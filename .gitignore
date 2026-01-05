@@ -1,0 +1,47 @@
+# Dependencias de Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos de Firebase
+.firebase/
+.firebaserc
+firebase-debug.log
+firebase-debug.*.log
+
+# Logs
+logs/
+*.log
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos de construcción
+dist/
+build/
+.cache/
+
+# Archivos temporales
+tmp/
+temp/
+executiveperformancek-firebase-adminsdk-fbsvc-6d4e7aa3bd.json
+
+# Secrets
+executiveperformancek-firebase-adminsdk-*.json
+.env
+.env.*

@@ -1,0 +1,202 @@
+<!-- SUB-PESTAÑAS DE VENTAS DENTRO DE MÉTRICAS EJECUTIVO -->
+<div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 0;">
+  <button id="subTabDashboard" class="active" style="padding: 12px 20px; background: transparent; border: none; border-bottom: 3px solid #667eea; color: #667eea; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">📊 Dashboard</button>
+  <button id="subTabRegistro" style="padding: 12px 20px; background: transparent; border: none; border-bottom: 3px solid transparent; color: #999; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">➕ Registrar Venta</button>
+  <button id="subTabHistorial" style="padding: 12px 20px; background: transparent; border: none; border-bottom: 3px solid transparent; color: #999; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">📋 Historial</button>
+</div>
+
+<!-- CONTENIDO: DASHBOARD -->
+<div id="ventasDashboardContent" style="display: block;">
+  <!-- FILTRO ADMIN: Selector de usuario -->
+  <div id="adminUserFilterContainer"></div>
+
+  <div id="ventasDashboardMetricas" style="padding: 20px 0;">
+    <div style="text-align: center; padding: 40px; color: #999;">
+      <p>Cargando dashboard de métricas...</p>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENIDO: REGISTRO DE VENTA -->
+<div id="ventasRegistroContent" style="display: none; padding: 20px 0;">
+  <h3 style="margin: 0 0 20px 0; color: #1976D2; font-size: 18px;">➕ Registrar Nueva Venta</h3>
+
+  <!-- SELECTOR DE TIPO DE VENTA -->
+  <div style="display: flex; gap: 15px; margin-bottom: 30px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+    <button id="typeMobileBtn" class="active" style="flex: 1; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">📱 Venta Móvil</button>
+    <button id="typeHomeBtn" style="flex: 1; padding: 12px; background: #999; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">🏠 Venta Hogar</button>
+  </div>
+
+  <!-- FORM CONTAINER -->
+  <form style="max-width: 100%; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+    <!-- SECCIÓN: DATOS GENERALES -->
+    <h4 style="margin: 0 0 15px 0; color: #1976D2; font-size: 16px; border-bottom: 2px solid #1976D2; padding-bottom: 10px;">👤 Datos del Cliente</h4>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">🆔 Cédula del Cliente</label>
+        <input id="cedulaCliente" type="text" placeholder="Ej: 107150333" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+      </div>
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">📞 Teléfono (Opcional)</label>
+        <input id="numeroCliente" type="tel" placeholder="Ej: 87654321" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+      </div>
+    </div>
+
+    <div>
+      <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">👥 Nombre del Cliente</label>
+      <input id="nombreCliente" type="text" placeholder="Ej: Juan Pérez García" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box; margin-bottom: 20px;">
+    </div>
+
+    <!-- SECCIÓN: DETALLES DE VENTA MÓVIL -->
+    <div id="mobileOnlyFields">
+      <h4 style="margin: 0 0 15px 0; color: #1976D2; font-size: 16px; border-bottom: 2px solid #1976D2; padding-bottom: 10px;">📱 Detalles Venta Móvil</h4>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+        <div>
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">📋 Tipo de Pedido</label>
+          <select id="tipoPedido" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+            <option value="">-- Selecciona --</option>
+            <option value="Komercial">Komercial</option>
+            <option value="Siebel">Siebel</option>
+          </select>
+        </div>
+        <div>
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">📌 Número de Pedido</label>
+          <input id="numeroPedido" type="text" placeholder="Ej: KO-53190833" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+        </div>
+      </div>
+
+      <!-- IMEIs -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <label style="font-weight: bold; font-size: 14px;">📱 IMEIs</label>
+          <button id="addImeiBtn" type="button" style="padding: 6px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">+ Agregar</button>
+        </div>
+        <div id="imeisList"></div>
+      </div>
+
+      <!-- ACCESORIOS -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <label style="font-weight: bold; font-size: 14px;">🎁 Accesorios</label>
+          <button id="addAccesorioBtn" type="button" style="padding: 6px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">+ Agregar</button>
+        </div>
+        <div id="accesoriosList"></div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: DETALLES DE VENTA HOGAR -->
+    <div id="homeOnlyFields" style="display: none;">
+      <h4 style="margin: 0 0 15px 0; color: #1976D2; font-size: 16px; border-bottom: 2px solid #1976D2; padding-bottom: 10px;">🏠 Detalles Venta Hogar</h4>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+        <div>
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">🏠 Orden SIMO</label>
+          <input id="homeNumber" type="text" placeholder="Ej: SIMO-123456" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+        </div>
+        <div>
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">👤 Nombre Completo</label>
+          <input id="customerName" type="text" placeholder="Ej: María García López" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: PLAN Y PRECIO -->
+    <h4 style="margin: 20px 0 15px 0; color: #1976D2; font-size: 16px; border-bottom: 2px solid #1976D2; padding-bottom: 10px;">💰 Plan y Precio</h4>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px;">
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">📦 Plan</label>
+        <select id="planSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+          <option value="">-- Selecciona un plan --</option>
+        </select>
+      </div>
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 8px; font-size: 13px;">💵 Precio (₡)</label>
+        <input id="planPrice" type="number" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #f5f5f5; color: #666;">
+      </div>
+    </div>
+
+    <!-- PROYECCIONES -->
+    <div id="projectionDisplay"></div>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <div style="display: flex; gap: 15px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #eee;">
+      <button id="submitVentaBtn" type="button" style="flex: 1; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">✅ Registrar</button>
+      <button id="resetVentaBtn" type="button" style="flex: 1; padding: 12px; background: #FF9800; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">🔄 Limpiar</button>
+    </div>
+
+  </form>
+</div>
+
+<!-- CONTENIDO: HISTORIAL -->
+<div id="ventasHistorialContent" style="display: none; padding: 20px 0;">
+  <h3 style="margin: 0 0 20px 0; color: #1976D2; font-size: 18px;">📋 Historial de Ventas</h3>
+
+  <!-- FILTROS -->
+  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <h4 style="margin: 0 0 12px 0; color: #1976D2; font-size: 14px;">🔍 Filtros</h4>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px;">
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 12px;">📊 Tipo</label>
+        <select id="filterType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+          <option value="all">Todas</option>
+          <option value="mobile">📱 Móvil</option>
+          <option value="home">🏠 Hogar</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 12px;">📌 Número Pedido</label>
+        <input id="filterOrderNumber" type="text" placeholder="Ej: KO-5228" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+      </div>
+
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 12px;">🆔 Cédula</label>
+        <input id="filterCedula" type="text" placeholder="Ej: 109460" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+        <button id="applyFilterBtn" style="padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">🔍 Filtrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div id="ventasResumen"></div>
+
+  <!-- LISTA DE VENTAS -->
+  <div id="ventasListContainer" style="display: grid; gap: 12px;">
+    <div style="text-align: center; color: #999; padding: 30px;">
+      <p>Cargando historial...</p>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS: Cargar managers y dashboards -->
+<script src="js/ventas-manager.js"></script>
+<script src="js/sales-form.js"></script>
+<script src="js/sales-list.js"></script>
+<script src="js/ventas-dashboard.js"></script>
+
+<style>
+  #subTabDashboard.active,
+  #subTabRegistro.active,
+  #subTabHistorial.active {
+    color: #667eea !important;
+    border-bottom-color: #667eea !important;
+  }
+
+  #typeMobileBtn.active,
+  #typeHomeBtn.active {
+    background: #4CAF50 !important;
+  }
+
+  #typeMobileBtn:not(.active),
+  #typeHomeBtn:not(.active) {
+    background: #999 !important;
+  }
+</style>

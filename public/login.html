@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Executive Performance</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231f2937' width='100' height='100'/><text x='50' y='65' font-size='70' text-anchor='middle' dominant-baseline='middle'>🏢</text></svg>">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Fondo con gradiente animado estilo iOS - Verde ICE */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #00695c 0%, #00897b 25%, #26a69a 50%, #4db6ac 75%, #80cbc4 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Círculos flotantes de fondo */
+        .auth-container::before,
+        .auth-container::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .auth-container::before {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+        
+        .auth-container::after {
+            width: 200px;
+            height: 200px;
+            bottom: -50px;
+            right: -50px;
+            animation-delay: 3s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+        
+        /* Caja de login con glassmorphism iOS */
+        .auth-box {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 45px 40px;
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Logo animado */
+        .auth-box h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 2rem;
+            animation: fadeIn 0.8s ease 0.3s forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        /* Nombre de marca estilo Apple - Verde ICE elegante */
+        .brand-name {
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            background: linear-gradient(
+                135deg, 
+                #004d40 0%, 
+                #00695c 25%, 
+                #00897b 50%, 
+                #00695c 75%, 
+                #004d40 100%
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: 
+                appleReveal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s forwards,
+                appleGradient 8s ease-in-out infinite 1.6s;
+            opacity: 0;
+            transform: translateY(10px);
+            position: relative;
+        }
+        
+        @keyframes appleReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+                letter-spacing: 8px;
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                letter-spacing: 2px;
+            }
+        }
+        
+        @keyframes appleGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* Brillo sutil estilo Apple - muy lento */
+        .brand-name::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.15),
+                transparent
+            );
+            animation: appleShine 6s cubic-bezier(0.4, 0, 0.2, 1) infinite 2s;
+        }
+        
+        @keyframes appleShine {
+            0% { left: -150%; }
+            30%, 100% { left: 150%; }
+        }
+        
+        /* Subtítulo */
+        .brand-tagline {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: -20px;
+            margin-bottom: 28px;
+            animation: fadeIn 0.8s ease 0.6s forwards;
+            opacity: 0;
+        }
+        
+        /* Inputs estilo iOS */
+        .auth-box .form-group {
+            margin-bottom: 20px;
+            animation: fadeIn 0.8s ease calc(0.5s + var(--delay, 0s)) forwards;
+            opacity: 0;
+        }
+        
+        .auth-box .form-group:nth-child(1) { --delay: 0s; }
+        .auth-box .form-group:nth-child(2) { --delay: 0.1s; }
+        
+        .auth-box label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .auth-box input[type="email"],
+        .auth-box input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.8);
+            box-sizing: border-box;
+        }
+        
+        .auth-box input:focus {
+            outline: none;
+            border-color: #00897b;
+            box-shadow: 0 0 0 4px rgba(0, 137, 123, 0.15);
+            transform: scale(1.01);
+        }
+        
+        /* Botón estilo iOS - Verde ICE */
+        .auth-box .btn-primary {
+            background: linear-gradient(135deg, #00695c 0%, #00897b 50%, #26a69a 100%);
+            border: none;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 137, 123, 0.4);
+            animation: fadeIn 0.8s ease 0.7s forwards;
+            opacity: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-box .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .auth-box .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 137, 123, 0.5);
+        }
+        
+        .auth-box .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .auth-box .btn-primary:active::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* Link de registro */
+        .auth-link {
+            text-align: center;
+            margin-top: 24px;
+            color: #718096;
+            animation: fadeIn 0.8s ease 0.8s forwards;
+            opacity: 0;
+        }
+        
+        .auth-link a {
+            color: #00897b;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .auth-link a:hover {
+            color: #00695c;
+            text-decoration: none;
+        }
+        
+        /* Mensaje de error/éxito */
+        .message-box {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .auth-box {
+                padding: 35px 25px;
+                border-radius: 20px;
+            }
+            
+            .auth-box h1 {
+                font-size: 1.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h1>🔐 Iniciar Sesión</h1>
+            <p class="brand-name">✦ Executive Performance ✦</p>
+            <p class="brand-tagline">Sistema de Gestión Ejecutiva</p>
+            
+            <div id="authMessage" class="message-box hidden"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Correo electrónico:</label>
+                    <input type="email" id="email" name="email" required placeholder="tu@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Iniciar Sesión
+                </button>
+            </form>
+            
+            <div class="auth-link">
+                ¿No tienes cuenta? <a href="register.html">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>

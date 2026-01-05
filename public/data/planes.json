@@ -1,0 +1,64 @@
+{
+  "plansMobile": {
+    "kplus": {
+      "grupo": "📱 K Plus",
+      "planes": [
+        { "id": "k1plus", "nombre": "K1 plus", "precio": 12000 },
+        { "id": "k2plus", "nombre": "K2 plus", "precio": 16500 },
+        { "id": "k3plus", "nombre": "K3 plus", "precio": 21500 },
+        { "id": "k4plus", "nombre": "K4 plus", "precio": 29500 },
+        { "id": "k5plus", "nombre": "K5 plus", "precio": 35000 },
+        { "id": "k6plus", "nombre": "K6 plus", "precio": 44000 }
+      ]
+    },
+    "prepago": {
+      "grupo": "💳 Prepago",
+      "planes": [
+        { "id": "kitprepago", "nombre": "KIT PREPAGO", "precio": 1000 },
+        { "id": "doprepago6065", "nombre": "Do. Prepago 6.065", "precio": 6065 },
+        { "id": "doprepago12095", "nombre": "Do. Prepago 12.095", "precio": 12095 }
+      ]
+    },
+    "dominok": {
+      "grupo": "👑 Dominio K",
+      "planes": [
+        { "id": "dominok2", "nombre": "Dominio k2", "precio": 10458 },
+        { "id": "dominok3", "nombre": "Dominio k3", "precio": 14380 },
+        { "id": "dominok4", "nombre": "Dominio k4", "precio": 18738 },
+        { "id": "dominok5", "nombre": "Dominio k5", "precio": 25710 }
+      ]
+    }
+  },
+  "plansHome": {
+    "internet": {
+      "grupo": "🌐 Internet Individual",
+      "planes": [
+        { "id": "int200mbps", "nombre": "Internet 200 Mbps", "precio": 23900 },
+        { "id": "int300mbps", "nombre": "Internet 300 Mbps", "precio": 25900 },
+        { "id": "int500mbps", "nombre": "Internet 500 Mbps", "precio": 27900 },
+        { "id": "int800mbps", "nombre": "Internet 800 Mbps", "precio": 146700 },
+        { "id": "int1gbps", "nombre": "Internet 1 Gbps", "precio": 181800 }
+      ]
+    },
+    "duo": {
+      "grupo": "📺 Dúo (Internet + TV kölbi)",
+      "planes": [
+        { "id": "duo100mbps", "nombre": "Dúo 100 Mbps", "precio": 38900 },
+        { "id": "duo200mbps", "nombre": "Dúo 200 Mbps", "precio": 42500 },
+        { "id": "duo500mbps", "nombre": "Dúo 500 Mbps", "precio": 72800 },
+        { "id": "duo800mbps", "nombre": "Dúo 800 Mbps", "precio": 164700 },
+        { "id": "duo1gbps", "nombre": "Dúo 1 Gbps", "precio": 199800 }
+      ]
+    },
+    "triple": {
+      "grupo": "☎️ Triple (Internet + TV + Telefonía)",
+      "planes": [
+        { "id": "triple100mbps", "nombre": "Triple 100 Mbps", "precio": 45500 },
+        { "id": "triple200mbps", "nombre": "Triple 200 Mbps", "precio": 48900 },
+        { "id": "triple500mbps", "nombre": "Triple 500 Mbps", "precio": 76900 },
+        { "id": "triple800mbps", "nombre": "Triple 800 Mbps", "precio": 167400 },
+        { "id": "triple1gbps", "nombre": "Triple 1 Gbps", "precio": 202500 }
+      ]
+    }
+  }
+}

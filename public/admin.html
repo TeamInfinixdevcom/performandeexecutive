@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Executive Performance ICE</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231f2937' width='100' height='100'/><text x='50' y='65' font-size='70' text-anchor='middle' dominant-baseline='middle'>🏢</text></svg>">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .admin-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .users-table th,
+        .users-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .users-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .users-table tr:hover {
+            background: #f7fafc;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-admin {
+            background: #ffd700;
+            color: #7c5e10;
+        }
+        
+        .status-executive {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-delete-user {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .btn-delete-user:hover {
+            background: #e53e3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>👨‍💼 Panel de Administración</h1>
+                    <p>Executive Performance ICE - Gestión de Usuarios</p>
+                </div>
+                <div>
+                    <button id="btnBackToApp" class="btn btn-secondary">← Volver a la App</button>
+                    <button id="btnLogout" class="btn btn-danger" style="margin-left: 10px;" onclick="logoutUser()">🚪 Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de estado -->
+        <div id="messageBox" class="message-box hidden"></div>
+
+        <!-- Sección: Agregar Nuevo Usuario -->
+        <div class="admin-section">
+            <h2>➕ Agregar Nuevo Usuario</h2>
+            <p style="color: #718096; margin-bottom: 20px;">
+                Crea un nuevo usuario ejecutivo. Tú le darás la contraseña que debe usar para entrar.
+            </p>
+            
+            <form id="addUserForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userName">Nombre Completo: *</label>
+                        <input type="text" id="userName" required placeholder="Ej: Juan Pérez González">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Correo Electrónico: *</label>
+                        <input type="email" id="userEmail" required placeholder="ejecutivo@ice.go.cr">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userPassword">Contraseña: *</label>
+                        <input type="password" id="userPassword" required minlength="6" placeholder="Mínimo 6 caracteres">
+                        <small>Esta será la contraseña que el usuario usará para entrar</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Rol:</label>
+                        <select id="userRole">
+                            <option value="executive">Ejecutivo</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                        <small>Ejecutivo: Solo ve sus clientes | Admin: Acceso completo</small>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success">
+                    💾 Crear Usuario
+                </button>
+            </form>
+        </div>
+
+        <!-- Sección: Lista de Usuarios -->
+        <div class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>👥 Usuarios Registrados</h2>
+                <button id="btnRefreshUsers" class="btn btn-primary">🔄 Actualizar Lista</button>
+            </div>
+            
+            <div id="usersTableContainer">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Correo Electrónico</th>
+                            <th>Rol</th>
+                            <th>Fecha de Registro</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: #a0aec0;">
+                                Cargando usuarios...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 8px; border-left: 4px solid #f56565;">
+                <strong>⚠️ Nota Importante:</strong>
+                <p style="margin: 10px 0 0 0; color: #742a2a;">
+                    Al eliminar un usuario, perderá acceso inmediatamente al sistema. 
+                    Sus clientes NO se eliminarán y quedarán asociados a su cuenta.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sección: Estadísticas -->
+        <div class="admin-section">
+            <h2>📊 Estadísticas del Sistema</h2>
+            <div class="stats-bar">
+                <span>Total Usuarios: <strong id="totalUsers">0</strong></span>
+                <span>Administradores: <strong id="totalAdmins">0</strong></span>
+                <span>Ejecutivos: <strong id="totalExecutives">0</strong></span>
+                <span>Total Clientes: <strong id="totalClientsSystem">0</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script>
+        // Función de logout global
+        async function logoutUser() {
+            console.log('🔴 LOGOUT: logoutUser() llamado');
+            try {
+                console.log('🔴 LOGOUT: Obteniendo auth desde window...');
+                if (!window.auth) {
+                    console.error('❌ window.auth no disponible');
+                    alert('Error: Auth no disponible');
+                    return;
+                }
+
+                console.log('🔴 LOGOUT: Importando signOut...');
+                const { signOut } = await import('./js/firebase-config.js');
+                
+                console.log('🔴 LOGOUT: Limpiando datos de sesión (NO borrando meta)...');
+                // Solo borrar datos de sesión, preservar localStorage con datos importantes
+                sessionStorage.clear();
+                // Borrar solo tokens y fingerprints, NO la meta guardada
+                localStorage.removeItem('deviceFingerprint');
+                localStorage.removeItem('csrfToken');
+                localStorage.removeItem('reminders');
+                
+                console.log('🔴 LOGOUT: Llamando a signOut...');
+                await signOut(window.auth);
+                
+                console.log('🔴 LOGOUT: SignOut exitoso, redirigiendo...');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('❌ Error en logoutUser:', error);
+                alert('Error al cerrar sesión: ' + error.message);
+            }
+        }
+    </script>
+    <script type="module" src="js/admin-panel.js"></script>
+</body>
+</html>

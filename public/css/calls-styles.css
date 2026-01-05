@@ -1,0 +1,147 @@
+/* Calls Management Styles */
+.calls-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--separator);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s var(--timing-smooth);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--primary);
+}
+
+.stat-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0 0 4px 0;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.calls-form-container {
+    background: var(--card-bg);
+    border: 1px solid var(--separator);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.calls-form-container h3 {
+    margin-top: 0;
+    margin-bottom: 18px;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.calls-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.call-item {
+    background: #F9F9F9;
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    padding: 14px;
+    transition: all 0.3s var(--timing-smooth);
+}
+
+.call-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateX(4px);
+}
+
+.call-item.exitoso {
+    border-left-color: var(--success);
+    background: #D1F3D6;
+}
+
+.call-item.pendiente {
+    border-left-color: var(--warning);
+    background: #FCE5CC;
+}
+
+.call-item.rechazado {
+    border-left-color: var(--accent);
+    background: #FCDBD8;
+}
+
+.call-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.call-header h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.call-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.call-badge.exitoso {
+    background: var(--success);
+    color: white;
+}
+
+.call-badge.pendiente {
+    background: var(--warning);
+    color: white;
+}
+
+.call-badge.rechazado {
+    background: var(--accent);
+    color: white;
+}
+
+.call-details {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.call-notes {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-style: italic;
+}

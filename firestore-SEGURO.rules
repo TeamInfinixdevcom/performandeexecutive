@@ -1,0 +1,206 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // FUNCIONES AUXILIARES DE VALIDACIÓN
+    // ============================================
+    
+    // Verificar si el usuario está autenticado
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // ✅ MEJORADO: Verificar si el usuario es admin
+    function isAdmin() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Verificar si el usuario está activo
+    function isActiveUser() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
+    }
+    
+    // ✅ NUEVA: Validar datos de cliente
+    function isValidClientData() {
+      let req = request.resource.data;
+      return req.keys().hasAll(['name', 'email', 'executiveId']) &&
+             req.name is string && req.name.size() > 0 && req.name.size() <= 100 &&
+             req.email is string && req.email.matches('.*@.*\\..*') &&
+             req.executiveId is string && req.executiveId.size() > 0;
+    }
+    
+    // ✅ NUEVA: Validar datos de venta
+    function isValidSalesData() {
+      let req = request.resource.data;
+      return req.keys().hasAll(['amount', 'executiveId']) &&
+             req.amount is number && req.amount > 0 &&
+             req.executiveId is string && req.executiveId.size() > 0;
+    }
+    
+    // ✅ NUEVA: Validar datos de meta
+    function isValidGoalData() {
+      let req = request.resource.data;
+      return req.keys().hasAll(['target', 'period']) &&
+             req.target is number && req.target > 0;
+    }
+    
+    // ============================================
+    // REGLAS PARA COLECCIÓN 'users'
+    // ============================================
+    match /users/{userId} {
+      // Solo admins pueden leer/escribir datos de cualquier usuario
+      allow read, list, create, update, delete: if isAdmin();
+      
+      // Los usuarios pueden leer solo su propio documento
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      
+      // Los usuarios pueden actualizar solo ciertos campos de su propio documento
+      allow update: if isSignedIn() && 
+                       request.auth.uid == userId &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isActive', 'email']);
+    }
+    
+    // ============================================
+    // REGLAS PARA COLECCIÓN 'clients'
+    // ============================================
+    match /clients/{clientId} {
+      // Los usuarios activos pueden leer solo sus propios clientes
+      allow read: if isSignedIn() && 
+                     isActiveUser() && 
+                     resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden leer todos los clientes
+      allow read: if isAdmin();
+      
+      // ✅ MEJORADO: Crear clientes con validación de datos
+      allow create: if isSignedIn() && 
+                       isActiveUser() && 
+                       request.resource.data.executiveId == request.auth.uid &&
+                       isValidClientData();
+      
+      // ✅ MEJORADO: Actualizar solo propios clientes con validación
+      allow update: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid &&
+                       isValidClientData();
+      
+      // Eliminar solo propios clientes
+      allow delete: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden hacer todo con cualquier cliente
+      allow read, write: if isAdmin();
+    }
+    
+    // Permitir listar clientes (paginación)
+    match /clients/{document=**} {
+      allow list: if isSignedIn() && isActiveUser();
+    }
+    
+    // ============================================
+    // REGLAS PARA COLECCIÓN 'ventas' (Sales)
+    // ============================================
+    match /ventas/{ventaId} {
+      // Los usuarios activos pueden leer sus propias ventas
+      allow read: if isSignedIn() && 
+                     isActiveUser() && 
+                     resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden leer todas las ventas
+      allow read: if isAdmin();
+      
+      // ✅ MEJORADO: Crear ventas con validación
+      allow create: if isSignedIn() && 
+                       isActiveUser() && 
+                       request.resource.data.executiveId == request.auth.uid &&
+                       isValidSalesData();
+      
+      // ✅ MEJORADO: Actualizar solo propias ventas con validación
+      allow update: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid &&
+                       isValidSalesData();
+      
+      // Eliminar solo propias ventas
+      allow delete: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden hacer todo
+      allow read, write: if isAdmin();
+    }
+    
+    // Permitir listar ventas
+    match /ventas/{document=**} {
+      allow list: if isSignedIn() && isActiveUser();
+    }
+    
+    // ============================================
+    // REGLAS PARA COLECCIÓN 'metas' (Goals)
+    // ============================================
+    match /metas/{metaId} {
+      // Los usuarios activos pueden leer sus propias metas
+      allow read: if isSignedIn() && 
+                     isActiveUser() && 
+                     resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden leer todas las metas
+      allow read: if isAdmin();
+      
+      // ✅ MEJORADO: Crear metas con validación
+      allow create: if isSignedIn() && 
+                       isActiveUser() && 
+                       request.resource.data.executiveId == request.auth.uid &&
+                       isValidGoalData();
+      
+      // ✅ MEJORADO: Actualizar solo propias metas con validación
+      allow update: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid &&
+                       isValidGoalData();
+      
+      // Eliminar solo propias metas
+      allow delete: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden hacer todo
+      allow read, write: if isAdmin();
+    }
+    
+    // Permitir listar metas
+    match /metas/{document=**} {
+      allow list: if isSignedIn() && isActiveUser();
+    }
+    
+    // ============================================
+    // REGLAS PARA COLECCIÓN 'audit_logs' (Auditoría)
+    // ============================================
+    match /audit_logs/{logId} {
+      // Solo admins pueden leer logs
+      allow read, list: if isAdmin();
+      
+      // Solo Cloud Functions pueden escribir (mediante regla especial)
+      allow write: if false;
+    }
+    
+    // ============================================
+    // REGLAS PARA COLECCIÓN 'rate_limits' (Control de Tasa)
+    // ============================================
+    match /rate_limits/{limitId} {
+      // Solo Cloud Functions pueden escribir
+      allow read, write: if false;
+    }
+    
+    // ============================================
+    // REGLA POR DEFECTO: DENEGAR TODO
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

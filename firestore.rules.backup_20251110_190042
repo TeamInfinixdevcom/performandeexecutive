@@ -1,0 +1,182 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función para verificar si el usuario está autenticado
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Función para verificar si el usuario es admin
+    function isAdmin() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Función para verificar si el usuario está activo
+    function isActiveUser() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
+    }
+    
+    // Reglas para la colección 'users'
+    match /users/{userId} {
+      // Solo admins pueden leer, crear, actualizar o eliminar (cualquier usuario)
+      allow read, list, create, update, delete: if isAdmin();
+      
+      // Los usuarios regulares pueden leer solo su propio documento
+      allow read: if isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Reglas para la colección 'clients'
+    match /clients/{clientId} {
+      // Los usuarios activos pueden leer sus propios clientes
+      allow read: if isSignedIn() && 
+                     isActiveUser() && 
+                     resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden leer todos los clientes
+      allow read: if isAdmin();
+      
+      // Los usuarios activos pueden crear clientes (se asignan a sí mismos)
+      allow create: if isSignedIn() && 
+                       isActiveUser() && 
+                       request.resource.data.executiveId == request.auth.uid;
+      
+      // Los usuarios pueden actualizar solo sus propios clientes
+      allow update: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid;
+      
+      // Los usuarios pueden eliminar solo sus propios clientes
+      allow delete: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden hacer todo con cualquier cliente
+      allow write: if isAdmin();
+    }
+    
+    // Permitir lectura de la colección completa para listar
+    match /clients/{document=**} {
+      allow list: if isSignedIn() && isActiveUser();
+    }
+    
+    // Reglas para la colección 'ventas' (sales tracking)
+    match /ventas/{ventaId} {
+      // Los usuarios activos pueden leer sus propias ventas
+      allow read: if isSignedIn() && 
+                     isActiveUser() && 
+                     resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden leer todas las ventas
+      allow read: if isAdmin();
+      
+      // Los usuarios activos pueden crear ventas (se asignan a sí mismos)
+      allow create: if isSignedIn() && 
+                       isActiveUser() && 
+                       request.resource.data.executiveId == request.auth.uid;
+      
+      // Los usuarios pueden actualizar solo sus propias ventas
+      allow update: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid;
+      
+      // Los usuarios pueden eliminar solo sus propias ventas
+      allow delete: if isSignedIn() && 
+                       isActiveUser() && 
+                       resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden hacer todo con cualquier venta
+      allow write: if isAdmin();
+    }
+    
+    // Permitir lectura de la colección de ventas para listar
+    match /ventas/{document=**} {
+      allow list: if isSignedIn() && isActiveUser();
+    }
+    
+    // Reglas para la colección 'metas'
+    match /metas/{metaId} {
+      // Los usuarios pueden leer sus propias metas
+      allow read: if isSignedIn() && 
+                     isActiveUser() && 
+                     resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden leer todas las metas
+      allow read: if isAdmin();
+      
+      // Los usuarios pueden crear y actualizar sus propias metas
+      allow create, update: if isSignedIn() && 
+                               isActiveUser() && 
+                               request.resource.data.executiveId == request.auth.uid;
+      
+      // Los admins pueden hacer todo
+      allow write: if isAdmin();
+    }
+    
+    match /metas/{document=**} {
+      allow list: if isSignedIn() && isActiveUser();
+    }
+    
+    // Reglas para la colección 'calls' (seguimiento de llamadas)
+    match /calls/{callId} {
+      // Los usuarios pueden leer sus propias llamadas
+      allow read: if isSignedIn() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Los admins pueden leer todas las llamadas
+      allow read: if isAdmin();
+      
+      // Los usuarios pueden crear sus propias llamadas
+      allow create: if isSignedIn() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Los usuarios pueden actualizar solo sus propias llamadas
+      allow update: if isSignedIn() && 
+                       resource.data.userId == request.auth.uid;
+      
+      // Los usuarios pueden eliminar solo sus propias llamadas
+      allow delete: if isSignedIn() && 
+                       resource.data.userId == request.auth.uid;
+      
+      // Los admins pueden hacer todo con cualquier llamada
+      allow write: if isAdmin();
+    }
+    
+    // Permitir lectura de la colección de llamadas para listar
+    match /calls/{document=**} {
+      allow list: if isSignedIn();
+    }
+    
+    // Reglas para la colección 'orders' (seguimiento de pedidos)
+    match /orders/{orderId} {
+      // Los usuarios pueden leer sus propios pedidos
+      allow read: if isSignedIn() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Los admins pueden leer todos los pedidos
+      allow read: if isAdmin();
+      
+      // Los usuarios pueden crear sus propios pedidos
+      allow create: if isSignedIn() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Los usuarios pueden actualizar solo sus propios pedidos
+      allow update: if isSignedIn() && 
+                       resource.data.userId == request.auth.uid;
+      
+      // Los usuarios pueden eliminar solo sus propios pedidos
+      allow delete: if isSignedIn() && 
+                       resource.data.userId == request.auth.uid;
+      
+      // Los admins pueden hacer todo con cualquier pedido
+      allow write: if isAdmin();
+    }
+    
+    // Permitir lectura de la colección de pedidos para listar
+    match /orders/{document=**} {
+      allow list: if isSignedIn();
+    }
+  }
+}

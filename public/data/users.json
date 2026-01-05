@@ -1,0 +1,88 @@
+[
+  {
+    "id": "AWJFrsMkvxMTj1HVGsIr5NdBykE2",
+    "isActive": true,
+    "name": "cobandoa",
+    "lastLoginDevice": "3f727b90d86a003bdc8e...",
+    "role": "executive",
+    "createdAt": {
+      "_seconds": 1765306984,
+      "_nanoseconds": 514000000
+    },
+    "uid": "AWJFrsMkvxMTj1HVGsIr5NdBykE2",
+    "email": "cobandoa@ice.go.cr",
+    "lastLogin": "2025-12-11T15:40:13.057Z",
+    "createdBy": "system-auto"
+  },
+  {
+    "id": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+    "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+    "createdAt": {
+      "_seconds": 1762783690,
+      "_nanoseconds": 0
+    },
+    "lastLoginDevice": "3f727b90d86a003bdc8e...",
+    "updatedBy": "fix-script",
+    "permissions": [
+      "read_clients",
+      "write_clients"
+    ],
+    "role": "executive",
+    "createdBy": "system-repair",
+    "isActive": true,
+    "lastLogin": "2025-12-28T16:44:32.268Z",
+    "email": "cnajera@ice.go.cr",
+    "name": "cnajera",
+    "updatedAt": {
+      "_seconds": 1763145264,
+      "_nanoseconds": 907000000
+    }
+  },
+  {
+    "id": "pl2gw8PWCwc6AWI78WhHhqh1ixJ3",
+    "isActive": true,
+    "lastLogin": "2025-12-07T21:46:59.304Z",
+    "lastLoginDevice": "ec832ff3d905efdefaa0...",
+    "uid": "pl2gw8PWCwc6AWI78WhHhqh1ixJ3",
+    "name": "cmarquez",
+    "createdBy": "system-auto",
+    "role": "executive",
+    "email": "cmarquez@ice.go.cr",
+    "createdAt": {
+      "_seconds": 1765140778,
+      "_nanoseconds": 965000000
+    }
+  },
+  {
+    "id": "sxwWAlBkeJNuDMu9WL6MS82Ak0l1",
+    "isActive": true,
+    "role": "ejecutivo_standard",
+    "email": "mmendozas@ice.go.cr",
+    "permissions": [
+      "read_clients",
+      "write_clients"
+    ],
+    "createdAt": {
+      "_seconds": 1763652862,
+      "_nanoseconds": 305000000
+    },
+    "displayName": "mmendozas",
+    "lastLogin": "2025-12-08T19:38:17.924Z",
+    "lastLoginDevice": "fbdef9259eb8835c24fd..."
+  },
+  {
+    "id": "yF8fwbUQFpXXlOfUMyvQmHmBgNI3",
+    "uid": "yF8fwbUQFpXXlOfUMyvQmHmBgNI3",
+    "name": "Administrador ICE",
+    "lastLogin": "2025-12-29T01:52:39.132Z",
+    "isActive": true,
+    "createdAt": {
+      "_seconds": 1762675818,
+      "_nanoseconds": 245000000
+    },
+    "createdBy": "system",
+    "lastLoginDevice": "6185198da5c25a91cda6...",
+    "role": "admin",
+    "email": "rmadrigalj@ice.go.cr"
+  }
+]
