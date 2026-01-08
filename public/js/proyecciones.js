@@ -71,13 +71,13 @@ class Proyecciones {
               if (this.intervalActivo && !document.hidden) {
                 const proyeccionesTab = document.querySelector('[data-tab="proyecciones"]');
                 if (proyeccionesTab && proyeccionesTab.classList.contains('active')) {
-                  console.log('⏰ Intervalo disparado cada 5s');
+                  console.log('⏰ Intervalo disparado cada 10 minutos');
                   this.cargarDatos();
                 } else {
                   console.log('⏭️ Intervalo skip: pestaña no activa');
                 }
               }
-            }, 5000);
+            }, 600000);  // 10 minutos
             
             // Guardar ID globalmente para poder limpiarlo
             window._proyeccionesIntervalId = this.refreshInterval;
@@ -185,9 +185,9 @@ class Proyecciones {
         currentUser: this.currentUser?.email 
       });
 
-      // Cargar ventas
-      this.ventasMobile = await window.ventasManager.getVentas('mobile');
-      this.ventasHome = await window.ventasManager.getVentas('home');
+      // Cargar ventas SOLO del cache (no forzar refresh a Firestore)
+      this.ventasMobile = await window.ventasManager.getVentas('mobile', null, false);
+      this.ventasHome = await window.ventasManager.getVentas('home', null, false);
 
       // Renderizar
       this.renderMetricas();
@@ -626,7 +626,14 @@ class Proyecciones {
   /**
    * Método público para actualizar desde otras clases
    */
-  actualizarDatos() {
+  actualizarDatos(force = false) {
+    // Si se fuerza, siempre recargar (ej. después de eliminar/editar ventas)
+    if (force) {
+      this.cargarDatos();
+      console.log('🔄 Proyecciones actualizadas (forzado)');
+      return;
+    }
+
     // Solo cargar si estamos en la pestaña de proyecciones
     const proyeccionesTab = document.querySelector('[data-tab="proyecciones"]');
     if (proyeccionesTab && proyeccionesTab.classList.contains('active')) {

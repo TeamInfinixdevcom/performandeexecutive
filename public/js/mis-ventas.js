@@ -57,7 +57,7 @@ class MisVentas {
   /**
    * Cargar ventas del usuario actual
    */
-  async cargarVentas() {
+  async cargarVentas(forceRefresh = false) {
     try {
       // Evitar cargas simultáneas
       if (this.cargando) {
@@ -77,8 +77,9 @@ class MisVentas {
       await window.ventasManager.ensure();
 
       // Obtener ventas solo para el usuario actual (no pasar UID, VentasManager lo obtiene de auth)
-      this.ventasMobile = await window.ventasManager.getVentas('mobile');
-      this.ventasHome = await window.ventasManager.getVentas('home');
+      // Forzar refresh si se especificó (útil después de eliminar)
+      this.ventasMobile = await window.ventasManager.getVentas('mobile', null, forceRefresh);
+      this.ventasHome = await window.ventasManager.getVentas('home', null, forceRefresh);
 
       console.log(`📊 Ventas cargadas - Móvil: ${this.ventasMobile.length}, Hogar: ${this.ventasHome.length}`);
       this.renderVentas();
@@ -494,7 +495,8 @@ class MisVentas {
       }
 
       // Guardar en Firebase
-      await window.ventasManager.updateVenta(tipo, ventaId, ventaActualizada);
+      // Orden correcto de parámetros: (ventaId, tipo, data)
+      await window.ventasManager.updateVenta(ventaId, tipo, ventaActualizada);
 
       alert(`✅ Venta actualizada correctamente\nNuevo precio: ₡${newPrice.toLocaleString()}`);
 
@@ -515,7 +517,7 @@ class MisVentas {
         window.objetivosDashboard.refresh();
       }
       if (window.proyecciones) {
-        window.proyecciones.actualizarDatos();
+        window.proyecciones.actualizarDatos(true);
       }
     } catch (error) {
       console.error('❌ Error guardando edición:', error);
@@ -538,19 +540,20 @@ class MisVentas {
       }
 
       await window.ventasManager.ensure();
-      await window.ventasManager.deleteVenta(tipo, ventaId);
+      // ✅ CORRECCIÓN: Orden correcto de parámetros (ventaId, tipo)
+      await window.ventasManager.deleteVenta(ventaId, tipo);
 
       alert('✅ Venta eliminada correctamente');
 
-      // Recargar ventas
-      await this.cargarVentas();
+      // Recargar ventas forzando actualización del cache
+      await this.cargarVentas(true);
 
       // Refrescar dashboard
       if (window.objetivosDashboard) {
         window.objetivosDashboard.refresh();
       }
       if (window.proyecciones) {
-        window.proyecciones.actualizarDatos();
+        window.proyecciones.actualizarDatos(true);
       }
     } catch (error) {
       console.error('❌ Error eliminando venta:', error);
