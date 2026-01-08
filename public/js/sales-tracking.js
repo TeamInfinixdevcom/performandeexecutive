@@ -158,21 +158,30 @@ class SalesTracking {
 
     async getAllSales() {
         try {
-            const { collection, query, where, getDocs } = await this._ensureFirebaseImported();
+            const { collection, query, where, getDocs, getDocsFromServer } = await this._ensureFirebaseImported();
             const q = query(
                 collection(window.db, 'pedidos_ventas'),
                 where('executiveId', '==', this.userId)
             );
             
-            const snapshot = await getDocs(q);
+            // Intentar obtener del servidor primero para datos frescos
+            let snapshot;
+            try {
+                snapshot = await getDocsFromServer(q);
+                console.log('✅ Datos obtenidos del servidor (frescos)');
+            } catch (serverError) {
+                console.warn('⚠️ No se pudo obtener del servidor, usando cache:', serverError);
+                snapshot = await getDocs(q);
+            }
 
             const sales = [];
             snapshot.forEach(doc => {
                 sales.push({ id: doc.id, ...doc.data() });
             });
+            console.log(`📊 Total de ventas obtenidas: ${sales.length}`);
             return sales;
         } catch (error) {
-            console.error('Error:', error);
+            console.error('❌ Error en getAllSales:', error);
             return [];
         }
     }

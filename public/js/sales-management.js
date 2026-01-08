@@ -650,17 +650,30 @@ async function deleteSaleHandler(saleId) {
     }
     
     try {
+        console.log('🗑️ Eliminando venta:', saleId);
         const success = await window.salesTracking.deleteSale(saleId);
         if (success) {
+            console.log('✅ Venta eliminada exitosamente:', saleId);
             showSalesMessage('Venta eliminada correctamente', 'success');
             currentPage = 1;
-            updateSalesMetrics();
-            renderSalesList();
+            
+            // Esperar un momento para que Firestore se actualice
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Forzar actualización completa
+            console.log('🔄 Actualizando métricas y lista...');
+            await updateSalesMetrics();
+            await renderSalesList();
+            
+            // Actualizar también metas desglosadas si existen
+            if (window.updateDesglosadaCompletado) {
+                await window.updateDesglosadaCompletado();
+            }
         } else {
             showSalesMessage('Error al eliminar la venta', 'error');
         }
     } catch (error) {
-        console.error('Error eliminando venta:', error);
+        console.error('❌ Error eliminando venta:', error);
         showSalesMessage('Error al eliminar: ' + error.message, 'error');
     }
 }
@@ -670,8 +683,12 @@ async function completeSaleHandler(saleId) {
     const success = await window.salesTracking.completeSale(saleId);
     if (success) {
         showSalesMessage('Venta completada', 'success');
-        updateSalesMetrics();
-        renderSalesList();
+        
+        // Esperar un momento para que Firestore se actualice
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        await updateSalesMetrics();
+        await renderSalesList();
         
         // 🔄 Actualizar contadores en metas desglosadas
         if (window.updateDesglosadaCompletado) {
