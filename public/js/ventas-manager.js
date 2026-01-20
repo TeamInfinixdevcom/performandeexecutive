@@ -85,31 +85,6 @@ class VentasManager {
   }
 
   /**
-   * Obtener detalles de un plan (precio, nombre, grupo, tipo)
-   */
-  getPlanDetails(planId) {
-    if (!this.planesCache) return null;
-
-    for (const [grupoId, grupo] of Object.entries(this.planesCache.plansMobile || {})) {
-      const plan = grupo.planes.find(p => p.id === planId);
-      if (plan) return { precio: plan.precio, nombre: plan.nombre, grupoId, grupoNombre: grupo.grupo, tipo: 'mobile' };
-    }
-    for (const [grupoId, grupo] of Object.entries(this.planesCache.plansHome || {})) {
-      const plan = grupo.planes.find(p => p.id === planId);
-      if (plan) return { precio: plan.precio, nombre: plan.nombre, grupoId, grupoNombre: grupo.grupo, tipo: 'home' };
-    }
-
-    // Buscar precios por id de grupo (ej: accesorio_contado, imei_contado)
-    if (this.planesCache.plansMobile && this.planesCache.plansMobile[planId]) {
-      const g = this.planesCache.plansMobile[planId];
-      const plan = g.planes && g.planes[0];
-      if (plan) return { precio: plan.precio, nombre: plan.nombre || g.grupo, grupoId: planId, grupoNombre: g.grupo, tipo: 'mobile' };
-    }
-
-    return null;
-  }
-
-  /**
    * Obtener nombre de un plan
    */
   getPlanName(planId, type = 'mobile') {
@@ -137,6 +112,7 @@ class VentasManager {
     const monthsUntilEndOfYear = 12 - now.getMonth();
 
     return {
+      months12: planPrice * 12,
       endOfYear: planPrice * monthsUntilEndOfYear,
       calculatedAt: new Date().toISOString()
     };
@@ -167,33 +143,18 @@ class VentasManager {
       if (!tipo) throw new Error('No se pudo determinar el tipo de venta');
 
       // Obtener precio y calcular proyecciones
-      // Permitir precio 0 si el usuario lo ingresa manualmente
-      let planPrice = (typeof ventaData.planPrice !== 'undefined') ? ventaData.planPrice : this.getPlanPrice(ventaData.plan, tipo);
-      if (planPrice === null || typeof planPrice === 'undefined') throw new Error('Precio del plan no encontrado');
+      const planPrice = ventaData.planPrice || this.getPlanPrice(ventaData.plan, tipo);
+      if (!planPrice) throw new Error('Precio del plan no encontrado');
 
-      // Forzar guardar nombre del plan
-      let planNombre = ventaData.planNombre;
-      if (!planNombre) {
-        planNombre = this.getPlanName(ventaData.plan, tipo) || '';
-      }
+      const projections = this.calculateProjections(planPrice);
 
-      // Detectar si es prepago por nombre de plan
-      let tipoVenta = ventaData.tipoVenta;
-      const nombreLower = (planNombre || '').toLowerCase();
-      if (!tipoVenta && nombreLower.includes('prepago')) {
-        tipoVenta = 'prepago';
-      }
-
-      // Preparar documento (no almacenar proyecciones para nuevas ventas)
-      const fechaISO = new Date().toISOString();
+      // Preparar documento
       const docData = {
         ...ventaData,
         uid,
         tipo,
         planPrice,
-        planNombre,
-        tipoVenta, // Forzar tipoVenta si es prepago
-        fecha: fechaISO, // Campo ISO para filtrado mensual
+        projections,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
@@ -332,8 +293,11 @@ class VentasManager {
     const { collection, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
     try {
-
-      // No recalcular ni almacenar proyecciones al actualizar (proyecciones deshabilitadas)
+      // Si se actualiza el precio, recalcular proyecciones
+      if (updateData.planPrice) {
+        const projections = this.calculateProjections(updateData.planPrice);
+        updateData.projections = projections;
+      }
 
       updateData.updatedAt = new Date().toISOString();
 
@@ -392,11 +356,16 @@ class VentasManager {
       const ventasHome = await this.getVentas('home', filtroUID);
       const todasVentas = [...ventasMobile, ...ventasHome];
 
-      // Calcular contadores básicos (sin proyecciones)
+      // Sumar proyecciones
+      let totalProjection12m = 0;
+      let totalProjectionEndOfYear = 0;
       let totalTerminals = 0;
       let totalAccesorios = 0;
 
       todasVentas.forEach(venta => {
+        totalProjection12m += venta.projections?.months12 || 0;
+        totalProjectionEndOfYear += venta.projections?.endOfYear || 0;
+
         // Contar terminals (solo móvil)
         if (venta.imeis && Array.isArray(venta.imeis)) {
           totalTerminals += venta.imeis.length;
@@ -406,75 +375,19 @@ class VentasManager {
         if (venta.accesorios && Array.isArray(venta.accesorios)) {
           totalAccesorios += venta.accesorios.length;
         }
-
-        // Sumar 1 accesorio por cada venta de tipo accesorio_contado o imei_contado
-        if (
-          (venta.tipoPedido === 'accesorio_contado' || venta.tipoPedido === 'imei_contado') &&
-          (!venta.accesorios || venta.accesorios.length === 0)
-        ) {
-          totalAccesorios += 1;
-        }
       });
 
       const metricas = {
         totalVentas: todasVentas.length,
         ventasMobile: ventasMobile.length,
         ventasHome: ventasHome.length,
+        totalProjection12m,
+        totalProjectionEndOfYear,
         totalTerminals,
         totalIMEI: totalTerminals, // Alias para IMEIs
         totalAccesorios,
-        totalRevenue: 0,
         calculatedAt: new Date().toISOString()
       };
-
-      // Calcular totalRevenue: preferir campo `totalPrice` si existe en la venta,
-      // si no existe, intentar reconstruir sumando planPrice + accesorios/imeis unitarios
-      let totalRevenue = 0;
-      let totalPrepagoRevenue = 0;
-      let totalAccesorioImeiContadoRevenue = 0;
-      let totalRevenueMobile = 0;
-      let totalRevenueHome = 0;
-      for (const v of todasVentas) {
-        if (v.totalPrice) {
-          const tp = Number(v.totalPrice) || 0;
-          totalRevenue += tp;
-          // classify by tipo (mobile/home)
-          const vtipo = v.tipo || (v.homeNumber ? 'home' : 'mobile');
-          if (vtipo === 'mobile') totalRevenueMobile += tp;
-          else totalRevenueHome += tp;
-          // breakdown
-          if (v.tipoVenta === 'prepago') totalPrepagoRevenue += tp;
-          if (v.tipoPedido === 'accesorio_contado' || v.tipoPedido === 'imei_contado') totalAccesorioImeiContadoRevenue += tp;
-        } else {
-          let value = Number(v.planPrice) || 0;
-          // Si venta es accesorio_contado o imei_contado y planPrice es 0,
-          // intentar obtener unit price desde catalogo
-          if (v.tipoPedido === 'accesorio_contado') {
-            const det = this.getPlanDetails('accesorio_contado');
-            const unit = det?.precio || 0;
-            value += (Array.isArray(v.accesorios) ? v.accesorios.length : 0) * unit;
-          }
-          if (v.tipoPedido === 'imei_contado') {
-            const det = this.getPlanDetails('imei_contado');
-            const unit = det?.precio || 0;
-            value += (Array.isArray(v.imeis) ? v.imeis.length : 0) * unit;
-          }
-          // breakdown for reconstructed values
-          // classify by tipo (mobile/home)
-          const vtipo = v.tipo || (v.homeNumber ? 'home' : 'mobile');
-          if (vtipo === 'mobile') totalRevenueMobile += value;
-          else totalRevenueHome += value;
-          if (v.tipoVenta === 'prepago') totalPrepagoRevenue += value;
-          if (v.tipoPedido === 'accesorio_contado' || v.tipoPedido === 'imei_contado') totalAccesorioImeiContadoRevenue += value;
-          totalRevenue += value;
-        }
-      }
-
-      metricas.totalRevenue = totalRevenue;
-      metricas.totalRevenueMobile = totalRevenueMobile;
-      metricas.totalRevenueHome = totalRevenueHome;
-      metricas.totalPrepagoRevenue = totalPrepagoRevenue;
-      metricas.totalAccesorioImeiContadoRevenue = totalAccesorioImeiContadoRevenue;
 
       console.log('✅ Métricas calculadas:', metricas);
       return metricas;
