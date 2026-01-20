@@ -133,9 +133,7 @@ class ObjetivosForm {
     for (const [grupoKey, grupo] of Object.entries(grupos)) {
       opcionesPlanes += `<optgroup label="${grupo.grupo}">`;
       for (const plan of grupo.planes) {
-        const precioVal = (typeof plan.precio === 'number') ? plan.precio : '';
-        const precioDisplay = precioVal !== '' ? `₡${precioVal.toLocaleString()}` : 'N/D';
-        opcionesPlanes += `<option value="${plan.id}" data-precio="${precioVal}">${plan.nombre} - ${precioDisplay}</option>`;
+        opcionesPlanes += `<option value="${plan.id}" data-precio="${plan.precio}">${plan.nombre} - ₡${plan.precio.toLocaleString()}</option>`;
       }
       opcionesPlanes += '</optgroup>';
     }
@@ -253,9 +251,7 @@ class ObjetivosForm {
     for (const [grupoKey, grupo] of Object.entries(grupos)) {
       opcionesPlanes += `<optgroup label="${grupo.grupo}">`;
       for (const plan of grupo.planes) {
-        const precioVal = (typeof plan.precio === 'number') ? plan.precio : '';
-        const precioDisplay = precioVal !== '' ? `₡${precioVal.toLocaleString()}` : 'N/D';
-        opcionesPlanes += `<option value="${plan.id}" data-precio="${precioVal}">${plan.nombre} - ${precioDisplay}</option>`;
+        opcionesPlanes += `<option value="${plan.id}" data-precio="${plan.precio}">${plan.nombre} - ₡${plan.precio.toLocaleString()}</option>`;
       }
       opcionesPlanes += '</optgroup>';
     }
