@@ -19,6 +19,7 @@ class SalesForm {
       await this.ventasManager.ensure();
       this.setupEventListeners();
       this.loadPlanes();
+      this.updateTotalDisplay();
       console.log('✅ SalesForm inicializado');
     } catch (error) {
       console.error('❌ Error inicializando SalesForm:', error);
@@ -95,6 +96,30 @@ class SalesForm {
     // Reset form
     const resetBtn = document.getElementById('resetVentaBtn');
     if (resetBtn) resetBtn.addEventListener('click', () => this.resetForm());
+
+    // Tipo de pedido change affects totals and unit price visibility
+    const tipoPedidoEl = document.getElementById('tipoPedido');
+    if (tipoPedidoEl) {
+      tipoPedidoEl.addEventListener('change', (e) => {
+        this.onTipoPedidoChange(e);
+      });
+    }
+
+    // Unit price input should also update totals when changed
+    const unitPriceEl = document.getElementById('unitPrice');
+    if (unitPriceEl) unitPriceEl.addEventListener('input', () => this.updateTotalDisplay());
+  }
+
+  onTipoPedidoChange(e) {
+    const val = e?.target?.value || document.getElementById('tipoPedido')?.value;
+    const container = document.getElementById('unitPriceContainer');
+    if (!container) return;
+    if (val === 'accesorio_contado' || val === 'imei_contado') {
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+    }
+    this.updateTotalDisplay();
   }
 
   /**
@@ -139,25 +164,59 @@ class SalesForm {
   onPlanChange(e) {
     const planId = e.target.value;
     const precio = e.target.selectedOptions[0]?.dataset?.price;
-
-    if (precio) {
-      const precioInput = document.getElementById('planPrice');
-      if (precioInput) precioInput.value = precio;
-
-      // Calcular y mostrar proyecciones
-      const projections = this.ventasManager.calculateProjections(parseInt(precio));
-      const projectionDisplay = document.getElementById('projectionDisplay');
-      if (projectionDisplay) {
-        projectionDisplay.innerHTML = `
-          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 10px;">
-            <h4 style="margin: 0 0 10px 0;">📊 Proyecciones (Plan: ₡${parseInt(precio).toLocaleString('es-CR')})</h4>
-            <p style="margin: 5px 0;"><strong>12 meses:</strong> ₡${projections.months12.toLocaleString('es-CR')}</p>
-            <p style="margin: 5px 0;"><strong>Hasta fin de año:</strong> ₡${projections.endOfYear.toLocaleString('es-CR')}</p>
-          </div>
-        `;
+    const precioInput = document.getElementById('planPrice');
+    // Detectar si el plan permite precio editable
+    const editable = (planId === 'accesorio_contado' || planId === 'imei_contado');
+    if (precioInput) {
+      precioInput.value = precio || '';
+      if (editable) {
+        precioInput.removeAttribute('readonly');
+        precioInput.style.background = '#fff';
+      } else {
+        precioInput.setAttribute('readonly', 'readonly');
+        precioInput.style.background = '#f5f5f5';
       }
     }
+
+    // Calcular y mostrar proyecciones
+    this.updateProjectionDisplay();
+
+    // Mostrar input unitario si aplica
+    const unitContainer = document.getElementById('unitPriceContainer');
+    const tipoPedidoEl = document.getElementById('tipoPedido');
+    if (editable) {
+      if (unitContainer) unitContainer.style.display = 'block';
+      if (tipoPedidoEl) tipoPedidoEl.value = planId;
+      const det = this.ventasManager.getPlanDetails(planId);
+      const unitEl = document.getElementById('unitPrice');
+      if (unitEl && det && det.precio) unitEl.value = det.precio;
+    } else {
+      if (unitContainer) unitContainer.style.display = 'none';
+    }
+
+    this.updateTotalDisplay();
+
+    // Agregar listener para actualizar proyección y card al editar precio
+    if (precioInput && !precioInput._listenerAdded) {
+      precioInput.addEventListener('input', () => {
+        this.updateProjectionDisplay();
+        this.updateTotalDisplay();
+      });
+      precioInput._listenerAdded = true;
+    }
   }
+
+  /**
+   * Actualiza la proyección según el valor actual del precio
+   */
+  // ...existing code...
+  updateProjectionDisplay() {
+    // Proyecciones deshabilitadas para nuevas ventas — limpiar display
+    const projectionDisplay = document.getElementById('projectionDisplay');
+    if (projectionDisplay) projectionDisplay.innerHTML = '';
+  } // <-- Add this closing brace to fix the error
+// ...existing code...
+  
 
   /**
    * Agregar input de IMEI
@@ -172,11 +231,28 @@ class SalesForm {
     div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
     div.innerHTML = `
       <input type="text" class="imei-input" placeholder="Ej: 864332073665046" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-      <button type="button" class="btn btn-danger" onclick="document.getElementById('${id}').remove();" style="padding: 10px 15px;">🗑️</button>
+      <button type="button" class="btn btn-danger remove-imei" style="padding: 10px 15px;">🗑️</button>
     `;
+
     container.appendChild(div);
 
+    // attach listeners
+    const removeBtn = div.querySelector('.remove-imei');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        div.remove();
+        this.updateImeisList();
+        this.updateTotalDisplay();
+      });
+    }
+
+    const input = div.querySelector('.imei-input');
+    if (input) {
+      input.addEventListener('input', () => this.updateImeisList());
+    }
+
     this.updateImeisList();
+    this.updateTotalDisplay();
   }
 
   /**
@@ -185,6 +261,7 @@ class SalesForm {
   updateImeisList() {
     const inputs = document.querySelectorAll('.imei-input');
     this.imeisList = Array.from(inputs).map(input => input.value.trim()).filter(v => v);
+    this.updateTotalDisplay();
   }
 
   /**
@@ -200,11 +277,26 @@ class SalesForm {
     div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
     div.innerHTML = `
       <input type="text" class="accesorio-input" placeholder="Serie/modelo del accesorio" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-      <button type="button" class="btn btn-danger" onclick="document.getElementById('${id}').remove();" style="padding: 10px 15px;">🗑️</button>
+      <button type="button" class="btn btn-danger remove-accesorio" style="padding: 10px 15px;">🗑️</button>
     `;
     container.appendChild(div);
 
+    const removeBtn = div.querySelector('.remove-accesorio');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        div.remove();
+        this.updateAccesoriosList();
+        this.updateTotalDisplay();
+      });
+    }
+
+    const input = div.querySelector('.accesorio-input');
+    if (input) {
+      input.addEventListener('input', () => this.updateAccesoriosList());
+    }
+
     this.updateAccesoriosList();
+    this.updateTotalDisplay();
   }
 
   /**
@@ -213,6 +305,7 @@ class SalesForm {
   updateAccesoriosList() {
     const inputs = document.querySelectorAll('.accesorio-input');
     this.accesoriosList = Array.from(inputs).map(input => input.value.trim()).filter(v => v);
+    this.updateTotalDisplay();
   }
 
   /**
@@ -225,13 +318,30 @@ class SalesForm {
       this.updateAccesoriosList();
 
       // Recolectar datos
+      const planSelectEl = document.getElementById('planSelect');
+      const planId = planSelectEl?.value;
+      const planText = planSelectEl?.options[planSelectEl.selectedIndex]?.textContent || '';
       const formData = {
-        plan: document.getElementById('planSelect')?.value,
+        plan: planId,
+        planNombre: planText,
         planPrice: parseInt(document.getElementById('planPrice')?.value || 0),
         cedulaCliente: document.getElementById('cedulaCliente')?.value,
         numeroCliente: document.getElementById('numeroCliente')?.value,
         nombreCliente: document.getElementById('nombreCliente')?.value
       };
+      // Validar duplicidad de número de pedido para ventas móviles
+      if (this.currentType === 'mobile') {
+        const numeroPedido = formData.numeroPedido;
+        if (numeroPedido) {
+          // Buscar si ya existe una venta con ese número de pedido
+          const ventas = await this.ventasManager.getVentas('mobile', null, true);
+          const existe = ventas.some(v => v.numeroPedido === numeroPedido);
+          if (existe) {
+            alert('❌ Ya existe una venta con ese número de pedido. No se puede duplicar.');
+            return;
+          }
+        }
+      }
 
       // Campos específicos por tipo
       if (this.currentType === 'mobile') {
@@ -239,13 +349,19 @@ class SalesForm {
         formData.numeroPedido = document.getElementById('numeroPedido')?.value;
         formData.imeis = this.imeisList;
         formData.accesorios = this.accesoriosList;
+        // Nuevo campo: tipoVenta
+        const renovacionChecked = document.getElementById('checkboxRenovacion')?.checked;
+        formData.tipoVenta = renovacionChecked ? 'renovacion' : 'nueva';
+        // unit price (editable when tipoPedido is contado)
+        const unitPriceVal = Number(document.getElementById('unitPrice')?.value || 0) || 0;
+        if (unitPriceVal > 0) formData.unitPrice = unitPriceVal;
       } else {
         formData.homeNumber = document.getElementById('homeNumber')?.value;
         formData.customerName = document.getElementById('customerName')?.value;
       }
 
-      // Validar
-      if (!formData.plan || !formData.planPrice) {
+      // Validar: exigir plan seleccionado; permitir `planPrice` == 0 (accesorios contados)
+      if (!formData.plan) {
         alert('❌ Debes seleccionar un plan');
         return;
       }
@@ -254,6 +370,9 @@ class SalesForm {
         alert('❌ Debes ingresar la cédula del cliente');
         return;
       }
+
+      // Calcular totalPrice y adjuntarlo (no editable por UI)
+      formData.totalPrice = this.computeTotalPrice(formData);
 
       // Crear venta
       const venta = await this.ventasManager.createVenta(formData);
@@ -266,6 +385,12 @@ class SalesForm {
 
       // Evento para que otros scripts se enteren
       window.dispatchEvent(new CustomEvent('ventaCreada', { detail: venta }));
+
+      // Actualizar tarjeta de métricas totales
+      try {
+        const mets = await this.ventasManager.calcularMetricas();
+        this.renderTotalsCard(mets);
+      } catch (e) {}
 
     } catch (error) {
       console.error('❌ Error:', error);
@@ -294,11 +419,86 @@ class SalesForm {
     document.getElementById('imeisList').innerHTML = '';
     document.getElementById('accesoriosList').innerHTML = '';
     document.getElementById('projectionDisplay').innerHTML = '';
+    document.getElementById('totalSaleCard').innerHTML = '';
   }
-}
+
+  /**
+   * Calcular el precio total de la venta actual (plan + accesorios/imeis contado)
+   */
+  computeTotalPrice(formData = null) {
+    try {
+      const planPrice = Number(document.getElementById('planPrice')?.value || 0) || 0;
+      let total = planPrice;
+
+      const tipoPedido = document.getElementById('tipoPedido')?.value;
+      const unitPriceInput = Number(document.getElementById('unitPrice')?.value || 0) || 0;
+
+      if (tipoPedido === 'accesorio_contado') {
+        // prefer unitPriceInput if provided, else fallback to catalog
+        const det = this.ventasManager.getPlanDetails('accesorio_contado');
+        const unit = unitPriceInput || det?.precio || 0;
+        total += (this.accesoriosList.length || 0) * unit;
+      }
+      if (tipoPedido === 'imei_contado') {
+        const det = this.ventasManager.getPlanDetails('imei_contado');
+        const unit = unitPriceInput || det?.precio || 0;
+        total += (this.imeisList.length || 0) * unit;
+      }
+
+      return total;
+    } catch (e) {
+      return Number(document.getElementById('planPrice')?.value || 0) || 0;
+    }
+  }
+
+  /**
+   * Actualizar display del total de la venta y de las métricas acumuladas
+   */
+  async updateTotalDisplay() {
+    // Mostrar total de la venta actual
+    const total = this.computeTotalPrice();
+    const el = document.getElementById('totalSaleCard');
+    if (el) {
+      el.innerHTML = `
+        <div style="background:#fff8e1;padding:12px;border-radius:8px;border:1px solid #ffecb3;">
+          <strong>Precio total (venta):</strong> ₡${Math.round(total).toLocaleString('es-CR')}
+        </div>
+      `;
+    }
+
+    // Actualizar métricas acumuladas (totalRevenue)
+    try {
+      const mets = await this.ventasManager.calcularMetricas();
+      this.renderTotalsCard(mets);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  renderTotalsCard(metricas) {
+    const el = document.getElementById('totalSaleCard');
+    if (!el) return;
+    el.innerHTML = `
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="flex:1;background:#e3f2fd;padding:12px;border-radius:8px;border:1px solid #bbdefb;">
+          <div style="font-size:12px;color:#333">Total ventas (importe acumulado)</div>
+          <div style="font-size:18px;font-weight:700">₡${Math.round(metricas.totalRevenue || 0).toLocaleString('es-CR')}</div>
+          <div style="margin-top:8px;font-size:13px;color:#222">🔹 Prepago: ₡${Math.round(metricas.totalPrepagoRevenue || 0).toLocaleString('es-CR')}</div>
+          <div style="font-size:13px;color:#222">🔹 Accesorios/IMEI contado: ₡${Math.round(metricas.totalAccesorioImeiContadoRevenue || 0).toLocaleString('es-CR')}</div>
+        </div>
+        <div style="width:260px;text-align:right;">
+          <div style="background:#fff8e1;padding:12px;border-radius:8px;border:1px solid #ffecb3;">
+            <div style="font-size:12px;color:#333">Precio venta actual</div>
+            <div style="font-size:16px;font-weight:700">₡${Math.round(this.computeTotalPrice()).toLocaleString('es-CR')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+} // <-- Add this closing brace to properly end the class
 
 // Instancia global (No auto-inicializar, esperar a que se llame desde switchVentasSubTab)
-const salesForm = new SalesForm();
+var salesForm = new SalesForm();
 window.salesForm = salesForm; // Exponer globalmente
 
 console.log('✅ SalesForm cargado (esperando inicialización manual)');

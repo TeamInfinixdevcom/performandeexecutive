@@ -143,6 +143,15 @@ class ObjetivosForm {
         <div class="card" style="margin-bottom: 24px;">
           <h3>📱 Registrar Venta Móvil Kolbi</h3>
 
+          <!-- Checkbox Renovación -->
+          <div class="form-row" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: bold;">
+              <input id="checkboxRenovacionObj" type="checkbox" style="width: 20px; height: 20px;">
+              ¿Es renovación?
+            </label>
+            <span style="font-size: 13px; color: #888; margin-left: 30px;">Marca si el cliente está renovando un plan existente.</span>
+          </div>
+
           <!-- Fila 1: Tipo y Número de Pedido -->
           <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
@@ -343,8 +352,8 @@ class ObjetivosForm {
 
     if (precio) {
       priceInput.value = precio;
-      this.updateProjections(type);
-      projectionDiv.style.display = 'block';
+      // Proyecciones deshabilitadas para nuevas ventas: no mostrar preview
+      projectionDiv.style.display = 'none';
     } else {
       priceInput.value = '';
       projectionDiv.style.display = 'none';
@@ -479,6 +488,10 @@ class ObjetivosForm {
 
       await window.ventasManager.ensure();
 
+      // Nuevo campo: tipoVenta
+      const renovacionChecked = document.getElementById('checkboxRenovacionObj')?.checked;
+      const tipoVenta = renovacionChecked ? 'renovacion' : 'nueva';
+
       const ventaData = {
         agenteId: this.currentUser?.email || 'DESCONOCIDO',
         tipoPedido,
@@ -489,6 +502,7 @@ class ObjetivosForm {
         accesorios,
         cedulaCliente,
         numeroCliente: numeroCliente || null,
+        tipoVenta,
         createdAt: new Date(),
       };
 

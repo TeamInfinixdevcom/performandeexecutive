@@ -135,14 +135,20 @@ class SalesList {
 
     let ventasAMostrar = [];
 
-    // Filtrar por tipo
-    if (this.currentFilter.type === 'all' || this.currentFilter.type === 'mobile') {
+    // Filtrar por tipo principal
+    if (['all', 'mobile', 'nueva', 'renovacion'].includes(this.currentFilter.type)) {
       ventasAMostrar = ventasAMostrar.concat(this.ventasMobile);
     }
     if (this.currentFilter.type === 'all' || this.currentFilter.type === 'home') {
       ventasAMostrar = ventasAMostrar.concat(this.ventasHome);
     }
 
+    // Filtrar por tipoVenta si corresponde
+    if (this.currentFilter.type === 'nueva') {
+      ventasAMostrar = ventasAMostrar.filter(v => v.tipoVenta === 'nueva');
+    } else if (this.currentFilter.type === 'renovacion') {
+      ventasAMostrar = ventasAMostrar.filter(v => v.tipoVenta === 'renovacion');
+    }
     // Filtrar por criterios
     ventasAMostrar = ventasAMostrar.filter(venta => {
       if (this.currentFilter.orderNumber && !venta.numeroPedido?.toLowerCase().includes(this.currentFilter.orderNumber)) {
@@ -243,16 +249,7 @@ class SalesList {
           </tbody>
         </table>
 
-        <!-- PROYECCIONES -->
-        <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px;">
-          <p style="margin: 0 0 8px 0; color: #2e7d32;"><strong>📊 Proyecciones:</strong></p>
-          <p style="margin: 4px 0; color: #555;">
-            <strong>12 meses:</strong> ₡${venta.projections?.months12?.toLocaleString('es-CR') || '0'}
-          </p>
-          <p style="margin: 4px 0; color: #555;">
-            <strong>Fin de año:</strong> ₡${venta.projections?.endOfYear?.toLocaleString('es-CR') || '0'}
-          </p>
-        </div>
+        <!-- PROYECCIONES: Eliminadas (usar métricas acumuladas) -->
 
         <!-- FECHA -->
         <p style="margin: 0; color: #999; font-size: 12px;">📅 ${new Date(venta.createdAt).toLocaleDateString('es-CR')}</p>
@@ -265,36 +262,68 @@ class SalesList {
    */
   async editVenta(ventaId, tipo) {
     try {
-      const venta = await this.ventasManager.getVenta(ventaId, tipo);
-      const container = document.getElementById('ventasListContainer');
-      if (!container) return;
+      // Obtener la venta actual
+      const venta = (tipo === 'mobile'
+        ? this.ventasMobile.find(v => v.id === ventaId)
+        : this.ventasHome.find(v => v.id === ventaId)
+      );
+      if (!venta) throw new Error('Venta no encontrada');
 
-      // Crear modal/formulario de edición
-      const editForm = document.createElement('div');
-      editForm.id = `editForm-${ventaId}`;
-      editForm.style.cssText = 'background: #e8f5e9; padding: 20px; border-radius: 8px; border-left: 5px solid #4CAF50; margin-bottom: 20px;';
-      
-      const isMobile = tipo === 'mobile';
-      const grupos = isMobile ? this.ventasManager.getGruposMobile() : this.ventasManager.getGruposHome();
-      
-      let planOptions = '<option value="">-- Selecciona un plan --</option>';
-      grupos.forEach(grupo => {
-        grupo.planes.forEach(plan => {
-          const selected = plan.id === venta.plan ? 'selected' : '';
-          planOptions += `<option value="${plan.id}" data-price="${plan.precio}" ${selected}>${plan.nombre} - ₡${plan.precio.toLocaleString('es-CR')}</option>`;
-        });
+      const isMobile = venta.tipo === 'mobile';
+      const tipoLabel = isMobile ? '📱 Móvil' : '🏠 Hogar';
+      const planName = isMobile
+        ? this.ventasManager.getPlanName(venta.plan, 'mobile')
+        : this.ventasManager.getPlanName(venta.plan, 'home');
+      const referencia = isMobile ? venta.numeroPedido : venta.homeNumber;
+
+      // Etiqueta de tipo de venta
+      let tipoVentaLabel = '';
+      if (isMobile) {
+        tipoVentaLabel = venta.tipoVenta === 'renovacion'
+          ? '<span style="background: #FFF3E0; color: #F57C00; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; margin-left: 8px;">Renovación</span>'
+          : '<span style="background: #E8F5E9; color: #388E3C; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; margin-left: 8px;">Nueva</span>';
+      }
+
+      // Obtener opciones de plan
+      let planOptions = '';
+      const grupo = isMobile ? this.ventasManager.mobile : this.ventasManager.home;
+      grupo.planes.forEach(plan => {
+        const selected = plan.id === venta.plan ? 'selected' : '';
+        planOptions += `<option value="${plan.id}" data-price="${plan.precio}" ${selected}>${plan.nombre} - ₡${plan.precio.toLocaleString('es-CR')}</option>`;
       });
 
+      // Crear el formulario de edición
+      const editForm = document.createElement('div');
+      editForm.id = `editForm-${ventaId}`;
+      editForm.style.background = 'white';
+      editForm.style.padding = '20px';
+      editForm.style.borderRadius = '8px';
+      editForm.style.marginBottom = '15px';
+      editForm.style.borderLeft = `6px solid ${isMobile ? '#2196F3' : '#4CAF50'}`;
+      editForm.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+
       editForm.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <div>
+            <h3 style="margin: 0; color: #1976D2; font-size: 18px;">
+              ${isMobile ? '📌 Pedido: ' : '🏠 Orden SIMO: '} <strong>${referencia || 'N/A'}</strong>
+              ${tipoVentaLabel}
+            </h3>
+            <span style="color: #666; font-size: 14px;">${tipoLabel}</span>
+          </div>
+          <div>
+            <span style="background: #E3F2FD; color: #1976D2; padding: 6px 14px; border-radius: 16px; font-size: 14px; font-weight: bold;">${planName || 'Sin plan'}</span>
+          </div>
+        </div>
         <h4 style="margin: 0 0 15px 0; color: #2e7d32; font-weight: bold;">✏️ Editar Venta</h4>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
           <div>
             <label style="font-weight: bold; display: block; margin-bottom: 5px; font-size: 13px;">Cliente</label>
-            <input type="text" value="${venta.nombreCliente || ''}" placeholder="Nombre" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;" data-field="nombreCliente">
+            <input type="text" value="${venta.nombreCliente || ''}" placeholder="Nombre" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;" data-field="nombreCliente" />
           </div>
           <div>
             <label style="font-weight: bold; display: block; margin-bottom: 5px; font-size: 13px;">Cédula</label>
-            <input type="text" value="${venta.cedulaCliente || ''}" placeholder="Cédula" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;" data-field="cedulaCliente">
+            <input type="text" value="${venta.cedulaCliente || ''}" placeholder="Cédula" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;" data-field="cedulaCliente" />
           </div>
         </div>
         <div style="margin-bottom: 15px;">
@@ -350,7 +379,7 @@ class SalesList {
         planPrice
       });
 
-      alert('✅ Venta actualizada correctamente. Las proyecciones se han recalculado automáticamente.');
+      alert('✅ Venta actualizada correctamente.');
       editForm.remove();
       await this.loadVentas(); // Recargar la lista completa
     } catch (error) {
