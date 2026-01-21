@@ -227,7 +227,11 @@ class VentasDashboard {
 
       </div>
 
-      <!-- GRÁFICO DE PROYECCIONES eliminado del UI -->
+      <!-- GRÁFICO DE PROYECCIONES -->
+      <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <h3 style="margin: 0 0 20px 0; color: #1976D2; font-size: 18px;">💰 Comparativa de Proyecciones</h3>
+        <canvas id="ventasProjectionChart" style="max-height: 300px;"></canvas>
+      </div>
 
       <!-- DESGLOSE POR TIPO DE VENTA -->
       <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -264,7 +268,10 @@ class VentasDashboard {
       </div>
     `;
 
-    // Gráfico de proyecciones eliminado: no se inicializa
+    // Renderizar gráfico si está disponible Chart.js
+    if (typeof Chart !== 'undefined') {
+      this.renderProjectionChart();
+    }
   }
 
   /**

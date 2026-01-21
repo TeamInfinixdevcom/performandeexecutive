@@ -144,9 +144,20 @@ class SalesForm {
       const precioInput = document.getElementById('planPrice');
       if (precioInput) precioInput.value = precio;
 
-      // No mostrar proyecciones en el formulario: mantener el contenedor vacío
+      // Mostrar solo proyección hasta fin de año
+      const precioInt = parseInt(precio) || 0;
+      const now = new Date();
+      const monthsRemaining = 12 - now.getMonth();
+      const endYear = precioInt * monthsRemaining;
       const projectionDisplay = document.getElementById('projectionDisplay');
-      if (projectionDisplay) projectionDisplay.innerHTML = '';
+      if (projectionDisplay) {
+        projectionDisplay.innerHTML = `
+          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 10px;">
+            <h4 style="margin: 0 0 10px 0;">📊 Proyección (Plan: ₡${parseInt(precio).toLocaleString('es-CR')})</h4>
+            <p style="margin: 5px 0;"><strong>Hasta fin de año:</strong> ₡${endYear.toLocaleString('es-CR')}</p>
+          </div>
+        `;
+      }
     }
   }
 

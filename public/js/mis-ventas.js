@@ -270,7 +270,13 @@ class MisVentas {
               </div>
               `}
 
-              <!-- Proyecciones eliminadas del UI -->
+              <!-- Proyecciones: mostrar solo Fin de año -->
+              <div style="background: #f0f4ff; border-left: 4px solid #667eea; padding: 12px; border-radius: 4px; margin-top: 12px;">
+                <p style="margin: 0; font-size: 0.9em; color: #666;">
+                  <strong>Proyecciones:</strong>
+                  Fin de año: <span style="color: #667eea; font-weight: bold;">₡${proyeccionEndYear.toLocaleString()}</span>
+                </p>
+              </div>
             ` : `
               <!-- Modo edición -->
               <div style="background: #fef9e7; padding: 16px; border-radius: 6px; border: 1px solid #f9d74e;">
@@ -284,7 +290,10 @@ class MisVentas {
                     <label>📱 IMEI del Terminal</label>
                     <input type="text" id="editImei_${ventaId}" class="form-input" value="${venta.imeis && venta.imeis[0] ? venta.imeis[0] : ''}" placeholder="Ingresa el IMEI (15 dígitos)" maxlength="15" style="font-family: monospace;">
                   </div>
-                  <!-- Proyección inputs eliminados del modo edición -->
+                  <div class="form-group">
+                    <label>Proyección Fin de Año</label>
+                    <input type="text" id="projEndYear_${ventaId}" class="form-input" value="₡${proyeccionEndYear.toLocaleString()}" readonly style="background-color: #f5f5f5;">
+                  </div>
                 </div>
               </div>
             `}
@@ -362,7 +371,10 @@ class MisVentas {
                     <label>Precio (₡) *</label>
                     <input type="number" id="editPrice_${ventaId}" class="form-input" value="${venta.planPrice}" onchange="window.misVentas?.updateProjections('${ventaId}', 'home')">
                   </div>
-                  <!-- Proyección inputs eliminados del modo edición -->
+                  <div class="form-group">
+                    <label>Proyección Fin de Año</label>
+                    <input type="text" id="projEndYear_${ventaId}" class="form-input" value="₡${proyeccionEndYear.toLocaleString()}" readonly style="background-color: #f5f5f5;">
+                  </div>
                 </div>
               </div>
             `}
@@ -403,8 +415,17 @@ class MisVentas {
    * Actualizar proyecciones en tiempo real
    */
   updateProjections(ventaId, tipo) {
-    // Proyecciones en UI deshabilitadas — función no hace nada
-    return;
+    const priceInput = document.getElementById(`editPrice_${ventaId}`);
+    const projEndYearInput = document.getElementById(`projEndYear_${ventaId}`);
+
+    if (!priceInput) return;
+
+    const precio = parseInt(priceInput.value) || 0;
+    const now = new Date();
+    const monthsRemaining = 12 - now.getMonth();
+    const projEndYear = precio * monthsRemaining;
+
+    if (projEndYearInput) projEndYearInput.value = `₡${projEndYear.toLocaleString()}`;
   }
 
   /**

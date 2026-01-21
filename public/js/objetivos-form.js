@@ -218,8 +218,7 @@ class ObjetivosForm {
           <!-- Proyecciones Preview -->
           <div style="background: #f0f4ff; border-left: 4px solid #667eea; padding: 12px; border-radius: 4px; margin-bottom: 16px; display: none;" id="projectionsPreview">
             <p style="margin: 0; font-size: 0.9em; color: #666;">
-              <strong>Proyecciones:</strong> 
-              12 meses: <span id="projection12m" style="color: #667eea; font-weight: bold;">₡0</span> | 
+              <strong>Proyecciones:</strong>
               Fin de año: <span id="projectionEndYear" style="color: #667eea; font-weight: bold;">₡0</span>
             </p>
           </div>
@@ -301,8 +300,7 @@ class ObjetivosForm {
           <!-- Proyecciones Preview -->
           <div style="background: #f0f4ff; border-left: 4px solid #667eea; padding: 12px; border-radius: 4px; margin-bottom: 16px; display: none;" id="projectionsPreviewHome">
             <p style="margin: 0; font-size: 0.9em; color: #666;">
-              <strong>Proyecciones:</strong> 
-              12 meses: <span id="projection12mHome" style="color: #667eea; font-weight: bold;">₡0</span> | 
+              <strong>Proyecciones:</strong>
               Fin de año: <span id="projectionEndYearHome" style="color: #667eea; font-weight: bold;">₡0</span>
             </p>
           </div>
@@ -361,24 +359,20 @@ class ObjetivosForm {
    */
   updateProjections(type) {
     const priceInputId = type === 'mobile' ? 'planPrice' : 'planPriceHome';
-    const projection12mId = type === 'mobile' ? 'projection12m' : 'projection12mHome';
     const projectionEndYearId = type === 'mobile' ? 'projectionEndYear' : 'projectionEndYearHome';
 
     const priceInput = document.getElementById(priceInputId);
-    const projection12m = document.getElementById(projection12mId);
     const projectionEndYear = document.getElementById(projectionEndYearId);
 
     if (!priceInput) return;
 
     const precio = parseInt(priceInput.value) || 0;
-    const proj12m = precio * 12;
 
     // Calcular meses restantes del año
     const now = new Date();
     const monthsRemaining = 12 - now.getMonth();
     const projEndYear = precio * monthsRemaining;
 
-    if (projection12m) projection12m.textContent = `₡${proj12m.toLocaleString()}`;
     if (projectionEndYear) projectionEndYear.textContent = `₡${projEndYear.toLocaleString()}`;
   }
 

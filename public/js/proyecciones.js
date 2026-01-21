@@ -225,12 +225,12 @@ class Proyecciones {
 
     container.innerHTML = `
       <div class="grid-metricas">
-        ${this._card('Proyección 12 Meses - Venta Nueva', ingresoNuevas * 12, '📈', true, 'card-nueva')}
-        ${this._card('Proyección 12 Meses - Renovación', ingresoRenovacion * 12, '🔄', true, 'card-renovacion')}
-        ${this._card('Proyección 12 Meses - Hogar', ingresoHogar * 12, '🏠', true, 'card-hogar')}
-        ${this._card('Proyección 12 Meses - Prepago', montoPrepago * 12, '💳', true, 'card-prepago')}
-        ${this._card('Proyección 12 Meses - Dominio', montoDominio * 12, '🌐', true, 'card-dominio')}
-        ${this._card('Proyección 12 Meses - Total', totalProyeccion, '🧮', true, 'card-total')}
+        ${this._card('Proyección Fin de Año - Venta Nueva', ingresoNuevas * (12 - (new Date()).getMonth()), '📈', true, 'card-nueva')}
+        ${this._card('Proyección Fin de Año - Renovación', ingresoRenovacion * (12 - (new Date()).getMonth()), '🔄', true, 'card-renovacion')}
+        ${this._card('Proyección Fin de Año - Hogar', ingresoHogar * (12 - (new Date()).getMonth()), '🏠', true, 'card-hogar')}
+        ${this._card('Proyección Fin de Año - Prepago', montoPrepago * (12 - (new Date()).getMonth()), '💳', true, 'card-prepago')}
+        ${this._card('Proyección Fin de Año - Dominio', montoDominio * (12 - (new Date()).getMonth()), '🌐', true, 'card-dominio')}
+        ${this._card('Proyección Fin de Año - Total', totalProyeccion * (12 - (new Date()).getMonth()) / 12, '🧮', true, 'card-total')}
         ${this._card('Ventas Nuevas (Venta Nueva)', ventasNuevas, '🟢', false, 'card-ventas-nueva')}
         ${this._card('Ventas Renovación (Renovación)', ventasRenovacion, '🟠', false, 'card-ventas-renovacion')}
         ${this._card('Ventas Hogar', ventasHogar, '🏠', false, 'card-ventas-hogar')}
@@ -367,7 +367,6 @@ class Proyecciones {
    INSTANCIA GLOBAL
 ======================= */
 window.app = window.app || {};
-// Proyecciones deshabilitadas en UI: no inicializamos la instancia
-window.app.proyecciones = null;
+window.app.proyecciones = new Proyecciones();
 
-console.log('ℹ️ Proyecciones deshabilitadas (cards 12m / fin de año removidas)');
+console.log('✅ Proyecciones cargado correctamente');
