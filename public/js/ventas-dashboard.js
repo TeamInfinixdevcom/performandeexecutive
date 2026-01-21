@@ -184,7 +184,7 @@ class VentasDashboard {
     const container = document.getElementById('ventasDashboardMetricas');
     if (!container) return;
 
-    const { totalVentas, totalProjectionEndOfYear, totalTerminals, totalAccesorios, totalRevenue, totalPrepagoRevenue } = this.metricas;
+    const { totalVentas, totalTerminals, totalAccesorios, totalRevenue, totalPrepagoRevenue } = this.metricas;
 
     container.innerHTML = `
       <!-- TARJETAS DE MÉTRICAS POR DINERO -->

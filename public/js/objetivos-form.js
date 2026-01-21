@@ -215,13 +215,7 @@ class ObjetivosForm {
             <button type="button" class="btn btn-secondary" onclick="window.objetivosForm?.addAccesorioField()" style="margin-top: 8px; background-color: #667eea; color: white;">➕ Agregar Accesorio</button>
           </div>
 
-          <!-- Proyecciones Preview -->
-          <div style="background: #f0f4ff; border-left: 4px solid #667eea; padding: 12px; border-radius: 4px; margin-bottom: 16px; display: none;" id="projectionsPreview">
-            <p style="margin: 0; font-size: 0.9em; color: #666;">
-              <strong>Proyecciones:</strong>
-              Fin de año: <span id="projectionEndYear" style="color: #667eea; font-weight: bold;">₡0</span>
-            </p>
-          </div>
+          <!-- Projections removed per product decision -->
 
           <!-- Botones -->
           <div style="display: flex; gap: 12px;">
@@ -297,13 +291,7 @@ class ObjetivosForm {
             </div>
           </div>
 
-          <!-- Proyecciones Preview -->
-          <div style="background: #f0f4ff; border-left: 4px solid #667eea; padding: 12px; border-radius: 4px; margin-bottom: 16px; display: none;" id="projectionsPreviewHome">
-            <p style="margin: 0; font-size: 0.9em; color: #666;">
-              <strong>Proyecciones:</strong>
-              Fin de año: <span id="projectionEndYearHome" style="color: #667eea; font-weight: bold;">₡0</span>
-            </p>
-          </div>
+          <!-- Projections removed per product decision -->
 
           <!-- Botones -->
           <div style="display: flex; gap: 12px;">
@@ -345,12 +333,8 @@ class ObjetivosForm {
 
     if (precio) {
       priceInput.value = precio;
-      this.updateProjections(type);
-      // Mantener preview oculto: eliminamos la card visual de proyecciones
-      if (projectionDiv) projectionDiv.style.display = 'none';
     } else {
       priceInput.value = '';
-      if (projectionDiv) projectionDiv.style.display = 'none';
     }
   }
 
@@ -358,22 +342,8 @@ class ObjetivosForm {
    * Calcular y mostrar proyecciones
    */
   updateProjections(type) {
-    const priceInputId = type === 'mobile' ? 'planPrice' : 'planPriceHome';
-    const projectionEndYearId = type === 'mobile' ? 'projectionEndYear' : 'projectionEndYearHome';
-
-    const priceInput = document.getElementById(priceInputId);
-    const projectionEndYear = document.getElementById(projectionEndYearId);
-
-    if (!priceInput) return;
-
-    const precio = parseInt(priceInput.value) || 0;
-
-    // Calcular meses restantes del año
-    const now = new Date();
-    const monthsRemaining = 12 - now.getMonth();
-    const projEndYear = precio * monthsRemaining;
-
-    if (projectionEndYear) projectionEndYear.textContent = `₡${projEndYear.toLocaleString()}`;
+    // Proyecciones deshabilitadas: no hacer nada
+    return;
   }
 
   /**
@@ -497,7 +467,8 @@ class ObjetivosForm {
       alert(`✅ Venta registrada exitosamente\nID: ${ventaId}`);
       document.getElementById('formVentasMobile').reset();
       document.getElementById('planPrice').value = '';
-      document.getElementById('projectionsPreview').style.display = 'none';
+      const previewEl = document.getElementById('projectionsPreview');
+      if (previewEl) previewEl.style.display = 'none';
 
       // Actualizar gráficas si existen
       if (window.objetivosDashboard) {
@@ -554,7 +525,8 @@ class ObjetivosForm {
       alert(`✅ Venta registrada exitosamente\nID: ${ventaId}`);
       document.getElementById('formVentasHome').reset();
       document.getElementById('planPriceHome').value = '';
-      document.getElementById('projectionsPreviewHome').style.display = 'none';
+      const previewHome = document.getElementById('projectionsPreviewHome');
+      if (previewHome) previewHome.style.display = 'none';
 
       // Actualizar gráficas si existen
       if (window.objetivosDashboard) {

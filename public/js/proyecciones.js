@@ -60,12 +60,12 @@ class Proyecciones {
 
       container.innerHTML = `
         <div class="grid-metricas">
-          ${this._card('Proyección Mes - Venta Nueva', ingresoNuevas, '📈', true, 'card-nueva')}
-          ${this._card('Proyección Mes - Renovación', ingresoRenovacion, '🔄', true, 'card-renovacion')}
-          ${this._card('Proyección Mes - Hogar', ingresoHogar, '🏠', true, 'card-hogar')}
-          ${this._card('Proyección Mes - Prepago', montoPrepago, '💳', true, 'card-prepago')}
-          ${this._card('Proyección Mes - Dominio', montoDominio, '🌐', true, 'card-dominio')}
-          ${this._card('Proyección Mes - Total', totalProyeccion, '🧮', true, 'card-total')}
+          ${this._card('Ingreso Mes - Venta Nueva', ingresoNuevas, '📈', true, 'card-nueva')}
+          ${this._card('Ingreso Mes - Renovación', ingresoRenovacion, '🔄', true, 'card-renovacion')}
+          ${this._card('Ingreso Mes - Hogar', ingresoHogar, '🏠', true, 'card-hogar')}
+          ${this._card('Ingreso Mes - Prepago', montoPrepago, '💳', true, 'card-prepago')}
+          ${this._card('Ingreso Mes - Dominio', montoDominio, '🌐', true, 'card-dominio')}
+          ${this._card('Ingreso Mes - Total', totalProyeccion, '🧮', true, 'card-total')}
           ${this._card('Ventas Nuevas (Mes)', ventasNuevas, '🟢', false, 'card-ventas-nueva')}
           ${this._card('Ventas Renovación (Mes)', ventasRenovacion, '🟠', false, 'card-ventas-renovacion')}
           ${this._card('Ventas Hogar (Mes)', ventasHogar, '🏠', false, 'card-ventas-hogar')}
@@ -218,19 +218,19 @@ class Proyecciones {
     const ingresoNuevas = this._ingresoMobilePorTipo('nueva');
     const ingresoRenovacion = this._ingresoMobilePorTipo('renovacion');
     const ingresoHogar = this._ingresoHome();
-    const totalProyeccion = ingresoNuevas * 12 + ingresoRenovacion * 12 + ingresoHogar * 12;
+    const totalProyeccion = ingresoNuevas + ingresoRenovacion + ingresoHogar;
     const ventasNuevas = this.ventasMobile.filter(v => v.tipoVenta === 'nueva').length;
     const ventasRenovacion = this.ventasMobile.filter(v => v.tipoVenta === 'renovacion').length;
     const ventasHogar = this.ventasHome.length;
 
     container.innerHTML = `
       <div class="grid-metricas">
-        ${this._card('Proyección Fin de Año - Venta Nueva', ingresoNuevas * (12 - (new Date()).getMonth()), '📈', true, 'card-nueva')}
-        ${this._card('Proyección Fin de Año - Renovación', ingresoRenovacion * (12 - (new Date()).getMonth()), '🔄', true, 'card-renovacion')}
-        ${this._card('Proyección Fin de Año - Hogar', ingresoHogar * (12 - (new Date()).getMonth()), '🏠', true, 'card-hogar')}
-        ${this._card('Proyección Fin de Año - Prepago', montoPrepago * (12 - (new Date()).getMonth()), '💳', true, 'card-prepago')}
-        ${this._card('Proyección Fin de Año - Dominio', montoDominio * (12 - (new Date()).getMonth()), '🌐', true, 'card-dominio')}
-        ${this._card('Proyección Fin de Año - Total', totalProyeccion * (12 - (new Date()).getMonth()) / 12, '🧮', true, 'card-total')}
+        ${this._card('Ingreso Mensual - Venta Nueva', ingresoNuevas, '📈', true, 'card-nueva')}
+        ${this._card('Ingreso Mensual - Renovación', ingresoRenovacion, '🔄', true, 'card-renovacion')}
+        ${this._card('Ingreso Mensual - Hogar', ingresoHogar, '🏠', true, 'card-hogar')}
+        ${this._card('Ingreso Mensual - Prepago', montoPrepago, '💳', true, 'card-prepago')}
+        ${this._card('Ingreso Mensual - Dominio', montoDominio, '🌐', true, 'card-dominio')}
+        ${this._card('Ingreso Mensual - Total', totalProyeccion, '🧮', true, 'card-total')}
         ${this._card('Ventas Nuevas (Venta Nueva)', ventasNuevas, '🟢', false, 'card-ventas-nueva')}
         ${this._card('Ventas Renovación (Renovación)', ventasRenovacion, '🟠', false, 'card-ventas-renovacion')}
         ${this._card('Ventas Hogar', ventasHogar, '🏠', false, 'card-ventas-hogar')}

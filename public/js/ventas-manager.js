@@ -142,19 +142,16 @@ class VentasManager {
 
       if (!tipo) throw new Error('No se pudo determinar el tipo de venta');
 
-      // Obtener precio y calcular proyecciones
+      // Obtener precio (no se calculan ni almacenan proyecciones)
       const planPrice = ventaData.planPrice || this.getPlanPrice(ventaData.plan, tipo);
       if (!planPrice) throw new Error('Precio del plan no encontrado');
 
-      const projections = this.calculateProjections(planPrice);
-
-      // Preparar documento
+      // Preparar documento sin campo `projections`
       const docData = {
         ...ventaData,
         uid,
         tipo,
         planPrice,
-        projections,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
@@ -293,10 +290,10 @@ class VentasManager {
     const { collection, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
     try {
-      // Si se actualiza el precio, recalcular proyecciones
+      // No se recalculan ni almacenan proyecciones al actualizar el precio
       if (updateData.planPrice) {
-        const projections = this.calculateProjections(updateData.planPrice);
-        updateData.projections = projections;
+        // asegurar que planPrice esté presente
+        updateData.planPrice = updateData.planPrice;
       }
 
       updateData.updatedAt = new Date().toISOString();
@@ -356,35 +353,56 @@ class VentasManager {
       const ventasHome = await this.getVentas('home', filtroUID);
       const todasVentas = [...ventasMobile, ...ventasHome];
 
-      // Sumar proyecciones
-      let totalProjection12m = 0;
-      let totalProjectionEndOfYear = 0;
+      // Calcular métricas basadas en `planPrice` (sin proyecciones)
       let totalTerminals = 0;
       let totalAccesorios = 0;
+      let totalRevenue = 0;
+      let totalRevenueMobile = 0;
+      let totalRevenueHome = 0;
+      let totalPrepagoRevenue = 0;
 
-      todasVentas.forEach(venta => {
-        totalProjection12m += venta.projections?.months12 || 0;
-        totalProjectionEndOfYear += venta.projections?.endOfYear || 0;
+      // Ventas móviles
+      ventasMobile.forEach(venta => {
+        const precio = venta.planPrice || 0;
+        totalRevenue += precio;
+        totalRevenueMobile += precio;
 
-        // Contar terminals (solo móvil)
         if (venta.imeis && Array.isArray(venta.imeis)) {
           totalTerminals += venta.imeis.length;
         }
-
-        // Contar accesorios (solo móvil)
         if (venta.accesorios && Array.isArray(venta.accesorios)) {
           totalAccesorios += venta.accesorios.length;
         }
+
+        if (venta.tipoVenta === 'prepago') totalPrepagoRevenue += precio;
+      });
+
+      // Ventas hogar
+      ventasHome.forEach(venta => {
+        const precio = venta.planPrice || 0;
+        totalRevenue += precio;
+        totalRevenueHome += precio;
+
+        if (venta.imeis && Array.isArray(venta.imeis)) {
+          totalTerminals += venta.imeis.length;
+        }
+        if (venta.accesorios && Array.isArray(venta.accesorios)) {
+          totalAccesorios += venta.accesorios.length;
+        }
+
+        if (venta.tipoVenta === 'prepago') totalPrepagoRevenue += precio;
       });
 
       const metricas = {
         totalVentas: todasVentas.length,
         ventasMobile: ventasMobile.length,
         ventasHome: ventasHome.length,
-        totalProjection12m,
-        totalProjectionEndOfYear,
+        totalRevenue,
+        totalRevenueMobile,
+        totalRevenueHome,
+        totalPrepagoRevenue,
         totalTerminals,
-        totalIMEI: totalTerminals, // Alias para IMEIs
+        totalIMEI: totalTerminals,
         totalAccesorios,
         calculatedAt: new Date().toISOString()
       };

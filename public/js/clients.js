@@ -625,6 +625,25 @@ function displayClientDetail(client) {
         `).join('')
         : '<p>No hay interacciones registradas</p>';
     
+    // Calcular contactaciones exitosas en el año actual
+    const currentYear = (new Date()).getFullYear();
+    const successfulThisYear = (client.interactions || []).reduce((count, int) => {
+        try {
+            const dateObj = int.date && typeof int.date.toDate === 'function' ? int.date.toDate() : new Date(int.date);
+            if (String(int.result).toLowerCase() === 'exitoso' && dateObj.getFullYear() === currentYear) return count + 1;
+        } catch (e) {
+            // ignore malformed dates
+        }
+        return count;
+    }, 0);
+
+    const contactCounterHTML = `
+        <p><strong>Contactos ${currentYear}:</strong>
+           <span style="font-weight:bold; ${successfulThisYear < 4 ? 'color: #e53935;' : 'color: #2e7d32;'}">${successfulThisYear}/4</span>
+           ${successfulThisYear < 4 ? '<span style="color:#e53935; margin-left:8px;">⚠️ Faltan contactaciones</span>' : ''}
+        </p>
+    `;
+
     document.getElementById('clientDetailContent').innerHTML = `
         <div class="client-detail-info">
             <h3>📋 Información Personal</h3>
@@ -643,8 +662,8 @@ function displayClientDetail(client) {
             <p><strong>Segmento:</strong> <span class="segment-badge ${client.segmento.toLowerCase()}">${client.segmento}</span></p>
             <p><strong>Score:</strong> ${client.puntajeScore || 'N/A'}</p>
             <p><strong>Categoría:</strong> ${client.categoriaCrediticia || 'N/A'}</p>
+            ${contactCounterHTML}
             <p><strong>Notas:</strong> ${client.notas || 'Ninguna'}</p>
-            
             <h3>📞 Historial de Interacciones</h3>
             ${interactionsHTML}
         </div>
