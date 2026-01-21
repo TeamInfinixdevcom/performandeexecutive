@@ -27,6 +27,7 @@ let currentEditId = null;
 let allClients = [];
 let filteredClients = [];
 let selectedClientId = null;
+let editingInteractionId = null;
 
 // Variables de paginación
 let currentPage = 1;
@@ -631,13 +632,18 @@ function displayClientDetail(client) {
     
     const interactions = client.interactions || [];
     const interactionsHTML = interactions.length > 0 
-        ? interactions.map(int => `
-            <div class="interaction-item">
-                <strong>${int.type}</strong> - ${int.result} 
+        ? interactions.map(int => {
+            const canEdit = int.id; // only interactions with an id can be edited
+            return `
+            <div class="interaction-item" data-int-id="${int.id || ''}">
+                <div class="interaction-header">
+                  <strong>${int.type}</strong> - ${int.result}
+                  ${canEdit ? `<button class="btn btn-small btn-link" onclick="editInteraction('${client.id}','${int.id}')">Editar</button>` : ''}
+                </div>
                 <br><small>${formatDate(int.date)}</small>
                 <p>${int.notes}</p>
-            </div>
-        `).join('')
+            </div>`
+        }).join('')
         : '<p>No hay interacciones registradas</p>';
     
     // Calcular interacciones (cualquier resultado) en el año actual
@@ -763,7 +769,25 @@ async function handleInteractionSubmit(e) {
         if (docSnap.exists()) {
             const client = docSnap.data();
             const interactions = client.interactions || [];
-            interactions.push(interaction);
+            // Assign an id to the interaction so it can be edited later
+            const newId = editingInteractionId || String(Date.now());
+            interaction.id = newId;
+
+            if (editingInteractionId) {
+                // Replace existing interaction with same id
+                const updated = interactions.map(i => String(i.id) === String(editingInteractionId) ? { ...i, ...interaction, date: Timestamp.now() } : i);
+                await updateDoc(clientRef, { interactions: updated, updatedAt: Timestamp.now() });
+                // reset editing state
+                editingInteractionId = null;
+                const cancelBtn = document.getElementById('btnCancelInteractionEdit');
+                if (cancelBtn) cancelBtn.remove();
+            } else {
+                interactions.push(interaction);
+                await updateDoc(clientRef, { 
+                    interactions: interactions,
+                    updatedAt: Timestamp.now()
+                });
+            }
             
             await updateDoc(clientRef, { 
                 interactions: interactions,
@@ -787,6 +811,9 @@ async function handleInteractionSubmit(e) {
             
             showMessage('✅ Interacción registrada exitosamente', 'success');
             interactionForm.reset();
+            // Restore submit button text
+            const submitBtn = interactionForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = 'Registrar Interacción';
             viewClientDetail(selectedClientId); // Recargar detalle
         }
     } catch (error) {
@@ -894,4 +921,58 @@ function formatDate(timestamp) {
     if (!timestamp) return 'N/A';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleString('es-ES');
+}
+
+// Editar interacción: cargarla en el formulario para edición
+window.editInteraction = async function(clientId, interactionId) {
+    try {
+        if (!clientId || !interactionId) return;
+        const docSnap = await getDoc(doc(db, 'clients', clientId));
+        if (!docSnap.exists()) return showMessage('❌ Cliente no encontrado', 'error');
+        const client = docSnap.data();
+        const interaction = (client.interactions || []).find(i => String(i.id) === String(interactionId));
+        if (!interaction) return showMessage('❌ Interacción no encontrada', 'error');
+
+        // Poblar formulario
+        document.getElementById('interactionType').value = interaction.type || '';
+        document.getElementById('interactionNotes').value = interaction.notes || '';
+        document.getElementById('interactionResult').value = interaction.result || '';
+
+        // Estado de edición
+        editingInteractionId = String(interactionId);
+        selectedClientId = clientId;
+
+        // Cambiar texto del submit y mostrar botón cancelar si existe
+        const submitBtn = interactionForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = 'Guardar cambios';
+
+        // Añadir botón cancelar dinámicamente si no existe
+        let cancelBtn = document.getElementById('btnCancelInteractionEdit');
+        if (!cancelBtn) {
+            cancelBtn = document.createElement('button');
+            cancelBtn.id = 'btnCancelInteractionEdit';
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'btn btn-secondary btn-small';
+            cancelBtn.textContent = 'Cancelar edición';
+            cancelBtn.style.marginLeft = '8px';
+            cancelBtn.addEventListener('click', cancelEditInteraction);
+            interactionForm.querySelector('button[type="submit"]').after(cancelBtn);
+        }
+
+        window.scrollTo({ top: interactionForm.offsetTop - 20, behavior: 'smooth' });
+
+    } catch (error) {
+        console.error('Error editInteraction:', error);
+        showMessage('❌ Error al preparar edición', 'error');
+    }
+}
+
+function cancelEditInteraction() {
+    editingInteractionId = null;
+    interactionForm.reset();
+    selectedClientId = null;
+    const submitBtn = interactionForm.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = 'Registrar Interacción';
+    const cancelBtn = document.getElementById('btnCancelInteractionEdit');
+    if (cancelBtn) cancelBtn.remove();
 }
