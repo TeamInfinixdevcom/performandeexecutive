@@ -241,7 +241,9 @@ async function simularDatos() {
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
         
-        const docRef = db.collection('clients').doc();
+        const safeCedula = String(cliente.cedula || '').replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+        const clientId = `${EXECUTIVE_ID}_${safeCedula || 'auto' + Math.floor(Math.random()*1000000)}`;
+        const docRef = db.collection('clients').doc(clientId);
         clientesBatch.set(docRef, clienteData);
         
         console.log(`   ✅ ${cliente.nombre} - ${segmento}`);

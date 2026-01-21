@@ -34,8 +34,9 @@ async function testEditClient() {
             interactions: []
         };
         
-        const docRef = await db.collection('clients').add(nuevoCliente);
-        const clientId = docRef.id;
+        const safeCedula = String(nuevoCliente.cedula || '').replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+        const clientId = `${nuevoCliente.executiveId || 'test'}_${safeCedula || 'auto' + Math.floor(Math.random()*1000000)}`;
+        await db.collection('clients').doc(clientId).set(nuevoCliente);
         console.log(`✅ Cliente creado: ${clientId}`);
         console.log(`📋 Datos originales:`, nuevoCliente);
         console.log('');

@@ -118,8 +118,11 @@ async function createBossAccount() {
       const segment = segments[segmentIndex];
       const clientsInSegment = distribution[segmentIndex];
 
-      for (let i = 0; i < clientsInSegment; i++) {
-        const clientRef = db.collection('clients').doc();
+        for (let i = 0; i < clientsInSegment; i++) {
+        // Use deterministic ID when possible; no cedula available, use an auto suffix
+        const generatedSuffix = `auto${clientCount + 1}`;
+        const clientId = `${bossUID}_${generatedSuffix}`;
+        const clientRef = db.collection('clients').doc(clientId);
         const clientData = {
           name: generateClientName(),
           nombre: generateClientName(), // Mantener ambos campos

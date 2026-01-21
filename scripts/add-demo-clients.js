@@ -124,8 +124,10 @@ async function agregarClientesDemo() {
         updatedAt: admin.firestore.Timestamp.now()
       };
 
-      const docRef = await db.collection('clients').add(clienteData);
-      console.log(`✅ Cliente agregado: ${cliente.nombre} (ID: ${docRef.id})`);
+      const safeCedula = String(cliente.cedula || '').replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+      const clientId = `${executiveId}_${safeCedula || 'auto' + Math.floor(Math.random()*1000000)}`;
+      await db.collection('clients').doc(clientId).set(clienteData);
+      console.log(`✅ Cliente agregado: ${cliente.nombre} (ID: ${clientId})`);
     }
 
     console.log('\n✅ ¡Todos los clientes de demo han sido agregados exitosamente!');

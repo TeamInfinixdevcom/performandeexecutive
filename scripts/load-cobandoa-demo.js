@@ -262,7 +262,9 @@ async function loadData() {
     const clients = generateClients();
     
     for (const client of clients) {
-        const ref = db.collection('clients').doc();
+        const safeCedula = String(client.cedula || '').replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+        const clientId = `${COBANDOA_UID}_${safeCedula || 'auto' + Math.floor(Math.random()*1000000)}`;
+        const ref = db.collection('clients').doc(clientId);
         batch.set(ref, client);
         operaciones++;
         

@@ -272,9 +272,11 @@ async function loadDemoData() {
         const clientesRefs = [];
         
         for (const cliente of clientes) {
-            const ref = db.collection('clients').doc();
+            const safeCedula = String(cliente.cedula || '').replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+            const clientId = `${COBANDOA_UID}_${safeCedula || 'auto' + Math.floor(Math.random()*1000000)}`;
+            const ref = db.collection('clients').doc(clientId);
             clientesBatch.set(ref, cliente);
-            clientesRefs.push({ ...cliente, id: ref.id });
+            clientesRefs.push({ ...cliente, id: clientId });
         }
         await clientesBatch.commit();
         console.log(`   ✓ Creados ${clientes.length} clientes`);
