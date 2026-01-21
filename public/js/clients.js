@@ -91,7 +91,7 @@ if (btnExportClients) {
             'Estado': client.estado,
             'Móviles': Array.isArray(client.serviciosMoviles) ? client.serviciosMoviles.join(', ') : client.serviciosMoviles,
             'Fijos': Array.isArray(client.serviciosFijos) ? client.serviciosFijos.join(', ') : client.serviciosFijos,
-            'Última actualización': client.updatedAt ? (window.safeFormatDate ? window.safeFormatDate(client.updatedAt) : localSafeFormatDate(client.updatedAt)) : ''
+            'Última actualización': (client.updatedAt || client.createdAt) ? (window.safeFormatDate ? window.safeFormatDate(client.updatedAt || client.createdAt) : localSafeFormatDate(client.updatedAt || client.createdAt)) : ''
         }));
         const ws = window.XLSX.utils.json_to_sheet(exportData);
         const wb = window.XLSX.utils.book_new();
@@ -348,7 +348,7 @@ function showPage(pageNum) {
             </div>
             <div class="client-card-footer">
                 <button onclick="viewClientDetail('${safeClient.id}')" class="btn btn-small btn-primary">👁️ Ver Detalle</button>
-                <small>Última actualización: ${window.safeFormatDate ? window.safeFormatDate(client.updatedAt) : localSafeFormatDate(client.updatedAt)}</small>
+                <small>Última actualización: ${window.safeFormatDate ? window.safeFormatDate(client.updatedAt || client.createdAt) : localSafeFormatDate(client.updatedAt || client.createdAt)}</small>
             </div>
         </div>`
     }).join('');
@@ -815,6 +815,8 @@ async function handleInteractionSubmit(e) {
             // Restore submit button text
             const submitBtn = interactionForm.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.textContent = 'Registrar Interacción';
+            // Invalidate clients cache so list shows updated timestamps
+            try { if (currentUser) localStorage.removeItem(`clients_${currentUser.uid}`); } catch(e){}
             viewClientDetail(selectedClientId); // Recargar detalle
         }
     } catch (error) {
@@ -993,6 +995,9 @@ window.deleteInteraction = async function(clientId, interactionId) {
         const filtered = interactions.filter(i => String(i.id) !== String(interactionId));
 
         await updateDoc(clientRef, { interactions: filtered, updatedAt: Timestamp.now() });
+
+        // Invalidate clients cache so list shows updated timestamps
+        try { if (currentUser) localStorage.removeItem(`clients_${currentUser.uid}`); } catch(e){}
 
         // If we were editing this interaction, cancel edit state
         if (editingInteractionId && String(editingInteractionId) === String(interactionId)) {
