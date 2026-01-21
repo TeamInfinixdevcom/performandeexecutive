@@ -634,15 +634,16 @@ function displayClientDetail(client) {
     const interactionsHTML = interactions.length > 0 
         ? interactions.map(int => {
             const canEdit = int.id; // only interactions with an id can be edited
-            return `
-            <div class="interaction-item" data-int-id="${int.id || ''}">
-                <div class="interaction-header">
-                  <strong>${int.type}</strong> - ${int.result}
-                  ${canEdit ? `<button class="btn btn-small btn-link" onclick="editInteraction('${client.id}','${int.id}')">Editar</button>` : ''}
-                </div>
-                <br><small>${formatDate(int.date)}</small>
-                <p>${int.notes}</p>
-            </div>`
+                        return `
+                        <div class="interaction-item" data-int-id="${int.id || ''}">
+                                <div class="interaction-header">
+                                    <strong>${int.type}</strong> - ${int.result}
+                                    ${canEdit ? `<button class="btn btn-small btn-link" onclick="editInteraction('${client.id}','${int.id}')">Editar</button>` : ''}
+                                    ${canEdit ? `<button class="btn btn-small btn-link text-danger" onclick="deleteInteraction('${client.id}','${int.id}')">Borrar</button>` : ''}
+                                </div>
+                                <br><small>${formatDate(int.date)}</small>
+                                <p>${int.notes}</p>
+                        </div>`
         }).join('')
         : '<p>No hay interacciones registradas</p>';
     
@@ -975,4 +976,35 @@ function cancelEditInteraction() {
     if (submitBtn) submitBtn.textContent = 'Registrar Interacción';
     const cancelBtn = document.getElementById('btnCancelInteractionEdit');
     if (cancelBtn) cancelBtn.remove();
+}
+
+// Borrar interacción específica
+window.deleteInteraction = async function(clientId, interactionId) {
+    if (!clientId || !interactionId) return;
+    if (!confirm('¿Eliminar interacción? Esta acción no se puede deshacer.')) return;
+
+    try {
+        const clientRef = doc(db, 'clients', clientId);
+        const snap = await getDoc(clientRef);
+        if (!snap.exists()) return showMessage('❌ Cliente no encontrado', 'error');
+
+        const client = snap.data();
+        const interactions = client.interactions || [];
+        const filtered = interactions.filter(i => String(i.id) !== String(interactionId));
+
+        await updateDoc(clientRef, { interactions: filtered, updatedAt: Timestamp.now() });
+
+        // If we were editing this interaction, cancel edit state
+        if (editingInteractionId && String(editingInteractionId) === String(interactionId)) {
+            cancelEditInteraction();
+        }
+
+        showMessage('✅ Interacción eliminada', 'success');
+        if (selectedClientId === clientId) {
+            viewClientDetail(clientId);
+        }
+    } catch (error) {
+        console.error('Error deleting interaction:', error);
+        showMessage(`❌ Error: ${error.message}`, 'error');
+    }
 }
