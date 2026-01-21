@@ -28,6 +28,12 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
+    // ✅ NUEVA: Verificar si el usuario tiene rol 'cnajera'
+    function isCnajera() {
+      return isSignedIn() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'cnajera';
+    }
+    
     // ✅ NUEVA: Validar datos de cliente
     function isValidClientData() {
       let req = request.resource.data;
@@ -68,10 +74,19 @@ service cloud.firestore {
       // Crear clientes: validar datos y exigir que `executiveId` coincida con el usuario autenticado
       allow create: if isSignedIn() && isValidClientData() && request.resource.data.executiveId == request.auth.uid;
 
-      // Actualizar: solo el executive responsable o admins, y validar datos
+      // Actualizar: permitir dos casos seguros:
+      // 1) El executive responsable o admin pueden hacer actualizaciones completas (validadas por isValidClientData)
+      // 2) El rol `cnajera` (personal de campo) puede actualizar SOLO campos de `interactions` y `updatedAt`
       allow update: if isSignedIn() && (
-        resource.data.executiveId == request.auth.uid || isAdmin()
-      ) && isValidClientData();
+        ( (resource.data.executiveId == request.auth.uid) || isAdmin() ) && isValidClientData()
+        || (
+          isCnajera() &&
+          // No permitir cambios en campos sensibles
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['name','email','executiveId']) &&
+          // Debe estar modificando al menos interactions o updatedAt
+          request.resource.data.diff(resource.data).affectedKeys().hasAny(['interactions','updatedAt'])
+        )
+      );
 
       // Eliminar: solo admin o executive responsable
       allow delete: if isSignedIn() && (
