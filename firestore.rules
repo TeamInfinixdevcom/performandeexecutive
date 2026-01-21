@@ -63,12 +63,14 @@ service cloud.firestore {
     // REGLAS PARA COLECCIÓN 'clients'
     // ============================================
     match /clients/{clientId} {
-      // Permitir lectura del documento al ejecutivo responsable o a admins
+      // Permitir lectura del documento al ejecutivo responsable, admins o personal 'cnajera'
       allow read: if isSignedIn() && (
         // El executive asignado en el documento puede leerlo
         resource.data.executiveId == request.auth.uid
         // Los admins también pueden leer
         || isAdmin()
+        // Las usuarias con rol 'cnajera' pueden leer (opción A)
+        || isCnajera()
       );
 
       // Crear clientes: validar datos y exigir que `executiveId` coincida con el usuario autenticado
