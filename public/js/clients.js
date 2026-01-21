@@ -10,6 +10,7 @@ import {
     getDocs, 
     getDoc,
     doc, 
+    setDoc,
     updateDoc, 
     deleteDoc,
     query,
@@ -569,14 +570,28 @@ async function handleClientSubmit(e) {
             
             showMessage('✅ Cliente actualizado exitosamente', 'success');
         } else {
-            // Crear cliente nuevo
+            // Crear cliente nuevo con ID fijo: `${executiveId}_${cedula}`
             clientData.createdAt = Timestamp.now();
             clientData.interactions = [];
-            const newDoc = await addDoc(collection(db, 'clients'), clientData);
-            
-            // Registrar venta nueva
-            await window.registerNewClientSale?.(clientData, newDoc.id);
-            
+
+            // Normalizar cédula para usar en ID (sin espacios ni caracteres raros)
+            const safeCedula = cedula.replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+            const clientId = `${currentUser.uid}_${safeCedula}`;
+            const clientRef = doc(db, 'clients', clientId);
+
+            // Comprobar si ya existe un cliente con ese ID para este ejecutivo
+            const existing = await getDoc(clientRef);
+            if (existing.exists()) {
+                showMessage('❌ Ya existe un cliente con esa cédula para este ejecutivo.', 'error');
+                return;
+            }
+
+            // Crear el documento con setDoc
+            await setDoc(clientRef, clientData);
+
+            // Registrar venta nueva (si aplica) usando el ID calculado
+            await window.registerNewClientSale?.(clientData, clientId);
+
             showMessage('✅ Cliente agregado exitosamente', 'success');
         }
         
@@ -625,12 +640,12 @@ function displayClientDetail(client) {
         `).join('')
         : '<p>No hay interacciones registradas</p>';
     
-    // Calcular contactaciones exitosas en el año actual
+    // Calcular interacciones (cualquier resultado) en el año actual
     const currentYear = (new Date()).getFullYear();
-    const successfulThisYear = (client.interactions || []).reduce((count, int) => {
+    const interactionsThisYear = (client.interactions || []).reduce((count, int) => {
         try {
             const dateObj = int.date && typeof int.date.toDate === 'function' ? int.date.toDate() : new Date(int.date);
-            if (String(int.result).toLowerCase() === 'exitoso' && dateObj.getFullYear() === currentYear) return count + 1;
+            if (dateObj.getFullYear() === currentYear) return count + 1;
         } catch (e) {
             // ignore malformed dates
         }
@@ -639,8 +654,8 @@ function displayClientDetail(client) {
 
     const contactCounterHTML = `
         <p><strong>Contactos ${currentYear}:</strong>
-           <span style="font-weight:bold; ${successfulThisYear < 4 ? 'color: #e53935;' : 'color: #2e7d32;'}">${successfulThisYear}/4</span>
-           ${successfulThisYear < 4 ? '<span style="color:#e53935; margin-left:8px;">⚠️ Faltan contactaciones</span>' : ''}
+           <span style="font-weight:bold; ${interactionsThisYear < 4 ? 'color: #e53935;' : 'color: #2e7d32;'}">${interactionsThisYear}/4</span>
+           ${interactionsThisYear < 4 ? '<span style="color:#e53935; margin-left:8px;">⚠️ Faltan contactaciones</span>' : ''}
         </p>
     `;
 
