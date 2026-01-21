@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinix Dev - Cargando...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Container principal del splash */
+        .splash-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: splashFadeOut 0.8s ease-in-out 2.8s forwards;
+        }
+
+        /* Animación de fade out del splash */
+        @keyframes splashFadeOut {
+            0% {
+                opacity: 1;
+                visibility: visible;
+            }
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        /* Contenedor central */
+        .splash-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        /* Logo/Imagen con zoom effect */
+        .splash-logo {
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            animation: logoZoom 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes logoZoom {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .splash-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0;
+        }
+
+        /* Título principal */
+        .splash-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #0066ff;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+            animation: textFadeIn 1s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+
+        /* Subtítulo */
+        .splash-subtitle {
+            font-size: 18px;
+            color: #888888;
+            font-weight: 400;
+            margin-bottom: 24px;
+            animation: textFadeIn 1s ease-out 0.9s forwards;
+            opacity: 0;
+        }
+
+        /* Animación de fade-in para textos */
+        @keyframes textFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Caja de información */
+        .splash-info-box {
+            background: rgba(0, 102, 255, 0.08);
+            border: 1px solid rgba(0, 102, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-top: 12px;
+            animation: textFadeIn 1s ease-out 1.2s forwards;
+            opacity: 0;
+            max-width: 400px;
+        }
+
+        .splash-info-box p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #555;
+            margin: 4px 0;
+        }
+
+        .splash-info-box strong {
+            color: #0066ff;
+            font-weight: 600;
+        }
+
+        .splash-copyright {
+            font-size: 11px;
+            color: #999;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Contenedor de puntos de carga */
+        .splash-loader {
+            display: flex;
+            gap: 8px;
+            margin-top: 32px;
+            animation: textFadeIn 1s ease-out 0.9s forwards;
+            opacity: 0;
+        }
+
+        /* Puntos animados */
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #0066ff;
+            animation: dotBounce 1.5s ease-in-out infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        /* Animación de rebote/parpadeo de puntos */
+        @keyframes dotBounce {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Responsive para tablets */
+        @media (max-width: 768px) {
+            .splash-logo {
+                width: 240px;
+                height: 240px;
+            }
+
+            .splash-title {
+                font-size: 36px;
+            }
+
+            .splash-subtitle {
+                font-size: 16px;
+            }
+
+            .splash-info-box {
+                max-width: 300px;
+                padding: 12px 16px;
+            }
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 480px) {
+            .splash-logo {
+                width: 180px;
+                height: 180px;
+                margin-bottom: 16px;
+            }
+
+            .splash-title {
+                font-size: 28px;
+            }
+
+            .splash-subtitle {
+                font-size: 14px;
+            }
+
+            .splash-info-box {
+                max-width: 100%;
+                padding: 12px 16px;
+                margin: 12px 16px 0;
+            }
+
+            .splash-content {
+                gap: 16px;
+            }
+
+            .splash-loader {
+                margin-top: 24px;
+            }
+        }
+
+        /* Prevenir scroll mientras está el splash */
+        body.splash-active {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-container" id="splashScreen">
+        <div class="splash-content">
+            <!-- Logo con zoom effect -->
+            <div class="splash-logo">
+                <img src="/images/INFINIX LOGO.png" alt="Infinix Dev Logo" />
+            </div>
+
+            <!-- Título -->
+            <h1 class="splash-title">Infinix Dev</h1>
+
+            <!-- Subtítulo -->
+            <p class="splash-subtitle">Soluciones Tecnológicas</p>
+
+            <!-- Caja de información -->
+            <div class="splash-info-box">
+                <p><strong>Desarrollado por:</strong> Ruben Madrigal</p>
+                <p><strong>Licencia:</strong> INFINIX-KMS-2025-001</p>
+                <p class="splash-copyright">© 2025 Infinix Dev. Todos los derechos reservados.</p>
+            </div>
+
+            <!-- Loader dots -->
+            <div class="splash-loader">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Remover splash screen después de 3 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const splashScreen = document.getElementById('splashScreen');
+            
+            // Esperar 3 segundos y remover el elemento
+            setTimeout(() => {
+                splashScreen.remove();
+                document.body.classList.remove('splash-active');
+                // Redirigir a la página principal si es necesario
+                // window.location.href = '/';
+            }, 3000);
+
+            // Agregar clase para prevenir scroll
+            document.body.classList.add('splash-active');
+        });
+    </script>
+</body>
+</html>

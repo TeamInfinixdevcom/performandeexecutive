@@ -1,96 +1,134 @@
 /**
- * PROYECCIONES - Análisis monetario y gráficos de ingresos
+ * ============================================================
+ * PROYECCIONES
+ * Análisis monetario + métricas + gráficos (Chart.js)
+ * ============================================================
  */
 
+/* =======================
+   CONSTANTES GLOBALES
+======================= */
+const PROYECCIONES_INTERVAL_MS = 600000; // 10 minutos
+const PROYECCIONES_TAB_SELECTOR = '[data-tab="proyecciones"]';
+
+/* =======================
+   CLASE PRINCIPAL
+======================= */
 class Proyecciones {
+    // =======================
+    // MÉTRICAS POR MES
+    // =======================
+    renderMetricasMensual() {
+      const container = document.getElementById('proyeccionesMetricasMensualContainer');
+      if (!container) return;
+      const selectMes = document.getElementById('selectMesProyeccion');
+      const mes = selectMes ? parseInt(selectMes.value) : (new Date()).getMonth();
+      const year = (new Date()).getFullYear();
+
+      // Filtrar ventas por mes y año
+      const ventasMobileMes = this.ventasMobile.filter(v => {
+        // soportar distintos formatos: string ISO, Firestore Timestamp, o usar createdAt como fallback
+        const raw = v.fecha || v.createdAt;
+        if (!raw) return false;
+        const d = raw && raw.toDate ? raw.toDate() : new Date(raw);
+        if (!d || isNaN(d.getTime())) return false;
+        return d.getMonth() === mes && d.getFullYear() === year;
+      });
+      const ventasHomeMes = this.ventasHome.filter(v => {
+        const raw = v.fecha || v.createdAt;
+        if (!raw) return false;
+        const d = raw && raw.toDate ? raw.toDate() : new Date(raw);
+        if (!d || isNaN(d.getTime())) return false;
+        return d.getMonth() === mes && d.getFullYear() === year;
+      });
+
+      // Prepago y dominio: cantidad y monto
+      const ventasPrepago = ventasMobileMes.filter(v => v.tipoVenta === 'prepago');
+      const ventasDominio = ventasMobileMes.filter(v => v.tipoVenta === 'dominio');
+      const montoPrepago = ventasPrepago.reduce((s, v) => s + (v.planPrice || 0), 0);
+      const montoDominio = ventasDominio.reduce((s, v) => s + (v.planPrice || 0), 0);
+      const accesoriosVendidos = ventasMobileMes.reduce((t, v) => t + (Array.isArray(v.accesorios) ? v.accesorios.length : 0), 0);
+      const imeisVendidos = ventasMobileMes.reduce((t, v) => t + (Array.isArray(v.imeis) ? v.imeis.length : 0), 0);
+
+      const ingresoNuevas = ventasMobileMes.filter(v => v.tipoVenta === 'nueva').reduce((s, v) => s + (v.planPrice || 0), 0);
+      const ingresoRenovacion = ventasMobileMes.filter(v => v.tipoVenta === 'renovacion').reduce((s, v) => s + (v.planPrice || 0), 0);
+      const ingresoHogar = ventasHomeMes.reduce((s, v) => s + (v.planPrice || 0), 0);
+      const totalProyeccion = ingresoNuevas + ingresoRenovacion + ingresoHogar + montoPrepago + montoDominio;
+      const ventasNuevas = ventasMobileMes.filter(v => v.tipoVenta === 'nueva').length;
+      const ventasRenovacion = ventasMobileMes.filter(v => v.tipoVenta === 'renovacion').length;
+      const ventasHogar = ventasHomeMes.length;
+
+      container.innerHTML = `
+        <div class="grid-metricas">
+          ${this._card('Proyección Mes - Venta Nueva', ingresoNuevas, '📈', true, 'card-nueva')}
+          ${this._card('Proyección Mes - Renovación', ingresoRenovacion, '🔄', true, 'card-renovacion')}
+          ${this._card('Proyección Mes - Hogar', ingresoHogar, '🏠', true, 'card-hogar')}
+          ${this._card('Proyección Mes - Prepago', montoPrepago, '💳', true, 'card-prepago')}
+          ${this._card('Proyección Mes - Dominio', montoDominio, '🌐', true, 'card-dominio')}
+          ${this._card('Proyección Mes - Total', totalProyeccion, '🧮', true, 'card-total')}
+          ${this._card('Ventas Nuevas (Mes)', ventasNuevas, '🟢', false, 'card-ventas-nueva')}
+          ${this._card('Ventas Renovación (Mes)', ventasRenovacion, '🟠', false, 'card-ventas-renovacion')}
+          ${this._card('Ventas Hogar (Mes)', ventasHogar, '🏠', false, 'card-ventas-hogar')}
+          ${this._card('Ventas Prepago (Mes)', ventasPrepago.length, '💳', false, 'card-ventas-prepago')}
+          ${this._card('Ventas Dominio (Mes)', ventasDominio.length, '🌐', false, 'card-ventas-dominio')}
+          ${this._card('Accesorios Vendidos (Mes)', accesoriosVendidos, '🎁', false, 'card-accesorios')}
+          ${this._card('IMEIs Vendidos (Mes)', imeisVendidos, '📱', false, 'card-imeis')}
+        </div>
+      `;
+    }
   constructor() {
     this.db = null;
     this.auth = null;
     this.currentUser = null;
+
     this.ventasMobile = [];
     this.ventasHome = [];
+
     this.charts = {};
     this.refreshInterval = null;
     this.intervalActivo = false;
     this.cargando = false;
     this.authUnsubscribe = null;
+
     this._initPromise = this._init();
   }
 
+  /* =======================
+     INICIALIZACIÓN
+  ======================= */
   async _init() {
     try {
-      // LIMPIEZA AGRESIVA: Destruir CUALQUIER intervalo anterior
-      if (window._proyeccionesIntervalId) {
-        clearInterval(window._proyeccionesIntervalId);
-        window._proyeccionesIntervalId = null;
-        console.log('🧹 Intervalo anterior limpiado');
-      }
+      this._limpiarIntervalosGlobales();
 
-      // Esperar a que Firebase global esté disponible
+      // Esperar Firebase
       let attempts = 0;
-      while ((!window.firebaseDb || !window.firebaseAuth) && attempts < 100) {
+      while ((!window.firebaseDb || !window.firebaseAuth) && attempts < 50) {
         await new Promise(r => setTimeout(r, 100));
         attempts++;
       }
 
       if (!window.firebaseDb || !window.firebaseAuth) {
-        throw new Error('Firebase no inicializado en window');
+        throw new Error('Firebase no disponible');
       }
 
       this.db = window.firebaseDb;
       this.auth = window.firebaseAuth;
 
-      // Desuscribir listener anterior si existe
-      if (this.authUnsubscribe) {
-        this.authUnsubscribe();
-      }
+      if (this.authUnsubscribe) this.authUnsubscribe();
 
-      // Registrar listener de autenticación (solo UNA VEZ)
-      this.authUnsubscribe = this.auth.onAuthStateChanged((user) => {
+      this.authUnsubscribe = this.auth.onAuthStateChanged(user => {
         this.currentUser = user;
-        
-        // Detener intervalo anterior SIEMPRE
-        if (this.refreshInterval) {
-          clearInterval(this.refreshInterval);
-          this.refreshInterval = null;
-          this.intervalActivo = false;
-          console.log('🛑 Intervalo anterior detenido');
-        }
+        this._detenerIntervalo();
 
         if (user) {
           this.cargarDatos();
-          
-          // Solo crear intervalo si NO hay uno activo
-          if (!this.intervalActivo) {
-            this.intervalActivo = true;
-            this.refreshInterval = setInterval(() => {
-              // Solo ejecutar si:
-              // 1. El intervalo está activo
-              // 2. La pestaña de Proyecciones está visible
-              // 3. La página del navegador está visible (no en background)
-              if (this.intervalActivo && !document.hidden) {
-                const proyeccionesTab = document.querySelector('[data-tab="proyecciones"]');
-                if (proyeccionesTab && proyeccionesTab.classList.contains('active')) {
-                  console.log('⏰ Intervalo disparado cada 10 minutos');
-                  this.cargarDatos();
-                } else {
-                  console.log('⏭️ Intervalo skip: pestaña no activa');
-                }
-              }
-            }, 600000);  // 10 minutos
-            
-            // Guardar ID globalmente para poder limpiarlo
-            window._proyeccionesIntervalId = this.refreshInterval;
-            console.log('▶️ Intervalo inteligente creado con ID:', this.refreshInterval);
-          } else {
-            console.warn('⚠️ Ya hay un intervalo activo, NO se creará otro');
-          }
+          this._iniciarIntervalo();
         }
       });
 
       console.log('✅ Proyecciones inicializado');
-    } catch (error) {
-      console.error('❌ Error inicializando Proyecciones:', error);
+    } catch (err) {
+      console.error('❌ Error inicializando Proyecciones:', err);
     }
   }
 
@@ -98,554 +136,238 @@ class Proyecciones {
     await this._initPromise;
   }
 
-  /**
-   * Destruir la instancia y limpiar recursos
-   */
-  destroy() {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null;
-      this.intervalActivo = false;
-    }
+  /* =======================
+     INTERVALOS
+  ======================= */
+  _limpiarIntervalosGlobales() {
     if (window._proyeccionesIntervalId) {
       clearInterval(window._proyeccionesIntervalId);
       window._proyeccionesIntervalId = null;
     }
-    if (this.authUnsubscribe) {
-      this.authUnsubscribe();
-      this.authUnsubscribe = null;
-    }
-    console.log('🗑️ Proyecciones: recursos liberados completamente');
   }
 
-  /**
-   * Pausar la actualización automática (cuando se cambia de pestaña)
-   */
-  pausarActualizacion() {
+  _iniciarIntervalo() {
+    if (this.intervalActivo) return;
+
+    this.intervalActivo = true;
+    this.refreshInterval = setInterval(() => {
+      if (document.hidden) return;
+
+      const tab = document.querySelector(PROYECCIONES_TAB_SELECTOR);
+      if (tab && tab.classList.contains('active')) {
+        this.cargarDatos();
+      }
+    }, PROYECCIONES_INTERVAL_MS);
+
+    window._proyeccionesIntervalId = this.refreshInterval;
+    console.log('▶️ Intervalo Proyecciones activo');
+  }
+
+  _detenerIntervalo() {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
       this.intervalActivo = false;
-      if (window._proyeccionesIntervalId) {
-        clearInterval(window._proyeccionesIntervalId);
-        window._proyeccionesIntervalId = null;
-      }
-      console.log('⏸️ Proyecciones: actualización pausada');
     }
+    this._limpiarIntervalosGlobales();
   }
 
-  /**
-   * Reanudar la actualización automática
-   */
-  reanudarActualizacion() {
-    if (!this.intervalActivo && this.currentUser) {
-      this.intervalActivo = true;
-      this.refreshInterval = setInterval(() => {
-        // Solo ejecutar si la página está visible y la pestaña está activa
-        if (this.intervalActivo && !document.hidden) {
-          const proyeccionesTab = document.querySelector('[data-tab="proyecciones"]');
-          if (proyeccionesTab && proyeccionesTab.classList.contains('active')) {
-            this.cargarDatos();
-          }
-        }
-      }, 5000);
-      
-      // Guardar ID globalmente
-      window._proyeccionesIntervalId = this.refreshInterval;
-      console.log('▶️ Proyecciones: actualización reanudada con ID:', this.refreshInterval);
-    }
-    // Silenciosamente ignorar si ya está activo (no es un error)
+  destroy() {
+    this._detenerIntervalo();
+    if (this.authUnsubscribe) this.authUnsubscribe();
+    console.log('🗑️ Proyecciones destruido');
   }
 
-  /**
-   * Cargar datos de ventas
-   */
+  /* =======================
+     CARGA DE DATOS
+  ======================= */
   async cargarDatos() {
+    if (this.cargando || !this.currentUser) return;
+    if (!window.ventasManager) return;
+
     try {
-      // Evitar cargas simultáneas
-      if (this.cargando) {
-        console.log('⏳ Proyecciones: carga ya en progreso, ignorando');
-        return;
-      }
-
-      if (!this.currentUser) return;
-
-      if (!window.ventasManager) {
-        console.warn('⚠️ VentasManager no disponible');
-        return;
-      }
-
       this.cargando = true;
-
       await window.ventasManager.ensure();
 
-      console.log('🔄 Proyecciones: cargando datos...', { 
-        intervalActivo: this.intervalActivo,
-        intervalID: this.refreshInterval,
-        currentUser: this.currentUser?.email 
-      });
-
-      // Cargar ventas SOLO del cache (no forzar refresh a Firestore)
       this.ventasMobile = await window.ventasManager.getVentas('mobile', null, false);
       this.ventasHome = await window.ventasManager.getVentas('home', null, false);
 
-      // Renderizar
       this.renderMetricas();
       this.renderCharts();
-    } catch (error) {
-      console.error('❌ Error cargando datos:', error);
+    } catch (err) {
+      console.error('❌ Error cargando datos:', err);
     } finally {
       this.cargando = false;
     }
   }
 
-  /**
-   * Renderizar tarjetas de métricas
-   */
+  /* =======================
+     MÉTRICAS
+  ======================= */
   renderMetricas() {
+        // Prepago y dominio: cantidad y monto
+        const ventasPrepago = this.ventasMobile.filter(v => v.tipoVenta === 'prepago');
+        const ventasDominio = this.ventasMobile.filter(v => v.tipoVenta === 'dominio');
+        const montoPrepago = ventasPrepago.reduce((s, v) => s + (v.planPrice || 0), 0);
+        const montoDominio = ventasDominio.reduce((s, v) => s + (v.planPrice || 0), 0);
+      const accesoriosVendidos = this.calcularAccesoriosVendidos();
+      const imeisVendidos = this.calcularTerminalesVendidos();
     const container = document.getElementById('proyeccionesMetricasContainer');
     if (!container) return;
 
-    const totalVentas = this.ventasMobile.length + this.ventasHome.length;
-    const ingresoTotal = this.calcularIngresoTotal();
-    const proyeccion12m = this.calcularProyeccion12m();
-    const proyeccionFinAno = this.calcularProyeccionFinAno();
-    const terminalesVendidos = this.calcularTerminalesVendidos();
-    const accesoriosVendidos = this.calcularAccesoriosVendidos();
+    const ingresoNuevas = this._ingresoMobilePorTipo('nueva');
+    const ingresoRenovacion = this._ingresoMobilePorTipo('renovacion');
+    const ingresoHogar = this._ingresoHome();
+    const totalProyeccion = ingresoNuevas * 12 + ingresoRenovacion * 12 + ingresoHogar * 12;
+    const ventasNuevas = this.ventasMobile.filter(v => v.tipoVenta === 'nueva').length;
+    const ventasRenovacion = this.ventasMobile.filter(v => v.tipoVenta === 'renovacion').length;
+    const ventasHogar = this.ventasHome.length;
 
     container.innerHTML = `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px;">
-        <!-- Métrica: Total de Ventas -->
-        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Total de Ventas</p>
-              <h3 style="margin: 8px 0 0 0; font-size: 2.5em;">${totalVentas}</h3>
-              <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 0.9em;">
-                ${this.ventasMobile.length} móvil + ${this.ventasHome.length} hogar
-              </p>
-            </div>
-            <div style="font-size: 2.5em;">💰</div>
-          </div>
-        </div>
-
-        <!-- Métrica: Ingreso Total Actual -->
-        <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 24px; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Ingreso Total Mensual</p>
-              <h3 style="margin: 8px 0 0 0; font-size: 2.5em;">₡${ingresoTotal.toLocaleString()}</h3>
-              <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 0.9em;">
-                Por cada mes de vigencia
-              </p>
-            </div>
-            <div style="font-size: 2.5em;">📊</div>
-          </div>
-        </div>
-
-        <!-- Métrica: Proyección 12 Meses -->
-        <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 24px; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Proyección 12 Meses</p>
-              <h3 style="margin: 8px 0 0 0; font-size: 2.5em;">₡${proyeccion12m.toLocaleString()}</h3>
-              <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 0.9em;">
-                Ingresos estimados
-              </p>
-            </div>
-            <div style="font-size: 2.5em;">📈</div>
-          </div>
-        </div>
-
-        <!-- Métrica: Proyección Fin de Año -->
-        <div class="card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 24px; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Proyección Fin de Año</p>
-              <h3 style="margin: 8px 0 0 0; font-size: 2.5em;">₡${proyeccionFinAno.toLocaleString()}</h3>
-              <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 0.9em;">
-                Hasta diciembre 2026
-              </p>
-            </div>
-            <div style="font-size: 2.5em;">🎯</div>
-          </div>
-        </div>
-
-        <!-- Métrica: Terminales Vendidos (IMEIs) -->
-        <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 24px; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Terminales Vendidos</p>
-              <h3 style="margin: 8px 0 0 0; font-size: 2.5em;">${terminalesVendidos}</h3>
-              <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 0.9em;">
-                IMEIs registrados
-              </p>
-            </div>
-            <div style="font-size: 2.5em;">📱</div>
-          </div>
-        </div>
-
-        <!-- Métrica: Accesorios Vendidos -->
-        <div class="card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: white; padding: 24px; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Accesorios Vendidos</p>
-              <h3 style="margin: 8px 0 0 0; font-size: 2.5em;">${accesoriosVendidos}</h3>
-              <p style="margin: 4px 0 0 0; opacity: 0.8; font-size: 0.9em;">
-                Artículos complementarios
-              </p>
-            </div>
-            <div style="font-size: 2.5em;">🎁</div>
-          </div>
-        </div>
+      <div class="grid-metricas">
+        ${this._card('Proyección 12 Meses - Venta Nueva', ingresoNuevas * 12, '📈', true, 'card-nueva')}
+        ${this._card('Proyección 12 Meses - Renovación', ingresoRenovacion * 12, '🔄', true, 'card-renovacion')}
+        ${this._card('Proyección 12 Meses - Hogar', ingresoHogar * 12, '🏠', true, 'card-hogar')}
+        ${this._card('Proyección 12 Meses - Prepago', montoPrepago * 12, '💳', true, 'card-prepago')}
+        ${this._card('Proyección 12 Meses - Dominio', montoDominio * 12, '🌐', true, 'card-dominio')}
+        ${this._card('Proyección 12 Meses - Total', totalProyeccion, '🧮', true, 'card-total')}
+        ${this._card('Ventas Nuevas (Venta Nueva)', ventasNuevas, '🟢', false, 'card-ventas-nueva')}
+        ${this._card('Ventas Renovación (Renovación)', ventasRenovacion, '🟠', false, 'card-ventas-renovacion')}
+        ${this._card('Ventas Hogar', ventasHogar, '🏠', false, 'card-ventas-hogar')}
+        ${this._card('Ventas Prepago', ventasPrepago.length, '💳', false, 'card-ventas-prepago')}
+        ${this._card('Ventas Dominio', ventasDominio.length, '🌐', false, 'card-ventas-dominio')}
+        ${this._card('Accesorios Vendidos', accesoriosVendidos, '🎁', false, 'card-accesorios')}
+        ${this._card('IMEIs Vendidos', imeisVendidos, '📱', false, 'card-imeis')}
       </div>
     `;
   }
 
-  /**
-   * Renderizar gráficos
-   */
+  _card(title, value, icon, currency = true, extraClass = '') {
+    return `
+      <div class="card ${extraClass}">
+        <h4>${title}</h4>
+        <h2>${currency ? '₡' + value.toLocaleString() : value}</h2>
+        <span>${icon}</span>
+      </div>
+    `;
+  }
+
+  /* =======================
+     GRÁFICOS
+  ======================= */
   renderCharts() {
     const container = document.getElementById('proyeccionesChartsContainer');
-    if (!container) return;
+    if (!container || typeof Chart === 'undefined') return;
 
     container.innerHTML = `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
-        <!-- Gráfico: Ingresos por Tipo de Venta -->
-        <div class="card" style="padding: 24px;">
-          <h3 style="margin-top: 0;">💵 Ingresos por Tipo de Venta</h3>
-          <canvas id="chartIngresosPorTipo" style="max-height: 300px;"></canvas>
-        </div>
-
-        <!-- Gráfico: Distribución de Planes -->
-        <div class="card" style="padding: 24px;">
-          <h3 style="margin-top: 0;">📱 Planes Más Vendidos (Top 5)</h3>
-          <canvas id="chartPlanesMasVendidos" style="max-height: 300px;"></canvas>
-        </div>
-
-        <!-- Gráfico: Proyección Mensual -->
-        <div class="card" style="padding: 24px;">
-          <h3 style="margin-top: 0;">📆 Ingresos Proyectados por Mes (12 Meses)</h3>
-          <canvas id="chartProyeccionMensual" style="max-height: 300px;"></canvas>
-        </div>
-
-        <!-- Gráfico: Evolución Acumulada -->
-        <div class="card" style="padding: 24px;">
-          <h3 style="margin-top: 0;">📊 Ingresos Acumulados</h3>
-          <canvas id="chartIngresoAcumulado" style="max-height: 300px;"></canvas>
-        </div>
+      <div class="charts-card">
+        <canvas id="chartIngresos"></canvas>
+      </div>
+      <div class="charts-card">
+        <canvas id="chartProyeccion"></canvas>
       </div>
     `;
 
-    // Inicializar gráficos después de que el DOM esté listo
     setTimeout(() => {
-      this.crearGraficoIngresosPorTipo();
-      this.crearGraficoPlanesMasVendidos();
-      this.crearGraficoProyeccionMensual();
-      this.crearGraficoIngresoAcumulado();
-    }, 100);
+      this._graficoIngresos();
+      this._graficoProyeccion();
+    }, 50);
   }
 
-  /**
-   * Gráfico 1: Ingresos por tipo de venta (Doughnut)
-   */
-  crearGraficoIngresosPorTipo() {
-    const canvas = document.getElementById('chartIngresosPorTipo');
-    if (!canvas) return;
+  _graficoIngresos() {
+    const ctx = document.getElementById('chartIngresos');
+    if (!ctx) return;
+    if (this.charts.ingresos) this.charts.ingresos.destroy();
 
-    // Destruir gráfico anterior si existe
-    if (this.charts.ingresosPorTipo) this.charts.ingresosPorTipo.destroy();
-
-    const ingresoMobile = this.ventasMobile.reduce((sum, v) => sum + (v.planPrice || 0), 0);
-    const ingresoHome = this.ventasHome.reduce((sum, v) => sum + (v.planPrice || 0), 0);
-
-    this.charts.ingresosPorTipo = new Chart(canvas, {
+    this.charts.ingresos = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['📱 Ventas Móvil', '🏠 Ventas Hogar'],
+        labels: ['Móvil', 'Hogar'],
         datasets: [{
-          data: [ingresoMobile, ingresoHome],
-          backgroundColor: ['#667eea', '#f093fb'],
-          borderColor: '#fff',
-          borderWidth: 2
+          data: [this._ingresoMobileTotal(), this._ingresoHome()],
+          backgroundColor: ['#667eea', '#f093fb']
         }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const value = context.parsed;
-                const total = ingresoMobile + ingresoHome;
-                const percent = ((value / total) * 100).toFixed(1);
-                return `₡${value.toLocaleString()} (${percent}%)`;
-              }
-            }
-          }
-        }
       }
     });
   }
 
-  /**
-   * Gráfico 2: Planes más vendidos (Horizontal Bar)
-   */
-  crearGraficoPlanesMasVendidos() {
-    const canvas = document.getElementById('chartPlanesMasVendidos');
-    if (!canvas) return;
+  _graficoProyeccion() {
+    const ctx = document.getElementById('chartProyeccion');
+    if (!ctx) return;
+    if (this.charts.proyeccion) this.charts.proyeccion.destroy();
 
-    if (this.charts.planesMasVendidos) this.charts.planesMasVendidos.destroy();
-
-    // Agrupar por plan y contar
-    const planesCounts = {};
-    [...this.ventasMobile, ...this.ventasHome].forEach(venta => {
-      const planName = venta.planName || venta.planId || 'Sin nombre';
-      const price = venta.planPrice || 0;
-      if (!planesCounts[planName]) {
-        planesCounts[planName] = { count: 0, totalIngresos: 0 };
-      }
-      planesCounts[planName].count++;
-      planesCounts[planName].totalIngresos += price;
-    });
-
-    // Top 5
-    const top5 = Object.entries(planesCounts)
-      .sort((a, b) => b[1].totalIngresos - a[1].totalIngresos)
-      .slice(0, 5);
-
-    const labels = top5.map(([name]) => name);
-    const ingresos = top5.map(([, data]) => data.totalIngresos);
-    const counts = top5.map(([, data]) => data.count);
-
-    this.charts.planesMasVendidos = new Chart(canvas, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Ingresos Totales',
-          data: ingresos,
-          backgroundColor: '#43e97b',
-          borderColor: '#38f9d7',
-          borderWidth: 2
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const idx = context.dataIndex;
-                const value = context.parsed.x;
-                return `₡${value.toLocaleString()} (${counts[idx]} ventas)`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: {
-              callback: function(value) {
-                return '₡' + value.toLocaleString();
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-
-  /**
-   * Gráfico 3: Proyección mensual (12 meses)
-   */
-  crearGraficoProyeccionMensual() {
-    const canvas = document.getElementById('chartProyeccionMensual');
-    if (!canvas) return;
-
-    if (this.charts.proyeccionMensual) this.charts.proyeccionMensual.destroy();
-
-    // Generar proyección para los próximos 12 meses
-    const hoy = new Date(2026, 0, 4); // Enero 4, 2026
     const meses = [];
-    const proyecciones = [];
+    const valores = [];
+    let base = this.calcularIngresoTotal();
 
     for (let i = 0; i < 12; i++) {
-      const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-      const monthName = fecha.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
-      meses.push(monthName);
-      proyecciones.push(this.calcularIngresoTotal());
+      const d = new Date();
+      d.setMonth(d.getMonth() + i);
+      meses.push(d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }));
+      valores.push(Math.round(base * (1 + i * 0.05)));
     }
 
-    this.charts.proyeccionMensual = new Chart(canvas, {
+    this.charts.proyeccion = new Chart(ctx, {
       type: 'line',
       data: {
         labels: meses,
         datasets: [{
-          label: 'Ingresos Proyectados',
-          data: proyecciones,
+          label: 'Ingreso Proyectado',
+          data: valores,
           borderColor: '#4facfe',
-          backgroundColor: 'rgba(79, 172, 254, 0.1)',
-          borderWidth: 3,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#00f2fe',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 5
+          fill: true
         }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return '₡' + context.parsed.y.toLocaleString();
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            ticks: {
-              callback: function(value) {
-                return '₡' + value.toLocaleString();
-              }
-            }
-          }
-        }
       }
     });
   }
 
-  /**
-   * Gráfico 4: Ingreso acumulado
-   */
-  crearGraficoIngresoAcumulado() {
-    const canvas = document.getElementById('chartIngresoAcumulado');
-    if (!canvas) return;
-
-    if (this.charts.ingresoAcumulado) this.charts.ingresoAcumulado.destroy();
-
-    const hoy = new Date(2026, 0, 4);
-    const meses = [];
-    const acumulados = [];
-    let acumulado = 0;
-
-    for (let i = 0; i < 12; i++) {
-      const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-      const monthName = fecha.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
-      meses.push(monthName);
-      acumulado += this.calcularIngresoTotal();
-      acumulados.push(acumulado);
-    }
-
-    this.charts.ingresoAcumulado = new Chart(canvas, {
-      type: 'bar',
-      data: {
-        labels: meses,
-        datasets: [{
-          label: 'Ingresos Acumulados',
-          data: acumulados,
-          backgroundColor: '#f5576c',
-          borderColor: '#f093fb',
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        indexAxis: undefined,
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return '₡' + context.parsed.y.toLocaleString();
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            ticks: {
-              callback: function(value) {
-                return '₡' + value.toLocaleString();
-              }
-            }
-          }
-        }
-      }
-    });
+  /* =======================
+     CÁLCULOS
+  ======================= */
+  _ingresoMobilePorTipo(tipo) {
+    return this.ventasMobile
+      .filter(v => v.tipoVenta === tipo)
+      .reduce((s, v) => s + (v.planPrice || 0), 0);
   }
 
-  /**
-   * Cálculos monetarios
-   */
+  _ingresoMobileTotal() {
+    return this.ventasMobile.reduce((s, v) => s + (v.planPrice || 0), 0);
+  }
+
+  _ingresoHome() {
+    return this.ventasHome.reduce((s, v) => s + (v.planPrice || 0), 0);
+  }
+
   calcularIngresoTotal() {
-    return [...this.ventasMobile, ...this.ventasHome].reduce((sum, v) => sum + (v.planPrice || 0), 0);
+    return this._ingresoMobileTotal() + this._ingresoHome();
   }
 
-  calcularProyeccion12m() {
-    return this.calcularIngresoTotal() * 12;
-  }
-
-  calcularProyeccionFinAno() {
-    // Desde enero a diciembre = 12 meses
-    return this.calcularIngresoTotal() * 12;
-  }
-
-  /**
-   * Calcular terminales vendidos (IMEIs)
-   */
   calcularTerminalesVendidos() {
-    return this.ventasMobile.reduce((total, venta) => {
-      const imeis = Array.isArray(venta.imeis) ? venta.imeis.length : 0;
-      return total + imeis;
-    }, 0);
+    return this.ventasMobile.reduce((t, v) => t + (Array.isArray(v.imeis) ? v.imeis.length : 0), 0);
   }
 
-  /**
-   * Calcular accesorios vendidos
-   */
   calcularAccesoriosVendidos() {
-    return this.ventasMobile.reduce((total, venta) => {
-      const accesorios = Array.isArray(venta.accesorios) ? venta.accesorios.length : 0;
-      return total + accesorios;
-    }, 0);
+    return this.ventasMobile.reduce((t, v) => t + (Array.isArray(v.accesorios) ? v.accesorios.length : 0), 0);
   }
 
-  /**
-   * Método público para actualizar desde otras clases
-   */
+  /* =======================
+     API PÚBLICA
+  ======================= */
   actualizarDatos(force = false) {
-    // Si se fuerza, siempre recargar (ej. después de eliminar/editar ventas)
-    if (force) {
-      this.cargarDatos();
-      console.log('🔄 Proyecciones actualizadas (forzado)');
-      return;
-    }
+    if (force) return this.cargarDatos();
 
-    // Solo cargar si estamos en la pestaña de proyecciones
-    const proyeccionesTab = document.querySelector('[data-tab="proyecciones"]');
-    if (proyeccionesTab && proyeccionesTab.classList.contains('active')) {
+    const tab = document.querySelector(PROYECCIONES_TAB_SELECTOR);
+    if (tab && tab.classList.contains('active')) {
       this.cargarDatos();
-      console.log('🔄 Proyecciones actualizadas manualmente (pestaña activa)');
-    } else {
-      console.log('⏭️ Proyecciones: actualización omitida (pestaña no activa)');
     }
   }
 }
 
-// Crear instancia global
-window.proyecciones = new Proyecciones();
+/* =======================
+   INSTANCIA GLOBAL
+======================= */
+window.app = window.app || {};
+// Proyecciones deshabilitadas en UI: no inicializamos la instancia
+window.app.proyecciones = null;
 
-console.log('✅ Proyecciones cargado globalmente');
+console.log('ℹ️ Proyecciones deshabilitadas (cards 12m / fin de año removidas)');

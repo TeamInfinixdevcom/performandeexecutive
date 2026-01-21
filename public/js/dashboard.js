@@ -275,7 +275,8 @@ function createDoughnutChart(platino, oro, plata, bronce, black) {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
+                aspectRatio: 1,
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -284,6 +285,9 @@ function createDoughnutChart(platino, oro, plata, bronce, black) {
                             font: { size: 13 }
                         }
                     }
+                },
+                layout: {
+                    padding: 12
                 }
             }
         });
@@ -334,7 +338,8 @@ function createBarChart(platino, oro, plata, bronce, black) {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
+                aspectRatio: 1.4,
                 plugins: {
                     legend: {
                         display: false

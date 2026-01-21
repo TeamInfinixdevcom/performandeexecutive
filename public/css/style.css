@@ -1665,14 +1665,19 @@ footer p {
     margin-top: 24px;
 }
 
+.chart-wrapper {
+    position: relative;
+    min-height: 320px;
+}
+
 .chart-card {
     background: var(--card-bg);
     border: 1px solid var(--separator);
     border-radius: 14px;
     padding: 20px 18px 26px 18px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    transition: all 0.3s var(--timing-smooth);
-    cursor: pointer;
+    transition: box-shadow 0.3s var(--timing-smooth);
+    cursor: default;
     position: relative;
     overflow: hidden;
 }
@@ -1684,8 +1689,8 @@ footer p {
 
 .chart-card:hover {
     box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    transform: translateY(-3px);
     border-color: var(--primary);
+    transform: none;
 }
 
 .chart-card h3 {
@@ -1700,6 +1705,16 @@ footer p {
     width: 100%;
     height: 350px;
     display: block;
+}
+
+@media (max-width: 1280px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card canvas {
+        height: 320px;
+    }
 }
 
 /* Expandible Chart Styles */

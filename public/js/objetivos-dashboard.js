@@ -101,12 +101,7 @@ class ObjetivosDashboard {
           <div style="font-size: 0.85em; opacity: 0.85;">Móvil: ${ventasMobile.length} | Hogar: ${ventasHome.length}</div>
         </div>
 
-        <!-- Proyección 12 Meses -->
-        <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px;">Proyección 12 Meses</div>
-          <div style="font-size: 2em; font-weight: bold; margin-bottom: 4px;">₡${proyeccion12m.toLocaleString()}</div>
-          <div style="font-size: 0.85em; opacity: 0.85;">Ingreso proyectado anual</div>
-        </div>
+        <!-- Proyección 12 Meses eliminada del UI -->
 
         <!-- Terminales Vendidos -->
         <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -143,11 +138,7 @@ class ObjetivosDashboard {
           <canvas id="chartTipoVentas" style="max-height: 300px;"></canvas>
         </div>
 
-        <!-- Gráfica 2: Proyección -->
-        <div class="card" style="padding: 16px;">
-          <h3 style="margin-top: 0; margin-bottom: 16px;">💰 Proyección de Ingresos</h3>
-          <canvas id="chartProyecciones" style="max-height: 300px;"></canvas>
-        </div>
+        <!-- Gráfica de Proyección eliminada del UI -->
 
         <!-- Gráfica 3: Top Planes Móviles -->
         <div class="card" style="padding: 16px;">
@@ -179,8 +170,7 @@ class ObjetivosDashboard {
     // Gráfica 1: Móvil vs Hogar
     this.createChartTipoVentas(ventasMobile, ventasHome);
 
-    // Gráfica 2: Proyecciones
-    this.createChartProyecciones(ventasMobile, ventasHome);
+    // Gráfica 2: Proyecciones eliminada del UI (no se crea)
 
     // Gráfica 3: Top Planes Móviles
     this.createChartPlanesMobile(ventasMobile);

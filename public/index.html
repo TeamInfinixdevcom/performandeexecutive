@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/calls-styles.css">
     <link rel="stylesheet" href="css/sales-styles.css">
+    <link rel="stylesheet" href="css/proyecciones.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         /* Tabs wrapper and "Más" dropdown */
@@ -45,6 +46,7 @@
     </style>
 </head>
 <body>
+
     <div class="container">
         <header>
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
@@ -62,7 +64,7 @@
                         </span>
                     </p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
-                        <button id="btnAdminPanel" class="btn btn-warning apple-btn" style="padding: 8px 14px; display: none; font-size: 0.9rem;" onclick="window.location.href='admin.html'">
+                        <button id="btnAdminPanel" class="btn btn-warning apple-btn" style="padding: 8px 14px; font-size: 0.9rem; display: none !important;" onclick="window.location.href='admin.html'">
                             👨‍💼 Panel Admin
                         </button>
                         <button id="btnLogout" class="btn btn-secondary apple-btn" style="padding: 8px 14px; font-size: 0.9rem;" onclick="logoutUser()">
@@ -83,7 +85,7 @@
                     <button class="tab-btn" data-tab="listaEspera" onclick="switchTab('listaEspera')">⏳ Lista de Espera</button>
                     <button class="tab-btn" data-tab="objetivos" onclick="switchTab('objetivos')">🎯 Objetivos</button>
                     <button class="tab-btn" data-tab="misventas" onclick="switchTab('misventas')">📋 Mis Ventas</button>
-                    <button class="tab-btn" data-tab="todasventas" onclick="switchTab('todasventas')" id="btnTodasVentas" style="display: none;">🌐 Todas las Ventas</button>
+                    <button class="tab-btn" data-tab="todasventas" onclick="switchTab('todasventas')" id="btnTodasVentas" style="display: none !important;">🌐 Todas las Ventas</button>
                     <button class="tab-btn" data-tab="proyecciones" onclick="switchTab('proyecciones')">📈 Proyecciones</button>
                     <button class="tab-btn" data-tab="contactacionWhatsapp" onclick="switchTab('contactacionWhatsapp')">💬 Contactación WhatsApp</button>
                 </div>
@@ -370,12 +372,37 @@
                 <section class="form-section">
                     <h2 style="margin-bottom: 8px;">📈 Proyecciones Monetarias</h2>
                     <p style="color: #666; margin-bottom: 24px;">Visualiza tus proyecciones de ingresos basadas en tus ventas registradas</p>
-                    
-                    <!-- Métricas de resumen -->
-                    <div id="proyeccionesMetricasContainer"></div>
-                    
-                    <!-- Gráficos -->
-                    <div id="proyeccionesChartsContainer"></div>
+                    <!-- Tabs internas para anual/mensual -->
+                    <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                        <button id="btnProyeccionAnual" class="tab-btn active" onclick="switchProyeccionTab('anual')">Anual</button>
+                        <button id="btnProyeccionMensual" class="tab-btn" onclick="switchProyeccionTab('mensual')">Por Mes</button>
+                    </div>
+                    <!-- Contenido anual (por defecto visible) -->
+                    <div id="proyeccionAnualSection">
+                        <div id="proyeccionesMetricasContainer"></div>
+                        <div id="proyeccionesChartsContainer"></div>
+                    </div>
+                    <!-- Contenido mensual (oculto por defecto) -->
+                    <div id="proyeccionMensualSection" style="display:none;">
+                        <div style="margin-bottom: 18px;">
+                            <label for="selectMesProyeccion" style="font-weight:600; margin-right:8px;">Selecciona Mes:</label>
+                            <select id="selectMesProyeccion">
+                                <option value="0">Enero</option>
+                                <option value="1">Febrero</option>
+                                <option value="2">Marzo</option>
+                                <option value="3">Abril</option>
+                                <option value="4">Mayo</option>
+                                <option value="5">Junio</option>
+                                <option value="6">Julio</option>
+                                <option value="7">Agosto</option>
+                                <option value="8">Septiembre</option>
+                                <option value="9">Octubre</option>
+                                <option value="10">Noviembre</option>
+                                <option value="11">Diciembre</option>
+                            </select>
+                        </div>
+                        <div id="proyeccionesMetricasMensualContainer"></div>
+                    </div>
                 </section>
             </div>
 
@@ -402,6 +429,10 @@
                                     <option value="home">🏠 Hogar</option>
                                 </select>
                             </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">🔍 Buscar (pedido / cédula / cliente):</label>
+                                    <input id="filtroBusquedaVentas" type="text" class="form-input" placeholder="KO-123, 0101, nombre cliente" oninput="window.todasVentas?.aplicarFiltros()" />
+                                </div>
                         </div>
                     </div>
                     
@@ -801,7 +832,7 @@
     <script type="module" src="js/init-master.js"></script>
     
     <!-- Script de autenticación -->
-    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/auth.js?v=20260107_2"></script>
     
     <script src="js/load-metrics.js"></script>
     
@@ -914,6 +945,38 @@
                 alert('Error al cerrar sesión: ' + error.message);
             }
         }
+
+        function switchProyeccionTab(tab) {
+            const anual = document.getElementById('proyeccionAnualSection');
+            const mensual = document.getElementById('proyeccionMensualSection');
+            const btnAnual = document.getElementById('btnProyeccionAnual');
+            const btnMensual = document.getElementById('btnProyeccionMensual');
+            if(tab === 'anual') {
+                anual.style.display = '';
+                mensual.style.display = 'none';
+                btnAnual.classList.add('active');
+                btnMensual.classList.remove('active');
+            } else {
+                anual.style.display = 'none';
+                mensual.style.display = '';
+                btnAnual.classList.remove('active');
+                btnMensual.classList.add('active');
+                if(window.app && window.app.proyecciones && typeof window.app.proyecciones.renderMetricasMensual === 'function') {
+                    window.app.proyecciones.renderMetricasMensual();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectMes = document.getElementById('selectMesProyeccion');
+            if(selectMes) {
+                selectMes.addEventListener('change', function() {
+                    if(window.app && window.app.proyecciones && typeof window.app.proyecciones.renderMetricasMensual === 'function') {
+                        window.app.proyecciones.renderMetricasMensual();
+                    }
+                });
+            }
+        });
     </script>
 
     <!-- Scripts de Seguridad y Monitoreo -->

@@ -144,18 +144,9 @@ class SalesForm {
       const precioInput = document.getElementById('planPrice');
       if (precioInput) precioInput.value = precio;
 
-      // Calcular y mostrar proyecciones
-      const projections = this.ventasManager.calculateProjections(parseInt(precio));
+      // No mostrar proyecciones en el formulario: mantener el contenedor vacío
       const projectionDisplay = document.getElementById('projectionDisplay');
-      if (projectionDisplay) {
-        projectionDisplay.innerHTML = `
-          <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 10px;">
-            <h4 style="margin: 0 0 10px 0;">📊 Proyecciones (Plan: ₡${parseInt(precio).toLocaleString('es-CR')})</h4>
-            <p style="margin: 5px 0;"><strong>12 meses:</strong> ₡${projections.months12.toLocaleString('es-CR')}</p>
-            <p style="margin: 5px 0;"><strong>Hasta fin de año:</strong> ₡${projections.endOfYear.toLocaleString('es-CR')}</p>
-          </div>
-        `;
-      }
+      if (projectionDisplay) projectionDisplay.innerHTML = '';
     }
   }
 

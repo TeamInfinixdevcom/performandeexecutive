@@ -11,7 +11,8 @@ class TodasVentas {
     this.paginaActual = 1;
     this.filtros = {
       usuario: '',
-      tipo: ''
+      tipo: '',
+      busqueda: ''
     };
     this.limiteCargaInicial = 100; // Solo 100 ventas iniciales
     this.limiteMaximo = 2000; // Máximo si se pide "Cargar más"
@@ -96,7 +97,8 @@ class TodasVentas {
           const { ventas, usuarios, timestamp } = JSON.parse(cached);
           const age = Date.now() - timestamp;
           
-          if (age < CACHE_TIME) {
+          const cacheEmpty = !ventas || ventas.length === 0;
+          if (age < CACHE_TIME && !cacheEmpty) {
             console.log(`📦 Cache hit: ${ventas.length} ventas (${Math.round(age/1000)}s ago) - AHORRO $$`);
             this.ventas = ventas;
             this.usuarios = new Map(usuarios);
@@ -106,7 +108,7 @@ class TodasVentas {
             this.renderizar();
             return;
           } else {
-            console.log(`⏰ Cache expirado (${Math.round(age/1000)}s), recargando...`);
+            console.log(`⏰ Cache expirado o vacío (${cacheEmpty ? 'sin datos' : Math.round(age/1000) + 's'}), recargando...`);
           }
         } catch (e) {
           console.warn('⚠️ Cache corrupto, limpiando...');
@@ -227,12 +229,36 @@ class TodasVentas {
     const LIMIT = limite || this.limiteCargaInicial; // 100 inicial, más si se pide
     
     const ventasCollection = this.collection(this.db, coleccion);
-    const q = this.query(
-      ventasCollection,
-      this.orderBy('fecha', 'desc'),
-      this.limit(LIMIT)
-    );
-    const snapshot = await this.getDocs(q);
+    let snapshot;
+
+    // Intento 1: ordenar por createdAt (campo nuevo estándar)
+    try {
+      const q1 = this.query(
+        ventasCollection,
+        this.orderBy('createdAt', 'desc'),
+        this.limit(LIMIT)
+      );
+      snapshot = await this.getDocs(q1);
+    } catch (e1) {
+      console.warn('⚠️ No se pudo ordenar por createdAt, probando por fecha:', e1?.message || e1);
+      try {
+        // Intento 2: ordenar por fecha (campo legacy)
+        const q2 = this.query(
+          ventasCollection,
+          this.orderBy('fecha', 'desc'),
+          this.limit(LIMIT)
+        );
+        snapshot = await this.getDocs(q2);
+      } catch (e2) {
+        console.warn('⚠️ No se pudo ordenar por fecha, usando sin orden:', e2?.message || e2);
+        // Intento 3: sin orderBy (cualquier orden)
+        const q3 = this.query(
+          ventasCollection,
+          this.limit(LIMIT)
+        );
+        snapshot = await this.getDocs(q3);
+      }
+    }
 
     const ventas = [];
     snapshot.forEach(doc => {
@@ -253,7 +279,7 @@ class TodasVentas {
       }
     }
     
-    // Verificar si hay más ventas
+    // Verificar si hay más ventas (si cargó menos que el límite, asumimos no hay más)
     if (ventas.length < LIMIT) {
       this.hayMasVentas = false;
     }
@@ -269,6 +295,7 @@ class TodasVentas {
   aplicarFiltros() {
     this.filtros.usuario = document.getElementById('filtroUsuarioTodasVentas')?.value || '';
     this.filtros.tipo = document.getElementById('filtroTipoTodasVentas')?.value || '';
+    this.filtros.busqueda = (document.getElementById('filtroBusquedaVentas')?.value || '').toLowerCase().trim();
     this.paginaActual = 1;
     this.renderizar();
   }
@@ -287,6 +314,17 @@ class TodasVentas {
     // Filtrar por tipo
     if (this.filtros.tipo) {
       ventasFiltradas = ventasFiltradas.filter(v => v.tipo === this.filtros.tipo);
+    }
+
+    // Búsqueda por número de pedido, cédula o nombre cliente
+    if (this.filtros.busqueda) {
+      const term = this.filtros.busqueda;
+      ventasFiltradas = ventasFiltradas.filter(v => {
+        const pedido = (v.numeroPedido || v.homeNumber || '').toString().toLowerCase();
+        const cedula = (v.cedulaCliente || '').toString().toLowerCase();
+        const nombre = (v.customerName || v.nombreCliente || '').toString().toLowerCase();
+        return pedido.includes(term) || cedula.includes(term) || nombre.includes(term);
+      });
     }
 
     return ventasFiltradas;
@@ -396,8 +434,7 @@ class TodasVentas {
    */
   renderVenta(venta) {
     const usuario = this.usuarios.get(venta.uid) || { nombre: 'Usuario desconocido', region: 'N/A' };
-    const fecha = venta.fecha?.toDate ? venta.fecha.toDate() : new Date(venta.fecha);
-    const fechaStr = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const fechaStr = this.formatearFecha(venta);
     const isMobile = venta.tipo === 'mobile';
     const color = isMobile ? '#667eea' : '#f5576c';
     const icon = isMobile ? '📱' : '🏠';
@@ -467,6 +504,27 @@ class TodasVentas {
         ` : ''}
       </div>
     `;
+  }
+
+  /**
+   * Formatear fecha de venta con fallbacks
+   */
+  formatearFecha(venta) {
+    const candidates = [venta.fecha, venta.createdAt, venta.updatedAt];
+
+    for (const val of candidates) {
+      if (!val) continue;
+      try {
+        const d = val.toDate ? val.toDate() : new Date(val);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+      } catch (e) {
+        // ignore and try next
+      }
+    }
+
+    return 'Sin fecha';
   }
 
   /**

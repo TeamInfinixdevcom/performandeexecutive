@@ -243,16 +243,7 @@ class SalesList {
           </tbody>
         </table>
 
-        <!-- PROYECCIONES -->
-        <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px;">
-          <p style="margin: 0 0 8px 0; color: #2e7d32;"><strong>📊 Proyecciones:</strong></p>
-          <p style="margin: 4px 0; color: #555;">
-            <strong>12 meses:</strong> ₡${venta.projections?.months12?.toLocaleString('es-CR') || '0'}
-          </p>
-          <p style="margin: 4px 0; color: #555;">
-            <strong>Fin de año:</strong> ₡${venta.projections?.endOfYear?.toLocaleString('es-CR') || '0'}
-          </p>
-        </div>
+        <!-- Proyecciones eliminado del UI -->
 
         <!-- FECHA -->
         <p style="margin: 0; color: #999; font-size: 12px;">📅 ${new Date(venta.createdAt).toLocaleDateString('es-CR')}</p>

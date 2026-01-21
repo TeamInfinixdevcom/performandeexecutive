@@ -6,13 +6,15 @@
  */
 
 const admin = require('firebase-admin');
+const path = require('path');
 
-// Inicializar Firebase Admin
-const serviceAccount = require('./executiveperformancek-firebase-adminsdk-fbsvc-6d4e7aa3bd.json');
+// Inicializar Firebase Admin (usar las credenciales del proyecto)
+const serviceAccountPath = path.join(__dirname, '../firebase-SEGURO.json');
+const serviceAccount = require(serviceAccountPath);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  projectId: 'executiveperformancek'
+  databaseURL: 'https://executiveperformancek.firebaseio.com'
 });
 
 const db = admin.firestore();

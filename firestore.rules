@@ -28,20 +28,6 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
-    // ✅ NUEVA: Verificar si el usuario tiene documento en Firestore
-    function hasUserDocument() {
-      return isSignedIn() && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-    
-    // ✅ NUEVA: Verificar si el usuario está activo (con fallback)
-    function isActiveUser() {
-      return isSignedIn() && (
-        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isActive', true) == true
-      );
-    }
-    
     // ✅ NUEVA: Validar datos de cliente
     function isValidClientData() {
       let req = request.resource.data;
@@ -49,21 +35,6 @@ service cloud.firestore {
              req.name is string && req.name.size() > 0 && req.name.size() <= 100 &&
              req.email is string && req.email.matches('.*@.*\\..*') &&
              req.executiveId is string && req.executiveId.size() > 0;
-    }
-    
-    // ✅ NUEVA: Validar datos de venta
-    function isValidSalesData() {
-      let req = request.resource.data;
-      return req.keys().hasAll(['amount', 'executiveId']) &&
-             req.amount is number && req.amount > 0 &&
-             req.executiveId is string && req.executiveId.size() > 0;
-    }
-    
-    // ✅ NUEVA: Validar datos de meta
-    function isValidGoalData() {
-      let req = request.resource.data;
-      return req.keys().hasAll(['target', 'period']) &&
-             req.target is number && req.target > 0;
     }
     
     // ============================================
@@ -86,42 +57,31 @@ service cloud.firestore {
     // REGLAS PARA COLECCIÓN 'clients'
     // ============================================
     match /clients/{clientId} {
-      // ✅ SIMPLIFICADO: Todos los usuarios autenticados pueden leer/escribir clientes
-      allow read, write: if isSignedIn();
-      
-      // ✅ VALIDACIÓN ADICIONAL: Para crear clientes, validar datos
-      allow create: if isSignedIn() && isValidClientData();
-      
-      // ✅ VALIDACIÓN ADICIONAL: Para actualizar clientes, validar datos  
-      allow update: if isSignedIn() && isValidClientData();
-      
-      // Los admins tienen acceso completo
-      allow read, write: if isAdmin();
+      // Permitir lectura del documento al ejecutivo responsable o a admins
+      allow read: if isSignedIn() && (
+        // El executive asignado en el documento puede leerlo
+        resource.data.executiveId == request.auth.uid
+        // Los admins también pueden leer
+        || isAdmin()
+      );
+
+      // Crear clientes: validar datos y exigir que `executiveId` coincida con el usuario autenticado
+      allow create: if isSignedIn() && isValidClientData() && request.resource.data.executiveId == request.auth.uid;
+
+      // Actualizar: solo el executive responsable o admins, y validar datos
+      allow update: if isSignedIn() && (
+        resource.data.executiveId == request.auth.uid || isAdmin()
+      ) && isValidClientData();
+
+      // Eliminar: solo admin o executive responsable
+      allow delete: if isSignedIn() && (
+        resource.data.executiveId == request.auth.uid || isAdmin()
+      );
     }
-    
-    // Permitir listar clientes (paginación)
+
+    // Permitir listar (queries) a usuarios autenticados; las queries deben usar filtros
     match /clients/{document=**} {
       allow list: if isSignedIn();
-    }
-    
-    // ============================================
-    // REGLAS PARA COLECCIÓN 'ventas' (Sales Records)
-    // ============================================
-    match /ventas/{ventaId} {
-      // Los usuarios pueden leer solo sus propias ventas
-      allow read, list: if isSignedIn() && 
-                           resource.data.executiveId == request.auth.uid;
-      
-      // Los usuarios pueden crear ventas asignadas a sí mismos
-      allow create: if isSignedIn() && 
-                       request.resource.data.executiveId == request.auth.uid;
-      
-      // Los usuarios pueden actualizar/eliminar solo sus propias ventas
-      allow update, delete: if isSignedIn() && 
-                               resource.data.executiveId == request.auth.uid;
-      
-      // Los admins tienen acceso completo
-      allow read, write: if isAdmin();
     }
 
     // ============================================
@@ -261,7 +221,12 @@ service cloud.firestore {
       // Cada usuario puede leer solo sus propias ventas
       allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
       // Cada usuario puede actualizar y eliminar solo sus propias ventas
+      // Permitir actualizar/eliminar solo si la venta es del usuario (uid establecido)
       allow update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+      // Fallback limitado: ventas legacy sin uid pero con executiveId del usuario
+      allow update, delete: if isSignedIn()
+                && !resource.data.keys().hasAny(['uid'])
+                && resource.data.executiveId == request.auth.uid;
       // Los admins pueden leer, crear, actualizar y eliminar todas las ventas
       allow read, write: if isAdmin();
     }
@@ -275,7 +240,13 @@ service cloud.firestore {
       // Cada usuario puede leer solo sus propias ventas
       allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
       // Cada usuario puede actualizar y eliminar solo sus propias ventas
+      // Permitir actualizar/eliminar cuando el documento ya tiene uid correcto
       allow update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+      // ⚠️ Fallback para datos antiguos sin campo uid: permitir que el propio usuario lo reclame
+      // Usamos resource.data para que también funcione en delete (request.resource es null en deletes)
+      allow update, delete: if isSignedIn()
+                            && !resource.data.keys().hasAny(['uid'])
+                            && resource.data.executiveId == request.auth.uid;
       // Los admins pueden leer, crear, actualizar y eliminar todas las ventas
       allow read, write: if isAdmin();
     }

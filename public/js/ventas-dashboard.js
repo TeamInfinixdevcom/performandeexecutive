@@ -184,24 +184,24 @@ class VentasDashboard {
     const container = document.getElementById('ventasDashboardMetricas');
     if (!container) return;
 
-    const { totalVentas, totalProjection12m, totalProjectionEndOfYear, totalTerminals, totalAccesorios } = this.metricas;
+    const { totalVentas, totalProjectionEndOfYear, totalTerminals, totalAccesorios, totalRevenue, totalPrepagoRevenue } = this.metricas;
 
     container.innerHTML = `
       <!-- TARJETAS DE MÉTRICAS POR DINERO -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
         
-        <!-- Tarjeta: Total Proyección 12 Meses -->
+        <!-- Tarjeta: Total Ingresos -->
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">📊 PROYECCIÓN 12 MESES</div>
-          <div style="font-size: 28px; font-weight: bold;">₡${totalProjection12m.toLocaleString('es-CR')}</div>
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">💰 TOTAL INGRESOS</div>
+          <div style="font-size: 28px; font-weight: bold;">₡${(totalRevenue || 0).toLocaleString('es-CR')}</div>
           <div style="font-size: 11px; opacity: 0.8; margin-top: 8px;">${totalVentas} venta(s) registrada(s)</div>
         </div>
 
-        <!-- Tarjeta: Total Proyección Fin de Año -->
+        <!-- Tarjeta: Total Prepago -->
         <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">📅 PROYECCIÓN FIN DE AÑO</div>
-          <div style="font-size: 28px; font-weight: bold;">₡${totalProjectionEndOfYear.toLocaleString('es-CR')}</div>
-          <div style="font-size: 11px; opacity: 0.8; margin-top: 8px;">Meses restantes del año 2026</div>
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">💳 TOTAL PREPAGO</div>
+          <div style="font-size: 28px; font-weight: bold;">₡${(totalPrepagoRevenue || 0).toLocaleString('es-CR')}</div>
+          <div style="font-size: 11px; opacity: 0.8; margin-top: 8px;">Acumulado de ventas prepago</div>
         </div>
 
         <!-- Tarjeta: Total Terminales -->
@@ -227,11 +227,7 @@ class VentasDashboard {
 
       </div>
 
-      <!-- GRÁFICO DE PROYECCIONES -->
-      <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
-        <h3 style="margin: 0 0 20px 0; color: #1976D2; font-size: 18px;">💰 Comparativa de Proyecciones</h3>
-        <canvas id="ventasProjectionChart" style="max-height: 300px;"></canvas>
-      </div>
+      <!-- GRÁFICO DE PROYECCIONES eliminado del UI -->
 
       <!-- DESGLOSE POR TIPO DE VENTA -->
       <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -241,7 +237,7 @@ class VentasDashboard {
             <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
               <th style="padding: 12px; text-align: left; font-weight: bold;">Tipo</th>
               <th style="padding: 12px; text-align: center; font-weight: bold;">Cantidad</th>
-              <th style="padding: 12px; text-align: right; font-weight: bold;">Proyección 12m</th>
+              <th style="padding: 12px; text-align: right; font-weight: bold;">Total Ingresos</th>
               <th style="padding: 12px; text-align: right; font-weight: bold;">Promedio/Venta</th>
             </tr>
           </thead>
@@ -249,14 +245,14 @@ class VentasDashboard {
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 12px; color: #333;"><strong>📱 Móvil</strong></td>
               <td style="padding: 12px; text-align: center; color: #666;">${this.metricas.ventasMobile}</td>
-              <td style="padding: 12px; text-align: right; font-weight: bold; color: #4CAF50;">₡${this.calcularProyeccionMobile().toLocaleString('es-CR')}</td>
-              <td style="padding: 12px; text-align: right; color: #666;">${this.metricas.ventasMobile > 0 ? '₡' + (this.calcularProyeccionMobile() / this.metricas.ventasMobile).toLocaleString('es-CR') : '₡0'}</td>
+              <td style="padding: 12px; text-align: right; font-weight: bold; color: #4CAF50;">₡${(this.metricas.totalRevenueMobile || 0).toLocaleString('es-CR')}</td>
+              <td style="padding: 12px; text-align: right; color: #666;">${this.metricas.ventasMobile > 0 ? '₡' + Math.round((this.metricas.totalRevenueMobile || 0) / this.metricas.ventasMobile).toLocaleString('es-CR') : '₡0'}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 12px; color: #333;"><strong>🏠 Hogar</strong></td>
               <td style="padding: 12px; text-align: center; color: #666;">${this.metricas.ventasHome}</td>
-              <td style="padding: 12px; text-align: right; font-weight: bold; color: #2196F3;">₡${this.calcularProyeccionHome().toLocaleString('es-CR')}</td>
-              <td style="padding: 12px; text-align: right; color: #666;">${this.metricas.ventasHome > 0 ? '₡' + (this.calcularProyeccionHome() / this.metricas.ventasHome).toLocaleString('es-CR') : '₡0'}</td>
+              <td style="padding: 12px; text-align: right; font-weight: bold; color: #2196F3;">₡${(this.metricas.totalRevenueHome || 0).toLocaleString('es-CR')}</td>
+              <td style="padding: 12px; text-align: right; color: #666;">${this.metricas.ventasHome > 0 ? '₡' + Math.round((this.metricas.totalRevenueHome || 0) / this.metricas.ventasHome).toLocaleString('es-CR') : '₡0'}</td>
             </tr>
           </tbody>
         </table>
@@ -268,28 +264,23 @@ class VentasDashboard {
       </div>
     `;
 
-    // Renderizar gráfico si está disponible Chart.js
-    if (typeof Chart !== 'undefined') {
-      this.renderProjectionChart();
-    }
+    // Gráfico de proyecciones eliminado: no se inicializa
   }
 
   /**
    * Calcular proyección de ventas móviles
    */
   calcularProyeccionMobile() {
-    if (!this.metricas || this.metricas.ventasMobile === 0) return 0;
-    // Se calcula desde los datos de ventas en Firestore
-    return this.metricas.totalProjection12m * 0.6; // Aproximado (ajustar según datos reales)
+    if (!this.metricas) return 0;
+    return this.metricas.totalRevenueMobile || 0;
   }
 
   /**
    * Calcular proyección de ventas hogar
    */
   calcularProyeccionHome() {
-    if (!this.metricas || this.metricas.ventasHome === 0) return 0;
-    // Se calcula desde los datos de ventas en Firestore
-    return this.metricas.totalProjection12m * 0.4; // Aproximado (ajustar según datos reales)
+    if (!this.metricas) return 0;
+    return this.metricas.totalRevenueHome || 0;
   }
 
   /**
@@ -307,13 +298,13 @@ class VentasDashboard {
     this.chart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Proyección 12 Meses', 'Proyección Fin de Año'],
+        labels: ['Total Ingresos', 'Prepago'],
         datasets: [
           {
-            label: 'Dinero Proyectado (₡)',
+            label: 'Dinero (₡)',
             data: [
-              this.metricas.totalProjection12m,
-              this.metricas.totalProjectionEndOfYear
+              this.metricas.totalRevenue || 0,
+              this.metricas.totalPrepagoRevenue || 0
             ],
             backgroundColor: [
               'rgba(102, 126, 234, 0.8)',

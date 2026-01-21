@@ -348,10 +348,11 @@ class ObjetivosForm {
     if (precio) {
       priceInput.value = precio;
       this.updateProjections(type);
-      projectionDiv.style.display = 'block';
+      // Mantener preview oculto: eliminamos la card visual de proyecciones
+      if (projectionDiv) projectionDiv.style.display = 'none';
     } else {
       priceInput.value = '';
-      projectionDiv.style.display = 'none';
+      if (projectionDiv) projectionDiv.style.display = 'none';
     }
   }
 

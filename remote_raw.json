@@ -149,14 +149,5 @@
         { "id": "triple1gbps", "nombre": "Triple 1 Gbps", "precio": 176714 }
       ]
     }
-  ,
-    "extras_hogar": {
-      "grupo": "📺/☎️ Extras Hogar",
-      "planes": [
-        { "id": "duo_tv_avanzada_telefonia", "nombre": "Dúo TV Avanzada + Telefonía", "precio": 23230 },
-        { "id": "tv_avanzada_individual", "nombre": "TV Avanzada Individual", "precio": 26327 },
-        { "id": "telefonia_individual", "nombre": "Telefonía Individual", "precio": 5660 }
-      ]
-    }
   }
 }

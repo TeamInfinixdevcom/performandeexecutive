@@ -16,6 +16,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
+console.log('✅ Cloud Functions seguras cargadas correctamente');
 
 const db = admin.firestore();
 const auth = admin.auth();
@@ -329,53 +330,6 @@ exports.syncAuthToFirestore = functions.https.onCall(async (data, context) => {
   }
 });
 
-// ============================================
-// TRIGGERS EXISTENTES (Sin cambios necesarios)
-// ============================================
-
-/**
- * TRIGGER: Cuando se crea un usuario en Authentication
- */
-exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
-  console.log(`✅ Nuevo usuario creado en Auth: ${user.email}`);
-  
-  try {
-    await db.collection('users').doc(user.uid).set({
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName || user.email.split('@')[0],
-      role: 'executive',
-      isActive: true,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdBy: 'system-auto',
-      lastLogin: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    console.log(`✅ Documento creado en Firestore para: ${user.email}`);
-    return true;
-    
-  } catch (error) {
-    console.error(`❌ Error sincronizando usuario: ${error.message}`);
-    throw error;
-  }
-});
-
-/**
- * TRIGGER: Cuando se elimina un usuario en Authentication
- */
-exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
-  console.log(`🗑️ Usuario eliminado de Auth: ${user.email}`);
-  
-  try {
-    await db.collection('users').doc(user.uid).delete();
-    console.log(`✅ Documento eliminado de Firestore: ${user.email}`);
-    return true;
-    
-  } catch (error) {
-    console.error(`❌ Error eliminando documento: ${error.message}`);
-    throw error;
-  }
-});
 
 // ============================================
 // ✅ NUEVA FUNCIÓN: Auditoría de cambios
@@ -832,9 +786,7 @@ exports.checkUserPermissions = functions.https.onCall(async (data, context) => {
   }
 });
 
-// ============================================
-// ✅ NUEVA FUNCIÓN: Crear documento de usuario automáticamente al registrarse
-// ============================================
+// Trigger: Crear documento de usuario automáticamente al registrarse
 exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
   try {
     const userData = {
@@ -845,21 +797,29 @@ exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       displayName: user.displayName || user.email.split('@')[0]
     };
-    
-    // Agregar permisos de admin si es necesario
     if (userData.role === 'admin') {
       userData.permissions.push('admin_panel');
     }
-    
     await db.collection('users').doc(user.uid).set(userData);
-    
     console.log('✅ Documento de usuario creado automáticamente:', user.email, 'Rol:', userData.role);
-    
     return null;
   } catch (error) {
     console.error('Error creando documento de usuario:', error);
     return null;
   }
 });
+
+// Trigger: Eliminar documento de usuario automáticamente al eliminarse en Auth
+exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
+  try {
+    await db.collection('users').doc(user.uid).delete();
+    console.log(`✅ Documento eliminado de Firestore: ${user.email}`);
+    return null;
+  } catch (error) {
+    console.error('Error eliminando documento de usuario:', error);
+    return null;
+  }
+});
+
 
 console.log('✅ Cloud Functions seguras cargadas correctamente');

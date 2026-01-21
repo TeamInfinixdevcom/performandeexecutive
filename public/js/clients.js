@@ -89,7 +89,7 @@ if (btnExportClients) {
             'Estado': client.estado,
             'Móviles': Array.isArray(client.serviciosMoviles) ? client.serviciosMoviles.join(', ') : client.serviciosMoviles,
             'Fijos': Array.isArray(client.serviciosFijos) ? client.serviciosFijos.join(', ') : client.serviciosFijos,
-            'Última actualización': client.updatedAt ? (window.safeFormatDate ? window.safeFormatDate(client.updatedAt) : formatDate(client.updatedAt)) : ''
+            'Última actualización': client.updatedAt ? (window.safeFormatDate ? window.safeFormatDate(client.updatedAt) : localSafeFormatDate(client.updatedAt)) : ''
         }));
         const ws = window.XLSX.utils.json_to_sheet(exportData);
         const wb = window.XLSX.utils.book_new();
@@ -133,6 +133,46 @@ closeModal.addEventListener('click', hideModal);
 btnEditClient.addEventListener('click', editSelectedClient);
 btnDeleteClient.addEventListener('click', deleteSelectedClient);
 interactionForm.addEventListener('submit', handleInteractionSubmit);
+
+// LOCAL FALLBACKS: Si `safe-data-validation.js` no se carga antes, usar helpers locales
+function localSafeFormatDate(timestamp, fallback = 'Sin fecha') {
+    if (!timestamp) return fallback;
+    try {
+        let date;
+        if (timestamp && typeof timestamp.toDate === 'function') {
+            date = timestamp.toDate();
+        } else if (timestamp instanceof Date) {
+            date = timestamp;
+        } else {
+            date = new Date(timestamp);
+        }
+        if (isNaN(date.getTime())) return fallback;
+        return date.toLocaleDateString('es-CR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function localSafeClientDisplay(client) {
+    if (!client) return { id: 'unknown', name: 'CLIENTE SIN DATOS', cedula: 'SIN CÉDULA', score: 0, categoria: 'B', segmento: 'BRONCE', estado: 'ACTIVO', serviciosMoviles: [], serviciosFijos: [], updatedAt: null };
+    return {
+        id: client.id || 'unknown',
+        name: client.name || client.nombre || 'CLIENTE SIN NOMBRE',
+        cedula: client.cedula || 'SIN CÉDULA',
+        telefono: client.telefono || client.telefonoContacto || client.moviles || client.serviciosMoviles?.[0] || client.celulares || 'SIN TELÉFONO',
+        email: client.email || 'SIN EMAIL',
+        score: client.score || client.puntajeScore || 0,
+        categoria: client.categoria || client.categoriaCrediticia || 'B',
+        segmento: client.segmento || 'BRONCE',
+        estado: client.estado || client.estadoPlan || 'ACTIVO',
+        tipoPlan: client.tipoPlan || 'SIN PLAN',
+        serviciosMoviles: client.serviciosMoviles || [],
+        serviciosFijos: client.serviciosFijos || [],
+        createdAt: client.createdAt,
+        updatedAt: client.updatedAt,
+        _original: client
+    };
+}
 
 // Event listeners de paginación
 if (btnPrevPage) btnPrevPage.addEventListener('click', previousPage);
@@ -289,8 +329,8 @@ function showPage(pageNum) {
     
     // Renderizar clientes con validación segura
     const clientsHTML = pageClients.map(client => {
-        // Usar validación segura para todos los campos
-        const safeClient = window.safeClientDisplay ? window.safeClientDisplay(client) : client;
+        // Usar validación segura para todos los campos (fallback local si no existe)
+        const safeClient = window.safeClientDisplay ? window.safeClientDisplay(client) : localSafeClientDisplay(client);
         return `
         <div class="client-card segment-${safeClient.segmento.toLowerCase()}" data-id="${safeClient.id}" data-client-id="${safeClient.id}">
             <div class="client-card-header">
@@ -306,7 +346,7 @@ function showPage(pageNum) {
             </div>
             <div class="client-card-footer">
                 <button onclick="viewClientDetail('${safeClient.id}')" class="btn btn-small btn-primary">👁️ Ver Detalle</button>
-                <small>Última actualización: ${window.safeFormatDate ? window.safeFormatDate(client.updatedAt) : formatDate(client.updatedAt)}</small>
+                <small>Última actualización: ${window.safeFormatDate ? window.safeFormatDate(client.updatedAt) : localSafeFormatDate(client.updatedAt)}</small>
             </div>
         </div>`
     }).join('');
@@ -470,26 +510,48 @@ async function handleClientSubmit(e) {
     e.preventDefault();
     
     if (!currentUser) return;
-    
+
+    // Validación de campos obligatorios
+    const cedula = document.getElementById('cedula').value.trim();
+    const name = document.getElementById('nombre').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const domicilio = document.getElementById('domicilio').value.trim();
+    const tipoPlan = document.getElementById('tipoPlan').value.trim();
+    const estadoPlan = document.getElementById('estadoPlan').value;
+    const segmento = document.getElementById('segmento').value;
+    const categoriaCrediticia = document.getElementById('categoriaCrediticia').value;
+
+    // Validar email simple
+    const emailRegex = /^.+@.+\..+$/;
+
+    if (!cedula || !name || !email || !domicilio || !tipoPlan || !estadoPlan || !segmento || !categoriaCrediticia) {
+        showMessage('❌ Por favor completa todos los campos obligatorios.', 'error');
+        return;
+    }
+    if (!emailRegex.test(email)) {
+        showMessage('❌ Ingresa un correo electrónico válido.', 'error');
+        return;
+    }
+
     const clientData = {
-        cedula: document.getElementById('cedula').value.trim(),
-        name: document.getElementById('nombre').value.trim().toUpperCase(),
-        email: document.getElementById('email').value.trim(),
+        cedula,
+        name: name.toUpperCase(),
+        email,
         fechaNacimiento: document.getElementById('fechaNacimiento').value,
-        domicilio: document.getElementById('domicilio').value.trim(),
+        domicilio,
         serviciosMoviles: document.getElementById('serviciosMoviles').value.split(',').map(s => s.trim()).filter(s => s),
         serviciosFijos: document.getElementById('serviciosFijos').value.split(',').map(s => s.trim()).filter(s => s),
-        tipoPlan: document.getElementById('tipoPlan').value.trim(),
-        estadoPlan: document.getElementById('estadoPlan').value,
-        segmento: document.getElementById('segmento').value,
+        tipoPlan,
+        estadoPlan,
+        segmento,
         puntajeScore: parseInt(document.getElementById('puntajeScore').value) || 0,
-        categoriaCrediticia: document.getElementById('categoriaCrediticia').value,
+        categoriaCrediticia,
         notas: document.getElementById('notas').value.trim(),
         executiveId: currentUser.uid,
         executiveName: currentUser.displayName || currentUser.email,
         updatedAt: Timestamp.now()
     };
-    
+
     try {
         if (currentEditId) {
             // Actualizar cliente
@@ -732,7 +794,7 @@ function searchClients() {
     
     const filtered = allClients.filter(client => {
         // ✅ Usar validación segura en búsqueda
-        const safeClient = window.safeClientDisplay ? window.safeClientDisplay(client) : client;
+        const safeClient = window.safeClientDisplay ? window.safeClientDisplay(client) : localSafeClientDisplay(client);
         
         // Normalizar valores para comparación (mayúsculas)
         const clientName = (safeClient.name || '').toUpperCase();
