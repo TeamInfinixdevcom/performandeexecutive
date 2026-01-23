@@ -43,6 +43,19 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
             </div>
 
             <div class="form-row" style="flex-direction:column;align-items:flex-start;">
+                <label for="planMini" class="small-muted">Oferta K+</label>
+                <select id='planMini' aria-label="Oferta K">
+                    <option value=''>Seleccioná una oferta K</option>
+                    <option value='k1plus'>k1 plus</option>
+                    <option value='k2plus'>k2 plus</option>
+                    <option value='k3plus'>k3 plus</option>
+                    <option value='k4plus'>k4 plus</option>
+                    <option value='k5plus'>k5 plus</option>
+                    <option value='k6plus'>k6 plus</option>
+                </select>
+            </div>
+
+            <div class="form-row" style="flex-direction:column;align-items:flex-start;">
                 <label for="phoneNumberMini" class="small-muted">Número (sin prefijo 506)</label>
                 <input type='text' id='phoneNumberMini' placeholder='Ej: 83033341' maxlength="8" pattern="\d{8}" aria-describedby="phoneHelp" aria-label="Número sin prefijo">
                 <div id="phoneHelp" class="form-help">Introduce 8 dígitos (sin prefijo 506)</div>
@@ -97,6 +110,16 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
         'Oferta Racsa 5G': `📡✨ ¡Conectate con la nueva era del Internet con RACSA 5G!\n💬 Respondé este mensaje y conocé las opciones disponibles`,
         'VIP ORO': `Usted es muy importante para nosotros y me encantaría ser su agente personal de Kolbi.`,
         'Mensaje Personalizado': ''
+    };
+
+    // Plantillas K+ (con placeholders: {AGENTE}, {EMAIL}, {CLIENTE})
+    const planTemplates = {
+        'k1plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k1 plus recibirías hasta 24 GB por mes durante 1 año + apps ilimitadas, por solo ₡12 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k2plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k2 plus recibirías hasta 34 GB por mes durante 1 año + apps ilimitadas, por solo ₡16 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k3plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k3 plus recibirías hasta 48 GB por mes durante 1 año + apps ilimitadas, por solo ₡21 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k4plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k4 plus recibirías hasta 76 GB por mes durante 1 año + apps ilimitadas, por solo ₡29 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k5plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k5 plus recibirías hasta 90 GB por mes durante 1 año + apps ilimitadas, por solo ₡35 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k6plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k6 plus navegarías de manera ilimitada + apps ilimitadas, por solo ₡44 000.\n¡Más velocidad, más beneficios y cero preocupación por los datos! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`
     };
 
     // Colores por tipo de oferta (puedes ajustar hex)
@@ -233,6 +256,7 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
     const agentSelect = document.getElementById('agentMini');
     const agentInfo = document.getElementById('agentInfoMini');
     const offerSelect = document.getElementById('offerTypeMini');
+    const planSelect = document.getElementById('planMini');
     const customMessage = document.getElementById('customMessageMini');
     const phoneInput = document.getElementById('phoneNumberMini');
     const numberList = document.getElementById('numberListMini');
@@ -246,13 +270,22 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
 
     function init() {
         // Restore defaults
-        customMessage.value = messages[offerSelect.value] || '';
+        // prefer plan template if selected, otherwise offer
+        let initial = '';
+        if(planSelect && planSelect.value) initial = fillTemplate(planTemplates[planSelect.value] || '');
+        if(!initial) initial = messages[offerSelect.value] || '';
+        customMessage.value = initial;
         // poblar select de ejecutivos
         populateAgents();
         // aplicar color inicial
         applyOfferColor(offerSelect.value);
         offerSelect.addEventListener('change', () => { customMessage.value = messages[offerSelect.value] || ''; updateFireWidget(); applyOfferColor(offerSelect.value); });
+        if(planSelect){
+            planSelect.addEventListener('change', () => { currentTemplate = planTemplates[planSelect.value] || ''; customMessage.value = fillTemplate(currentTemplate || messages[offerSelect.value] || ''); updateFireWidget(); applyOfferColor(offerSelect.value); });
+        }
         agentSelect.addEventListener('change', showAgentInfo);
+        agentSelect.addEventListener('change', () => { if(currentTemplate) customMessage.value = fillTemplate(currentTemplate); });
+        nombreClienteInput.addEventListener('input', () => { if(currentTemplate) customMessage.value = fillTemplate(currentTemplate); });
         document.getElementById('openWhatsAppBtn').addEventListener('click', sendMessage);
         document.getElementById('restoreTemplateBtnMini').addEventListener('click', () => { customMessage.value = messages[offerSelect.value] || ''; showToast('Plantilla restaurada'); });
         document.getElementById('clearHistoryMini').addEventListener('click', ()=>{ if(confirm('¿Seguro que querés borrar el historial de envíos?')) clearHistoryFirestore(); });
@@ -264,6 +297,17 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
         updateClockMini();
         setInterval(updateClockMini, 1000);
         updateSeasonalEmojiMini();
+    }
+
+    // currentTemplate stores the template with placeholders when a plan is selected
+    let currentTemplate = '';
+
+    function fillTemplate(tpl){
+        if(!tpl) return '';
+        const agente = (agentSelect && agentSelect.value) || '';
+        const email = (agentSelect && agentSelect.options[agentSelect.selectedIndex] && agentSelect.options[agentSelect.selectedIndex].getAttribute('data-email')) || '';
+        const cliente = (nombreClienteInput && nombreClienteInput.value) || '';
+        return tpl.replace(/\{AGENTE\}/g, agente).replace(/\{EMAIL\}/g, email).replace(/\{CLIENTE\}/g, cliente);
     }
 
     function showAgentInfo(){
