@@ -56,7 +56,7 @@ class Proyecciones {
       // RENOVACIONES: no aportar dinero a la proyección (solo cuentan como evento)
       const totalProyeccion = ingresoNuevas + ingresoHogar + montoPrepago + montoDominio;
       const ventasNuevas = ventasMobileMes.filter(v => v.tipoVenta === 'nueva').length;
-      const ventasRenovacion = ventasMobileMes.filter(v => v.tipoVenta === 'renovacion').length;
+      const ventasRenovacion = ventasMobileMes.filter(v => v.tipoVenta === 'renovacion' || v.renovacion === true).length;
       const ventasHogar = ventasHomeMes.length;
 
       container.innerHTML = `
@@ -222,7 +222,7 @@ class Proyecciones {
     // No incluir renovaciones en el total monetario
     const totalProyeccion = ingresoNuevas + ingresoHogar;
     const ventasNuevas = this.ventasMobile.filter(v => v.tipoVenta === 'nueva').length;
-    const ventasRenovacion = this.ventasMobile.filter(v => v.tipoVenta === 'renovacion').length;
+    const ventasRenovacion = this.ventasMobile.filter(v => v.tipoVenta === 'renovacion' || v.renovacion === true).length;
     const ventasHogar = this.ventasHome.length;
 
     container.innerHTML = `
@@ -328,7 +328,10 @@ class Proyecciones {
   ======================= */
   _ingresoMobilePorTipo(tipo) {
     return this.ventasMobile
-      .filter(v => v.tipoVenta === tipo)
+      .filter(v => {
+        if (tipo === 'renovacion') return v.tipoVenta === 'renovacion' || v.renovacion === true;
+        return v.tipoVenta === tipo;
+      })
       .reduce((s, v) => s + (v.planPrice || 0), 0);
   }
 
