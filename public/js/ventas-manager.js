@@ -144,7 +144,31 @@ class VentasManager {
 
       // Obtener precio (no se calculan ni almacenan proyecciones)
       const planPrice = ventaData.planPrice || this.getPlanPrice(ventaData.plan, tipo);
-      if (!planPrice) throw new Error('Precio del plan no encontrado');
+      if (planPrice === null || planPrice === undefined) throw new Error('Precio del plan no encontrado');
+
+      // Detectar tipoVenta automáticamente si no fue provisto (ej. 'prepago')
+      if (!ventaData.tipoVenta && this.planesCache) {
+        // Buscar en mobile
+        for (const [grupoKey, grupo] of Object.entries(this.planesCache.plansMobile || {})) {
+          const plan = grupo.planes.find(p => p.id === ventaData.plan);
+          if (plan) {
+            if (grupoKey === 'prepago' || ventaData.plan === 'kitprepago') {
+              ventaData.tipoVenta = 'prepago';
+            }
+            break;
+          }
+        }
+        // Buscar en home si aún no encontrado
+        if (!ventaData.tipoVenta) {
+          for (const [grupoKey, grupo] of Object.entries(this.planesCache.plansHome || {})) {
+            const plan = grupo.planes.find(p => p.id === ventaData.plan);
+            if (plan) {
+              // No marcamos prepago en home por defecto
+              break;
+            }
+          }
+        }
+      }
 
       // Preparar documento sin campo `projections`
       const docData = {
@@ -364,33 +388,51 @@ class VentasManager {
       // Ventas móviles
       ventasMobile.forEach(venta => {
         const precio = venta.planPrice || 0;
-        totalRevenue += precio;
-        totalRevenueMobile += precio;
+        // No sumar accesorios/IMEI contado a revenue; tampoco sumar renovaciones (son eventos, no dinero)
+        const esAccesorioOImeiContado = venta.planId === 'accesorio_contado' || venta.planId === 'imei_contado';
+        const esRenovacion = venta.tipoVenta === 'renovacion' || (venta.renovacion === true);
+        if (!esAccesorioOImeiContado && !esRenovacion) {
+          totalRevenue += precio;
+          totalRevenueMobile += precio;
+          if (venta.tipoVenta === 'prepago') totalPrepagoRevenue += precio;
+        }
 
-        if (venta.imeis && Array.isArray(venta.imeis)) {
+        if (venta.imeis && Array.isArray(venta.imeis) && venta.imeis.length > 0) {
           totalTerminals += venta.imeis.length;
+        } else if (venta.tipoPedido === 'imei_contado') {
+          // Contabilizar 1 terminal cuando se registró como IMEI contado sin lista
+          totalTerminals += 1;
         }
-        if (venta.accesorios && Array.isArray(venta.accesorios)) {
+        if (venta.accesorios && Array.isArray(venta.accesorios) && venta.accesorios.length > 0) {
           totalAccesorios += venta.accesorios.length;
+        } else if (venta.tipoPedido === 'accesorio_contado') {
+          // Contabilizar 1 accesorio cuando se registró como Accesorio contado sin lista
+          totalAccesorios += 1;
         }
-
-        if (venta.tipoVenta === 'prepago') totalPrepagoRevenue += precio;
       });
 
       // Ventas hogar
       ventasHome.forEach(venta => {
         const precio = venta.planPrice || 0;
-        totalRevenue += precio;
-        totalRevenueHome += precio;
+        // No sumar accesorios/IMEI contado a revenue; tampoco sumar renovaciones
+        const esAccesorioOImeiContado = venta.planId === 'accesorio_contado' || venta.planId === 'imei_contado';
+        const esRenovacionHome = venta.tipoVenta === 'renovacion' || (venta.renovacion === true);
+        if (!esAccesorioOImeiContado && !esRenovacionHome) {
+          totalRevenue += precio;
+          totalRevenueHome += precio;
+          if (venta.tipoVenta === 'prepago') totalPrepagoRevenue += precio;
+        }
 
-        if (venta.imeis && Array.isArray(venta.imeis)) {
+        if (venta.imeis && Array.isArray(venta.imeis) && venta.imeis.length > 0) {
           totalTerminals += venta.imeis.length;
+        } else if (venta.tipoPedido === 'imei_contado') {
+          totalTerminals += 1;
         }
-        if (venta.accesorios && Array.isArray(venta.accesorios)) {
+        if (venta.accesorios && Array.isArray(venta.accesorios) && venta.accesorios.length > 0) {
           totalAccesorios += venta.accesorios.length;
+        } else if (venta.tipoPedido === 'accesorio_contado') {
+          totalAccesorios += 1;
         }
-
-        if (venta.tipoVenta === 'prepago') totalPrepagoRevenue += precio;
       });
 
       const metricas = {

@@ -189,6 +189,11 @@ class ObjetivosForm {
               <label for="agenteId">Agente</label>
               <input type="text" id="agenteId" class="form-input" value="${this.getAgenteName()}" readonly style="background-color: #f5f5f5; cursor: not-allowed; font-weight: bold; color: #667eea;">
             </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+              <label for="esRenovacion" style="margin:0;">
+                <input type="checkbox" id="esRenovacion" /> ¿Es renovación?
+              </label>
+            </div>
           </div>
 
           <!-- Fila 4: IMEIs (Terminales) -->
@@ -275,6 +280,11 @@ class ObjetivosForm {
               <label for="agenteIdHome">Agente</label>
               <input type="text" id="agenteIdHome" class="form-input" value="${this.getAgenteName()}" readonly style="background-color: #f5f5f5; cursor: not-allowed; font-weight: bold; color: #667eea;">
             </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+              <label for="esRenovacionHome" style="margin:0;">
+                <input type="checkbox" id="esRenovacionHome" /> ¿Es renovación?
+              </label>
+            </div>
           </div>
 
           <!-- Fila 3: Plan y Precio -->
@@ -331,7 +341,8 @@ class ObjetivosForm {
     const selectedOption = select.options[select.selectedIndex];
     const precio = selectedOption.getAttribute('data-precio');
 
-    if (precio) {
+    // Asignar el precio aunque sea 0 ("0" string es válido)
+    if (precio !== null && precio !== undefined) {
       priceInput.value = precio;
     } else {
       priceInput.value = '';
@@ -448,10 +459,24 @@ class ObjetivosForm {
 
       await window.ventasManager.ensure();
 
+      const esRenovacion = !!document.getElementById('esRenovacion')?.checked;
+
+      // Determinar tipoVenta: renovacion > prepago (por catálogo) > nueva
+      let tipoVenta = null;
+      if (esRenovacion) {
+        tipoVenta = 'renovacion';
+      } else if (this.planesCache && this.planesCache.plansMobile && this.planesCache.plansMobile.prepago) {
+        const prepagoPlanes = (this.planesCache.plansMobile.prepago.planes || []).map(p => p.id);
+        tipoVenta = prepagoPlanes.includes(planId) ? 'prepago' : 'nueva';
+      } else {
+        tipoVenta = 'nueva';
+      }
+
       const ventaData = {
         agenteId: this.currentUser?.email || 'DESCONOCIDO',
         tipoPedido,
         numeroPedido,
+        plan: planId,
         planId,
         planPrice,
         imeis,
@@ -459,6 +484,8 @@ class ObjetivosForm {
         cedulaCliente,
         numeroCliente: numeroCliente || null,
         createdAt: new Date(),
+        tipoVenta,
+        categories: esRenovacion ? ['renovacion'] : []
       };
 
       const result = await window.ventasManager.createVenta(ventaData);
@@ -508,15 +535,23 @@ class ObjetivosForm {
 
       await window.ventasManager.ensure();
 
+      const esRenovacionHome = !!document.getElementById('esRenovacionHome')?.checked;
+
+      // Determinar tipoVenta para hogar: si es renovación marcarlo, sino 'nueva' por defecto
+      const tipoVentaHome = esRenovacionHome ? 'renovacion' : 'nueva';
+
       const ventaData = {
         agenteId: this.currentUser?.email || 'DESCONOCIDO',
         homeNumber,
         customerName,
         cedulaCliente,
         numeroCliente: numeroCliente || null,
+        plan: planId,
         planId,
         planPrice,
         createdAt: new Date(),
+        tipoVenta: tipoVentaHome,
+        categories: esRenovacionHome ? ['renovacion'] : []
       };
 
       const result = await window.ventasManager.createVenta(ventaData);
