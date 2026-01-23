@@ -260,15 +260,6 @@ class ObjetivosForm {
         <div class="card" style="margin-bottom: 24px;">
           <h3>🏠 Registrar Venta Hogar</h3>
 
-          <!-- Checkbox Renovación (moved arriba for UX) -->
-          <div class="form-row" style="margin-bottom: 12px;">
-            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-              <label for="esRenovacionHome" style="margin:0;">
-                <input type="checkbox" id="esRenovacionHome" /> ¿Es renovación?
-              </label>
-              <small style="color:#666; margin-left:8px;">Marca si el cliente está renovando un plan existente (no suma al ingreso mensual).</small>
-            </div>
-          </div>
 
           <!-- Fila 1: Orden SIMO y Cliente -->
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px;">
@@ -547,10 +538,8 @@ class ObjetivosForm {
 
       await window.ventasManager.ensure();
 
-      const esRenovacionHome = !!document.getElementById('esRenovacionHome')?.checked;
-
-      // Determinar tipoVenta para hogar: si es renovación marcarlo, sino 'nueva' por defecto
-      const tipoVentaHome = esRenovacionHome ? 'renovacion' : 'nueva';
+      // Para Hogar no existe renovación en el producto: siempre marcar como 'nueva'
+      const tipoVentaHome = 'nueva';
 
       const ventaData = {
         agenteId: this.currentUser?.email || 'DESCONOCIDO',
@@ -563,7 +552,7 @@ class ObjetivosForm {
         planPrice,
         createdAt: new Date(),
         tipoVenta: tipoVentaHome,
-        categories: esRenovacionHome ? ['renovacion'] : []
+        categories: []
       };
 
       const result = await window.ventasManager.createVenta(ventaData);
