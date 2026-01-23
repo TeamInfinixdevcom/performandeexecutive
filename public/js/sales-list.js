@@ -294,6 +294,42 @@ class SalesList {
             ${planOptions}
           </select>
         </div>
+
+        ${isMobile ? `
+          <div style="margin-bottom:12px;">
+            <label style="display:flex;align-items:center;gap:8px; font-weight:bold;">
+              <input type="checkbox" data-field="esRenovacion" ${venta.tipoVenta === 'renovacion' ? 'checked' : ''} /> ¿Es renovación?
+            </label>
+            <div style="font-size:12px;color:#666;margin-top:6px;">Si marca como renovación, esta venta dejará de contarse como ingreso y se contabilizará en renovaciones.</div>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="font-weight:bold; display:block; margin-bottom:6px;">📱 IMEIs</label>
+            <div id="imeisEdit-${ventaId}">
+              ${(venta.imeis || []).map(i => `
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                  <input class="edit-imei-input" value="${i}" placeholder="IMEI" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                  <button type="button" onclick="this.parentNode.remove()" style="padding:6px 10px;background:#e74c3c;color:#fff;border:none;border-radius:4px;">Eliminar</button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" onclick="(function(id){const c=document.getElementById(id);const d=document.createElement('div');d.style='display:flex;gap:8px;margin-bottom:8px;';d.innerHTML='<input class=\'edit-imei-input\' placeholder=\'IMEI\' style=\'flex:1;padding:8px;border:1px solid #ddd;border-radius:4px;\'><button type=\'button\' onclick=\'this.parentNode.remove()\' style=\'padding:6px 10px;background:#e74c3c;color:#fff;border:none;border-radius:4px;\'>Eliminar</button>';c.appendChild(d);})('imeisEdit-${ventaId}')" style="margin-top:8px;padding:8px 12px;background:#2196F3;color:#fff;border:none;border-radius:4px;">+ Agregar IMEI</button>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="font-weight:bold; display:block; margin-bottom:6px;">🎁 Accesorios</label>
+            <div id="accesoriosEdit-${ventaId}">
+              ${(venta.accesorios || []).map(a => `
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                  <input class="edit-accesorio-input" value="${a}" placeholder="Accesorio" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:4px;">
+                  <button type="button" onclick="this.parentNode.remove()" style="padding:6px 10px;background:#e74c3c;color:#fff;border:none;border-radius:4px;">Eliminar</button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" onclick="(function(id){const c=document.getElementById(id);const d=document.createElement('div');d.style='display:flex;gap:8px;margin-bottom:8px;';d.innerHTML='<input class=\'edit-accesorio-input\' placeholder=\'Accesorio\' style=\'flex:1;padding:8px;border:1px solid #ddd;border-radius:4px;\'><button type=\'button\' onclick=\'this.parentNode.remove()\' style=\'padding:6px 10px;background:#e74c3c;color:#fff;border:none;border-radius:4px;\'>Eliminar</button>';c.appendChild(d);})('accesoriosEdit-${ventaId}')" style="margin-top:8px;padding:8px 12px;background:#2196F3;color:#fff;border:none;border-radius:4px;">+ Agregar Accesorio</button>
+          </div>
+        ` : ''}
+
         <div style="display: flex; gap: 10px;">
           <button type="button" onclick="salesList.saveEditVenta('${ventaId}', '${tipo}')" style="flex: 1; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Guardar</button>
           <button type="button" onclick="document.getElementById('editForm-${ventaId}').remove()" style="flex: 1; padding: 10px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">✕ Cancelar</button>
@@ -328,22 +364,48 @@ class SalesList {
       const plan = planSelect.value;
       const planPrice = parseInt(planSelect.options[planSelect.selectedIndex].dataset.price) || 0;
 
+      // Campos opcionales: IMEIs, Accesorios, Renovacion (solo mobile)
+      let imeis = undefined;
+      let accesorios = undefined;
+      let tipoVentaOverride = undefined;
+      if (tipo === 'mobile') {
+        // Collect imeis
+        imeis = Array.from(editForm.querySelectorAll('.edit-imei-input')).map(i => i.value.trim()).filter(v => v);
+        // Collect accesorios
+        accesorios = Array.from(editForm.querySelectorAll('.edit-accesorio-input')).map(i => i.value.trim()).filter(v => v);
+        // Renovacion checkbox
+        const renovEl = editForm.querySelector('[data-field="esRenovacion"]');
+        if (renovEl) tipoVentaOverride = renovEl.checked ? 'renovacion' : 'nueva';
+      }
+
       if (!nombreCliente || !cedulaCliente || !plan) {
         alert('⚠️ Por favor completa todos los campos');
         return;
       }
 
-      // Actualizar venta
-      await this.ventasManager.updateVenta(ventaId, tipo, {
+      // Construir objeto de actualización
+      const updateObj = {
         nombreCliente,
         cedulaCliente,
         plan,
         planPrice
-      });
+      };
+      if (Array.isArray(imeis)) updateObj.imeis = imeis;
+      if (Array.isArray(accesorios)) updateObj.accesorios = accesorios;
+      if (tipoVentaOverride) {
+        updateObj.tipoVenta = tipoVentaOverride;
+        updateObj.categories = tipoVentaOverride === 'renovacion' ? ['renovacion'] : [];
+      }
+
+      // Actualizar venta
+      await this.ventasManager.updateVenta(ventaId, tipo, updateObj);
 
       alert('✅ Venta actualizada correctamente. Las proyecciones se han recalculado automáticamente.');
       editForm.remove();
       await this.loadVentas(); // Recargar la lista completa
+      // Refrescar dashboards si existen
+      if (window.objetivosDashboard && typeof window.objetivosDashboard.refresh === 'function') window.objetivosDashboard.refresh();
+      if (window.proyecciones && typeof window.proyecciones.refresh === 'function') window.proyecciones.refresh();
     } catch (error) {
       console.error('❌ Error:', error);
       alert('Error al actualizar la venta');
