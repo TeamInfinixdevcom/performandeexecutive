@@ -140,7 +140,7 @@
                     <h3>📋 Información Personal</h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="cedula">Cédula: *</label>
+                            <label for="cedula" id="labelCedula">Cédula: *</label>
                             <input type="text" id="cedula" required placeholder="112380702">
                         </div>
                         <div class="form-group">
@@ -155,6 +155,16 @@
                             <input type="email" id="email" placeholder="cliente@email.com">
                         </div>
                         <div class="form-group">
+                            <label for="tipoCliente">Tipo de Cliente:</label>
+                            <select id="tipoCliente">
+                                <option value="fisico">Físico</option>
+                                <option value="juridico">Jurídico</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" id="fechaGroup">
                             <label for="fechaNacimiento">Fecha de Nacimiento:</label>
                             <input type="date" id="fechaNacimiento">
                         </div>
@@ -357,6 +367,12 @@
                                 <option value="">Todos los tipos</option>
                                 <option value="mobile">📱 Móvil</option>
                                 <option value="home">🏠 Hogar</option>
+                            </select>
+                            <select id="filtroCategoriaVenta" class="form-select" style="flex: 1; min-width: 150px; margin-left:8px;" onchange="window.misVentas?.renderVentas()">
+                                <option value="">Todas las categorías</option>
+                                <option value="nueva">🟢 Nuevas</option>
+                                <option value="renovacion">🔄 Renovaciones</option>
+                                <option value="prepago">💳 Prepago</option>
                             </select>
                             <button onclick="window.misVentas?.cargarVentas()" class="btn btn-primary" style="background-color: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">🔄 Refrescar</button>
                         </div>

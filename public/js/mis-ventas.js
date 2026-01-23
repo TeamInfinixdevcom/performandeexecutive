@@ -99,6 +99,7 @@ class MisVentas {
 
     // Obtener filtros
     const filtroTipo = document.getElementById('filtroTipoVenta')?.value || '';
+    const filtroCategoria = document.getElementById('filtroCategoriaVenta')?.value || '';
     const buscarPedido = document.getElementById('buscarNumPedido')?.value.toLowerCase() || '';
     const buscarCedula = document.getElementById('buscarCedula')?.value.toLowerCase() || '';
 
@@ -111,6 +112,15 @@ class MisVentas {
     if (buscarCedula) ventasMobileFiltered = ventasMobileFiltered.filter(v => 
       v.cedulaCliente?.toLowerCase().includes(buscarCedula)
     );
+    // Filtrar por categoría de venta (nueva / renovacion / prepago)
+    if (filtroCategoria) {
+      ventasMobileFiltered = ventasMobileFiltered.filter(v => {
+        if (filtroCategoria === 'renovacion') return v.tipoVenta === 'renovacion' || v.renovacion === true;
+        if (filtroCategoria === 'nueva') return v.tipoVenta === 'nueva' || (!v.tipoVenta && v.renovacion !== true);
+        if (filtroCategoria === 'prepago') return v.tipoVenta === 'prepago';
+        return true;
+      });
+    }
 
     // Filtrar ventas hogar
     let ventasHomeFiltered = this.ventasHome;
@@ -118,6 +128,14 @@ class MisVentas {
     if (buscarCedula) ventasHomeFiltered = ventasHomeFiltered.filter(v => 
       v.cedulaCliente?.toLowerCase().includes(buscarCedula)
     );
+    if (filtroCategoria) {
+      ventasHomeFiltered = ventasHomeFiltered.filter(v => {
+        if (filtroCategoria === 'renovacion') return v.tipoVenta === 'renovacion' || v.renovacion === true;
+        if (filtroCategoria === 'nueva') return v.tipoVenta === 'nueva' || (!v.tipoVenta && v.renovacion !== true);
+        if (filtroCategoria === 'prepago') return v.tipoVenta === 'prepago';
+        return true;
+      });
+    }
 
     const todasLasVentas = [...ventasMobileFiltered, ...ventasHomeFiltered];
     const totalVentas = todasLasVentas.length;
