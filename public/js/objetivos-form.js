@@ -145,6 +145,16 @@ class ObjetivosForm {
         <div class="card" style="margin-bottom: 24px;">
           <h3>📱 Registrar Venta Móvil Kolbi</h3>
 
+          <!-- Checkbox Renovación (moved arriba por UX) -->
+          <div class="form-row" style="margin-bottom: 12px;">
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+              <label for="esRenovacion" style="margin:0;">
+                <input type="checkbox" id="esRenovacion" /> ¿Es renovación?
+              </label>
+              <small style="color:#666; margin-left:8px;">Marca si el cliente está renovando un plan existente (no suma al ingreso mensual).</small>
+            </div>
+          </div>
+
           <!-- Fila 1: Tipo y Número de Pedido -->
           <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
@@ -189,11 +199,7 @@ class ObjetivosForm {
               <label for="agenteId">Agente</label>
               <input type="text" id="agenteId" class="form-input" value="${this.getAgenteName()}" readonly style="background-color: #f5f5f5; cursor: not-allowed; font-weight: bold; color: #667eea;">
             </div>
-            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-              <label for="esRenovacion" style="margin:0;">
-                <input type="checkbox" id="esRenovacion" /> ¿Es renovación?
-              </label>
-            </div>
+            
           </div>
 
           <!-- Fila 4: IMEIs (Terminales) -->
@@ -254,6 +260,16 @@ class ObjetivosForm {
         <div class="card" style="margin-bottom: 24px;">
           <h3>🏠 Registrar Venta Hogar</h3>
 
+          <!-- Checkbox Renovación (moved arriba for UX) -->
+          <div class="form-row" style="margin-bottom: 12px;">
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+              <label for="esRenovacionHome" style="margin:0;">
+                <input type="checkbox" id="esRenovacionHome" /> ¿Es renovación?
+              </label>
+              <small style="color:#666; margin-left:8px;">Marca si el cliente está renovando un plan existente (no suma al ingreso mensual).</small>
+            </div>
+          </div>
+
           <!-- Fila 1: Orden SIMO y Cliente -->
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
@@ -280,11 +296,7 @@ class ObjetivosForm {
               <label for="agenteIdHome">Agente</label>
               <input type="text" id="agenteIdHome" class="form-input" value="${this.getAgenteName()}" readonly style="background-color: #f5f5f5; cursor: not-allowed; font-weight: bold; color: #667eea;">
             </div>
-            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-              <label for="esRenovacionHome" style="margin:0;">
-                <input type="checkbox" id="esRenovacionHome" /> ¿Es renovación?
-              </label>
-            </div>
+            
           </div>
 
           <!-- Fila 3: Plan y Precio -->
