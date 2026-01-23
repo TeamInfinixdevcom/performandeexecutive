@@ -150,7 +150,7 @@ class SalesForm {
   }
 
   /**
-   * Agregar input de IMEI
+  
    */
   addImeiInput() {
     const container = document.getElementById('imeisList');
@@ -223,6 +223,12 @@ class SalesForm {
         nombreCliente: document.getElementById('nombreCliente')?.value
       };
 
+      // Leer estado del checkbox "¿Es renovación?" (solo aplica para móvil)
+      try{
+        const renovEl = document.getElementById('checkboxRenovacion');
+        if(renovEl) formData.renovacion = renovEl.checked === true;
+      }catch(e){ formData.renovacion = false; }
+
       // Campos específicos por tipo
       if (this.currentType === 'mobile') {
         formData.tipoPedido = document.getElementById('tipoPedido')?.value;
@@ -284,6 +290,9 @@ class SalesForm {
     document.getElementById('imeisList').innerHTML = '';
     document.getElementById('accesoriosList').innerHTML = '';
     document.getElementById('projectionDisplay').innerHTML = '';
+    // Reset checkbox renovación
+    const renovEl = document.getElementById('checkboxRenovacion');
+    if(renovEl) renovEl.checked = false;
   }
 }
 
