@@ -30,8 +30,10 @@ service cloud.firestore {
     
     // ✅ NUEVA: Verificar si el usuario tiene rol 'cnajera'
     function isCnajera() {
-      return isSignedIn() &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'cnajera';
+          return isSignedIn() &&
+            // Asegurarse de que el documento de usuario exista antes de leer su campo `role`
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'cnajera';
     }
     
     // ✅ NUEVA: Validar datos de cliente
@@ -76,16 +78,17 @@ service cloud.firestore {
       // Crear clientes: validar datos y exigir que `executiveId` coincida con el usuario autenticado
       allow create: if isSignedIn() && isValidClientData() && request.resource.data.executiveId == request.auth.uid;
 
-      // Actualizar: permitir dos casos seguros:
-      // 1) El executive responsable o admin pueden hacer actualizaciones completas (validadas por isValidClientData)
-      // 2) El rol `cnajera` (personal de campo) puede actualizar SOLO campos de `interactions` y `updatedAt`
+      // Actualizar: solo el executive responsable puede modificar su cliente
       allow update: if isSignedIn() && (
-        ( (resource.data.executiveId == request.auth.uid) || isAdmin() ) && isValidClientData()
+        // Puede actualizar todo el cliente si pasa la validación
+        (resource.data.executiveId == request.auth.uid && isValidClientData())
+        // O puede modificar SOLO interactions y updatedAt de sus propios clientes
         || (
-          isCnajera() &&
-          // No permitir cambios en campos sensibles
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['name','email','executiveId']) &&
-          // Debe estar modificando al menos interactions o updatedAt
+          resource.data.executiveId == request.auth.uid &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'name','email','executiveId','puntajeScore','categoriaCrediticia','tipoPlan','estadoPlan',
+            'serviciosMoviles','serviciosFijos'
+          ]) &&
           request.resource.data.diff(resource.data).affectedKeys().hasAny(['interactions','updatedAt'])
         )
       );

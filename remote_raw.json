@@ -41,13 +41,13 @@
     "accesorio_contado": {
       "grupo": "🎁 Accesorios Contado",
       "planes": [
-        { "id": "accesorio_contado", "nombre": "Accesorio Contado", "precio": 0 }
+        { "id": "accesorio_contado", "nombre": "Accesorio Contado", "precio": 1 }
       ]
     },
     "imei_contado": {
       "grupo": "🔢 IMEI Contado",
       "planes": [
-        { "id": "imei_contado", "nombre": "IMEI Contado", "precio": 0 }
+        { "id": "imei_contado", "nombre": "IMEI Contado", "precio": 1 }
       ]
     },    
     "geolocalizacion": {
@@ -61,7 +61,6 @@
       "grupo": "🧳 Otros",
       "planes": [
         { "id": "planturista", "nombre": "Plan Turista", "precio": 10539 },
-        { "id": "chipprepago2024", "nombre": "Chip prepago 2024", "precio": 871 },
         { "id": "plankolbi60", "nombre": "Plan kölbi 60", "precio": 2900 }
       ]
     }

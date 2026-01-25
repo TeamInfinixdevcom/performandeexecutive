@@ -521,9 +521,15 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
         // duplicate check
         const exists = Array.from(numberList.children).some(li=>{ try{ const info=JSON.parse(li.dataset.info||'{}'); return info.fullNumber===fullNumber }catch(e){return false} });
         if(exists){ alert('Este número ya fue registrado en el historial.'); return; }
-        const saludo = `Hola, mi nombre es ${name}. Soy Agente Oficial de Kolbi.\n\n`;
+        // Build message: prefer the editable text (which may include placeholders
+        // previously filled). Ensure the client's name is present at the top
+        // if it isn't already in the message (covers templates that already
+        // start with a greeting or not).
         const editableText = (customMessage.value||'').trim();
-        let mensajeFinal = saludo + (editableText || messages[offerSelect.value] || '');
+        let mensajeFinal = editableText || messages[offerSelect.value] || '';
+        if (nombreCliente && !mensajeFinal.includes(nombreCliente)) {
+            mensajeFinal = `Hola ${nombreCliente}\n\n` + mensajeFinal;
+        }
         const safeMessage = mensajeFinal.replace(/\s{3,}/g,' ').slice(0,2000);
         const encoded = encodeURIComponent(safeMessage);
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);

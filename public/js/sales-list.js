@@ -189,9 +189,11 @@ class SalesList {
 
     const referencia = isMobile ? venta.numeroPedido : venta.homeNumber;
     const cliente = venta.nombreCliente || `${venta.customerName || 'Sin nombre'}`;
+    // Add an id to the card so we can animate it when marking entregado
+    const cardId = `venta-${venta.id}`;
 
     return `
-      <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 6px solid ${isMobile ? '#2196F3' : '#4CAF50'}; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <div id="${cardId}" style="position:relative; background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 6px solid ${isMobile ? '#2196F3' : '#4CAF50'}; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         
         <!-- HEADER: Referencia y tipo -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -201,9 +203,14 @@ class SalesList {
             </h3>
             <p style="margin: 5px 0 0 0; color: #999; font-size: 12px;">${tipoLabel}</p>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 8px; align-items:center;">
+            <div style="margin-right:8px; font-size:13px;">
+              ${venta.estado ? (venta.estado === 'pendiente' ? '<span style="background:#FFEB3B;padding:6px 10px;border-radius:12px;color:#333;font-weight:bold;">⏳ PENDIENTE</span>' : venta.estado === 'cancelado' ? '<span style="background:#EF9A9A;padding:6px 10px;border-radius:12px;color:#7f1d1d;font-weight:bold;">❌ CANCELADO</span>' : '<span style="background:#A5D6A7;padding:6px 10px;border-radius:12px;color:#1b5e20;font-weight:bold;">✅ ENTREGADO</span>') : ''}
+            </div>
             <button onclick="salesList.editVenta('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">✏️ Editar</button>
             <button onclick="if(confirm('¿Eliminar esta venta?')) salesList.deleteVenta('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
+            ${venta.estado === 'pendiente' ? `<button onclick="salesList.startEntregaAnimation('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🏍️ Marcar Entregado</button>` : ''}
+            ${venta.estado === 'pendiente' ? `<button onclick="if(confirm('¿Cancelar esta venta pendiente?')) salesList.markAsCancelado('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #FF7043; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">✖️ Cancelar</button>` : ''}
           </div>
         </div>
 
@@ -346,6 +353,75 @@ class SalesList {
     } catch (error) {
       console.error('❌ Error:', error);
       alert('Error al cargar la venta para editar');
+    }
+  }
+
+  /**
+   * Inicia animación de entrega; al completarse llama a markAsEntregado
+   */
+  startEntregaAnimation(ventaId, tipo) {
+    const card = document.getElementById(`venta-${ventaId}`);
+    if (!card) {
+      // fallback: marcar sin animación
+      return this.markAsEntregado(ventaId, tipo);
+    }
+
+    // Crear elemento moto simple
+    const moto = document.createElement('div');
+    moto.style.position = 'absolute';
+    moto.style.width = '48px';
+    moto.style.height = '24px';
+    moto.style.right = '-60px';
+    moto.style.top = '10px';
+    moto.style.zIndex = 9999;
+    moto.style.transition = 'transform 1.6s linear, right 1.6s linear';
+    moto.style.display = 'flex';
+    moto.style.alignItems = 'center';
+    moto.style.justifyContent = 'center';
+    moto.style.fontSize = '20px';
+    moto.textContent = '🏍️';
+
+    card.appendChild(moto);
+
+    // Force reflow then animate
+    void moto.offsetWidth;
+    moto.style.transform = 'translateX(-120%)';
+    moto.style.right = 'calc(100% + 20px)';
+
+    // After animation end, mark as entregado
+    setTimeout(async () => {
+      try {
+        await this.markAsEntregado(ventaId, tipo);
+        // small success feedback
+        alert('✅ Venta marcada como entregada');
+        this.loadVentas();
+      } catch (e) {
+        console.error('Error marcando entrega:', e);
+        alert('Error marcando entrega');
+      } finally {
+        moto.remove();
+      }
+    }, 1600);
+  }
+
+  async markAsEntregado(ventaId, tipo) {
+    try {
+      await this.ventasManager.markVentaEntregada(ventaId, tipo);
+      await this.loadVentas();
+    } catch (error) {
+      console.error('❌ Error marcando como entregado:', error);
+      alert('Error marcando como entregado');
+    }
+  }
+
+  async markAsCancelado(ventaId, tipo) {
+    try {
+      await this.ventasManager.markVentaCancelada(ventaId, tipo);
+      alert('✅ Venta cancelada correctamente');
+      await this.loadVentas();
+    } catch (error) {
+      console.error('❌ Error cancelando venta:', error);
+      alert('Error cancelando la venta');
     }
   }
 
