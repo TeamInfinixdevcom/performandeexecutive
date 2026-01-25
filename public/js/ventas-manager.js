@@ -193,11 +193,18 @@ class VentasManager {
       let fechaPendiente = null;
 
       // Si el agente indicó entrega inmediata no forzamos pendiente
-      if (hasImeiOrAccesorio && !ventaData.entregarInmediato && !ventaData.estado) {
-        initialEstado = 'pendiente';
-        fechaPendiente = serverTimestamp();
-      } else if (ventaData.estado) {
-        initialEstado = ventaData.estado; // permitir override
+      if (ventaData.estado) {
+        initialEstado = ventaData.estado; // permitir override explícito
+      } else if (hasImeiOrAccesorio && !ventaData.entregarInmediato) {
+        // Si hay método de envío y es mensajero, marcar pendiente por defecto
+        if (ventaData.metodoEnvio && ventaData.metodoEnvio === 'mensajero') {
+          initialEstado = 'pendiente';
+          fechaPendiente = serverTimestamp();
+        } else {
+          // por defecto si hay imei/accesorio lo dejamos 'pendiente' a menos que entregarInmediato true
+          initialEstado = 'pendiente';
+          fechaPendiente = serverTimestamp();
+        }
       }
 
       // Preparar documento sin campo `projections`

@@ -241,6 +241,7 @@ class SalesForm {
         formData.numeroPedido = document.getElementById('numeroPedido')?.value;
         formData.imeis = this.imeisList;
         formData.accesorios = this.accesoriosList;
+        try { const envioEl = document.getElementById('metodoEnvio'); if (envioEl && envioEl.value) formData.metodoEnvio = envioEl.value; } catch(e){}
       } else {
         formData.homeNumber = document.getElementById('homeNumber')?.value;
         formData.customerName = document.getElementById('customerName')?.value;
