@@ -27,10 +27,29 @@ class VentasPendientes {
       const ventasMobile = await window.ventasManager.getVentas('mobile', null, true);
       const ventasHome = await window.ventasManager.getVentas('home', null, true);
 
-      const pendientes = [...ventasMobile, ...ventasHome].filter(v => v.estado === 'pendiente' || v.estado === 'en_proceso');
+      // Mostrar solo ventas "pendientes" o "en_proceso" que sean próximas/nuevas.
+      // Criterio: tenga campo `fechaPendiente` generado al crear (ventas nuevas) O
+      // haya sido creada en los últimos 30 días. Evitamos listar ventas históricas antiguas.
+      const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const all = [...ventasMobile, ...ventasHome];
+      const pendientes = all.filter(v => {
+        const estadoMatch = v.estado === 'pendiente' || v.estado === 'en_proceso';
+        if (!estadoMatch) return false;
+
+        // Si fue marcada con `fechaPendiente` (nuestras nuevas ventas), mostrarla.
+        if (v.fechaPendiente) return true;
+
+        // Si no tiene fechaPendiente, considerar creación reciente (últimos 30 días)
+        const createdVal = v.createdAt && v.createdAt.toDate ? v.createdAt.toDate().getTime() : (v.createdAt ? new Date(v.createdAt).getTime() : null);
+        if (createdVal && (now - createdVal) <= THIRTY_DAYS_MS) return true;
+
+        return false; // excluir ventas antiguas
+      });
 
       this.renderPendientes(pendientes);
-      document.getElementById('ventasPendientesStatus').textContent = `Mostrando ${pendientes.length} ventas pendientes`;
+      document.getElementById('ventasPendientesStatus').textContent = `Mostrando ${pendientes.length} ventas pendientes (solo próximas)`;
     } catch (error) {
       console.error('Error cargando pendientes:', error);
       document.getElementById('ventasPendientesStatus').textContent = 'Error cargando pendientes: ' + (error.message || error);
