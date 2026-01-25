@@ -1,0 +1,54 @@
+{
+  "appliedAt": "2026-01-23T22:02:48.339Z",
+  "count": 6,
+  "items": [
+    {
+      "collection": "ventas",
+      "id": "gZaFKkLOYntFkNPQK1m1",
+      "changes": {
+        "tipoVenta": "nueva",
+        "updatedAt": {}
+      }
+    },
+    {
+      "collection": "ventas",
+      "id": "rSlrHuIQcM2RbxmPmPAS",
+      "changes": {
+        "tipoVenta": "nueva",
+        "updatedAt": {}
+      }
+    },
+    {
+      "collection": "ventas_hogar",
+      "id": "48wD2nCKzKfEhgPsdv1a",
+      "changes": {
+        "tipoVenta": "nueva",
+        "updatedAt": {}
+      }
+    },
+    {
+      "collection": "ventas_hogar",
+      "id": "Yj4hjpn9kFdcd85tIcrp",
+      "changes": {
+        "tipoVenta": "nueva",
+        "updatedAt": {}
+      }
+    },
+    {
+      "collection": "ventas_hogar",
+      "id": "jsOEbKfCWqOxWeHQEtvp",
+      "changes": {
+        "tipoVenta": "nueva",
+        "updatedAt": {}
+      }
+    },
+    {
+      "collection": "ventas_hogar",
+      "id": "pnBmqrszWyLFomiXDAub",
+      "changes": {
+        "tipoVenta": "nueva",
+        "updatedAt": {}
+      }
+    }
+  ]
+}

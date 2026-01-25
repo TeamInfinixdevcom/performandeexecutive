@@ -223,6 +223,12 @@ class SalesForm {
         nombreCliente: document.getElementById('nombreCliente')?.value
       };
 
+      // Entregar inmediatamente (override para ventas con IMEI/accesorio)
+      try {
+        const entregarEl = document.getElementById('entregarInmediato');
+        if (entregarEl) formData.entregarInmediato = entregarEl.checked === true;
+      } catch (e) { formData.entregarInmediato = false; }
+
       // Leer estado del checkbox "¿Es renovación?" (solo aplica para móvil)
       try{
         const renovEl = document.getElementById('checkboxRenovacion');

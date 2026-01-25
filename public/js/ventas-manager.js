@@ -12,6 +12,20 @@ class VentasManager {
   }
 
   /**
+   * Marcar venta como entregada
+   */
+  async markVentaEntregada(ventaId, tipo = 'mobile') {
+    return this.updateVenta(ventaId, tipo, { estado: 'entregado', entregadoAt: new Date().toISOString() });
+  }
+
+  /**
+   * Marcar venta como cancelada
+   */
+  async markVentaCancelada(ventaId, tipo = 'mobile', reason = null) {
+    return this.updateVenta(ventaId, tipo, { estado: 'cancelado', canceladoAt: new Date().toISOString(), cancelReason: reason });
+  }
+
+  /**
    * Inicializar: usar Firebase global
    */
   async _init() {
@@ -170,12 +184,30 @@ class VentasManager {
         }
       }
 
+      // Determinar estado inicial: por defecto, si tiene IMEIs o accesorios queda 'pendiente'
+      const hasImeiOrAccesorio = (ventaData.imeis && Array.isArray(ventaData.imeis) && ventaData.imeis.length > 0)
+        || (ventaData.accesorios && Array.isArray(ventaData.accesorios) && ventaData.accesorios.length > 0)
+        || ['imei_contado', 'accesorio_contado'].includes(ventaData.tipoPedido);
+
+      let initialEstado = 'entregado';
+      let fechaPendiente = null;
+
+      // Si el agente indicó entrega inmediata no forzamos pendiente
+      if (hasImeiOrAccesorio && !ventaData.entregarInmediato && !ventaData.estado) {
+        initialEstado = 'pendiente';
+        fechaPendiente = serverTimestamp();
+      } else if (ventaData.estado) {
+        initialEstado = ventaData.estado; // permitir override
+      }
+
       // Preparar documento sin campo `projections`
       const docData = {
         ...ventaData,
         uid,
         tipo,
         planPrice,
+        estado: initialEstado,
+        fechaPendiente: fechaPendiente,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
@@ -237,13 +269,13 @@ class VentasManager {
 
       const collectionName = tipo === 'mobile' ? 'ventas' : 'ventas_hogar';
 
-      // OPTIMIZACIÓN: Limitar a 50 ventas más recientes
-      // Query sin orderBy para evitar necesidad de índice compuesto
-      // (ordenaremos en memoria)
+      // OPTIMIZACIÓN: Limitar a 200 ventas más recientes y ordenar por createdAt
+      // Esto hace la query determinista y permite paginación si se desea.
       const q = query(
-        collection(this.db, collectionName), 
+        collection(this.db, collectionName),
         where('uid', '==', uidAUsar),
-        limit(50)
+        orderBy('createdAt', 'desc'),
+        limit(200)
       );
 
       const snapshot = await getDocs(q);
@@ -253,10 +285,10 @@ class VentasManager {
         ventas.push({ id: doc.id, ...doc.data() });
       });
 
-      // Ordenar por fecha en memoria (más barato que índice de Firestore)
+      // Ordenar por createdAt en memoria como fallback (en caso de formatos mixtos)
       ventas.sort((a, b) => {
-        const fechaA = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha);
-        const fechaB = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha);
+        const fechaA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const fechaB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
         return fechaB - fechaA; // Descendente (más reciente primero)
       });
 
@@ -311,7 +343,7 @@ class VentasManager {
   async updateVenta(ventaId, tipo, updateData) {
     await this.ensure();
 
-    const { collection, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const { collection, doc, updateDoc, getDoc, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
     try {
       // No se recalculan ni almacenan proyecciones al actualizar el precio
@@ -324,6 +356,22 @@ class VentasManager {
 
       const collectionName = tipo === 'mobile' ? 'ventas' : 'ventas_hogar';
       const docRef = doc(this.db, collectionName, ventaId);
+
+      // Create an audit entry with the previous document snapshot and the intended update
+      try {
+        const beforeSnap = await getDoc(docRef);
+        const beforeData = beforeSnap.exists() ? beforeSnap.data() : null;
+        const editsColl = collection(this.db, collectionName, ventaId, 'edits');
+        await addDoc(editsColl, {
+          before: beforeData,
+          update: updateData,
+          editorUid: this.auth.currentUser?.uid || null,
+          editorEmail: this.auth.currentUser?.email || null,
+          timestamp: serverTimestamp()
+        });
+      } catch (auditErr) {
+        console.warn('⚠️ No se pudo crear registro de auditoría para la venta:', auditErr);
+      }
 
       await updateDoc(docRef, updateData);
 
@@ -377,6 +425,9 @@ class VentasManager {
       const ventasHome = await this.getVentas('home', filtroUID);
       const todasVentas = [...ventasMobile, ...ventasHome];
 
+      // Excluir ventas pendientes o canceladas de métricas (no son ingresos válidos todavía)
+      const ventasValidas = todasVentas.filter(v => v.estado !== 'pendiente' && v.estado !== 'cancelado');
+
       // Calcular métricas basadas en `planPrice` (sin proyecciones)
       let totalTerminals = 0;
       let totalAccesorios = 0;
@@ -385,8 +436,9 @@ class VentasManager {
       let totalRevenueHome = 0;
       let totalPrepagoRevenue = 0;
 
-      // Ventas móviles
+      // Ventas móviles (usar sólo ventas válidas para revenue/conteos)
       ventasMobile.forEach(venta => {
+        if (venta.estado === 'pendiente' || venta.estado === 'cancelado') return; // ignorar
         const precio = venta.planPrice || 0;
         // No sumar accesorios/IMEI contado a revenue; tampoco sumar renovaciones (son eventos, no dinero)
         const esAccesorioOImeiContado = venta.planId === 'accesorio_contado' || venta.planId === 'imei_contado';
@@ -413,6 +465,7 @@ class VentasManager {
 
       // Ventas hogar
       ventasHome.forEach(venta => {
+        if (venta.estado === 'pendiente' || venta.estado === 'cancelado') return; // ignorar
         const precio = venta.planPrice || 0;
         // No sumar accesorios/IMEI contado a revenue; tampoco sumar renovaciones
         const esAccesorioOImeiContado = venta.planId === 'accesorio_contado' || venta.planId === 'imei_contado';
@@ -436,7 +489,7 @@ class VentasManager {
       });
 
       const metricas = {
-        totalVentas: todasVentas.length,
+        totalVentas: ventasValidas.length,
         ventasMobile: ventasMobile.length,
         ventasHome: ventasHome.length,
         totalRevenue,

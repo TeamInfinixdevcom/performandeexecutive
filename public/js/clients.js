@@ -47,6 +47,8 @@ const messageBox = document.getElementById('messageBox');
 const searchInput = document.getElementById('searchInput');
 const filterSegment = document.getElementById('filterSegment');
 const btnExportClients = document.getElementById('btnExportClients');
+const tipoClienteSelect = document.getElementById('tipoCliente');
+const fechaGroup = document.getElementById('fechaGroup');
 
 // Elementos de paginación
 const paginationControls = document.getElementById('paginationControls');
@@ -65,6 +67,7 @@ const interactionForm = document.getElementById('interactionForm');
 // Esperar autenticación
 onAuthStateChanged(auth, (user) => {
     if (user) {
+        console.log('Usuario autenticado UID:', user.uid, 'email:', user.email);
         currentUser = user;
         loadClients();
     }
@@ -117,6 +120,7 @@ btnAddClient.addEventListener('click', showForm);
 btnLoadClients.addEventListener('click', loadClients);
 btnCancelForm.addEventListener('click', hideForm);
 clientForm.addEventListener('submit', handleClientSubmit);
+if (tipoClienteSelect) tipoClienteSelect.addEventListener('change', onTipoClienteChange);
 btnSearch.addEventListener('click', searchClients);
 btnClearSearch.addEventListener('click', clearSearch);
 filterSegment.addEventListener('change', filterBySegment);
@@ -176,6 +180,28 @@ function localSafeClientDisplay(client) {
     };
 }
 
+function onTipoClienteChange() {
+    try {
+        const tipo = (document.getElementById('tipoCliente') && document.getElementById('tipoCliente').value) || 'fisico';
+        if (fechaGroup) {
+            if (tipo === 'juridico') {
+                fechaGroup.style.display = 'none';
+                const fechaInput = document.getElementById('fechaNacimiento');
+                if (fechaInput) fechaInput.value = '';
+            } else {
+                fechaGroup.style.display = '';
+            }
+        }
+        // update cedula label when juridico
+        const labelCedula = document.getElementById('labelCedula');
+        if (labelCedula) {
+            labelCedula.textContent = (tipo === 'juridico') ? 'Cédula Jurídica:' : 'Cédula: *';
+        }
+    } catch (e) {
+        // fail silently
+    }
+}
+
 // Event listeners de paginación
 if (btnPrevPage) btnPrevPage.addEventListener('click', previousPage);
 if (btnNextPage) btnNextPage.addEventListener('click', nextPage);
@@ -205,6 +231,9 @@ function showForm() {
     currentEditId = null;
     clientForm.reset();
     document.getElementById('formTitle').textContent = 'Agregar Nuevo Cliente';
+    // default to físico and ensure fecha visible
+    if (tipoClienteSelect) tipoClienteSelect.value = 'fisico';
+    onTipoClienteChange();
     window.scrollTo({ top: formSection.offsetTop - 20, behavior: 'smooth' });
 }
 
@@ -539,7 +568,9 @@ async function handleClientSubmit(e) {
         cedula,
         name: name.toUpperCase(),
         email,
-        fechaNacimiento: document.getElementById('fechaNacimiento').value,
+        // fechaNacimiento only for natural persons
+        fechaNacimiento: (document.getElementById('tipoCliente') && document.getElementById('tipoCliente').value === 'fisico') ? document.getElementById('fechaNacimiento').value : null,
+        tipoCliente: (document.getElementById('tipoCliente') && document.getElementById('tipoCliente').value) || 'fisico',
         domicilio,
         serviciosMoviles: document.getElementById('serviciosMoviles').value.split(',').map(s => s.trim()).filter(s => s),
         serviciosFijos: document.getElementById('serviciosFijos').value.split(',').map(s => s.trim()).filter(s => s),
@@ -707,7 +738,10 @@ function editSelectedClient() {
             document.getElementById('cedula').value = client.cedula;
             document.getElementById('nombre').value = client.name;
             document.getElementById('email').value = client.email || '';
+            // tipoCliente default to 'fisico' if not present
+            document.getElementById('tipoCliente').value = client.tipoCliente || 'fisico';
             document.getElementById('fechaNacimiento').value = client.fechaNacimiento || '';
+            onTipoClienteChange();
             document.getElementById('domicilio').value = client.domicilio || '';
             document.getElementById('serviciosMoviles').value = client.serviciosMoviles.join(', ');
             document.getElementById('serviciosFijos').value = client.serviciosFijos.join(', ');
@@ -766,7 +800,7 @@ async function handleInteractionSubmit(e) {
     try {
         const clientRef = doc(db, 'clients', selectedClientId);
         const docSnap = await getDoc(clientRef);
-        
+
         if (docSnap.exists()) {
             const client = docSnap.data();
             const interactions = client.interactions || [];
@@ -774,24 +808,20 @@ async function handleInteractionSubmit(e) {
             const newId = editingInteractionId || String(Date.now());
             interaction.id = newId;
 
+            let updatedInteractions;
             if (editingInteractionId) {
                 // Replace existing interaction with same id
-                const updated = interactions.map(i => String(i.id) === String(editingInteractionId) ? { ...i, ...interaction, date: Timestamp.now() } : i);
-                await updateDoc(clientRef, { interactions: updated, updatedAt: Timestamp.now() });
+                updatedInteractions = interactions.map(i => String(i.id) === String(editingInteractionId) ? { ...i, ...interaction, date: Timestamp.now() } : i);
                 // reset editing state
                 editingInteractionId = null;
                 const cancelBtn = document.getElementById('btnCancelInteractionEdit');
                 if (cancelBtn) cancelBtn.remove();
             } else {
-                interactions.push(interaction);
-                await updateDoc(clientRef, { 
-                    interactions: interactions,
-                    updatedAt: Timestamp.now()
-                });
+                updatedInteractions = [...interactions, interaction];
             }
-            
+
             await updateDoc(clientRef, { 
-                interactions: interactions,
+                interactions: updatedInteractions,
                 updatedAt: Timestamp.now()
             });
             

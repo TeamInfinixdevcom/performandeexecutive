@@ -1,0 +1,188 @@
+{
+  "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+  "generatedAt": "2026-01-23T22:03:16.851Z",
+  "recentDays": 7,
+  "totals": {
+    "ventas": 6,
+    "ventas_hogar": 3
+  },
+  "sales": [
+    {
+      "id": "4gfq8BeJK0Nyh9FXVnlg",
+      "collection": "ventas",
+      "createdAt": "2026-01-19T14:07:28.409Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 14380,
+      "tipoVenta": "renovacion",
+      "renovacion": false,
+      "categories": [
+        "renovacion"
+      ],
+      "tipoPedido": "Komercial",
+      "imeisCount": 1,
+      "accesoriosCount": 0,
+      "totalPriceStored": 14380,
+      "computedTotal": 14380,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "AOE0e3VJUroXcWPC8lP8",
+      "collection": "ventas",
+      "createdAt": "2026-01-19T14:03:33.169Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 10458,
+      "tipoVenta": "renovacion",
+      "renovacion": false,
+      "categories": [
+        "renovacion"
+      ],
+      "tipoPedido": "Komercial",
+      "imeisCount": 0,
+      "accesoriosCount": 0,
+      "totalPriceStored": 10458,
+      "computedTotal": 10458,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "QKmRwECHbsPKjaufJUcM",
+      "collection": "ventas",
+      "createdAt": "2026-01-20T17:33:03.348Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 0,
+      "tipoVenta": "nueva",
+      "renovacion": false,
+      "categories": [],
+      "tipoPedido": "Komercial",
+      "imeisCount": 0,
+      "accesoriosCount": 1,
+      "totalPriceStored": null,
+      "computedTotal": 0,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "exyGLy319AeywwHXN7Zj",
+      "collection": "ventas",
+      "createdAt": "2026-01-19T14:05:42.378Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 14380,
+      "tipoVenta": "renovacion",
+      "renovacion": false,
+      "categories": [
+        "renovacion"
+      ],
+      "tipoPedido": "Komercial",
+      "imeisCount": 1,
+      "accesoriosCount": 0,
+      "totalPriceStored": 14380,
+      "computedTotal": 14380,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "rSlrHuIQcM2RbxmPmPAS",
+      "collection": "ventas",
+      "createdAt": "2026-01-23T14:45:38.881Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 18738,
+      "tipoVenta": "nueva",
+      "renovacion": false,
+      "categories": [],
+      "tipoPedido": "Komercial",
+      "imeisCount": 1,
+      "accesoriosCount": 0,
+      "totalPriceStored": 18738,
+      "computedTotal": 18738,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "x2S32eISiYDsSk2hR7bX",
+      "collection": "ventas",
+      "createdAt": "2026-01-19T22:45:10.659Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 10619,
+      "tipoVenta": "nueva",
+      "renovacion": false,
+      "categories": [],
+      "tipoPedido": "Komercial",
+      "imeisCount": 1,
+      "accesoriosCount": 0,
+      "totalPriceStored": 10619,
+      "computedTotal": 10619,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "48wD2nCKzKfEhgPsdv1a",
+      "collection": "ventas_hogar",
+      "createdAt": "2026-01-22T19:15:43.439Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 13072,
+      "tipoVenta": "nueva",
+      "renovacion": false,
+      "categories": [],
+      "tipoPedido": null,
+      "imeisCount": 0,
+      "accesoriosCount": 0,
+      "totalPriceStored": 13072,
+      "computedTotal": 13072,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "jsOEbKfCWqOxWeHQEtvp",
+      "collection": "ventas_hogar",
+      "createdAt": "2026-01-19T14:27:41.728Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 13072,
+      "tipoVenta": "nueva",
+      "renovacion": false,
+      "categories": [],
+      "tipoPedido": null,
+      "imeisCount": 0,
+      "accesoriosCount": 0,
+      "totalPriceStored": 13072,
+      "computedTotal": 13072,
+      "reasons": [
+        "no rules require changes"
+      ]
+    },
+    {
+      "id": "pnBmqrszWyLFomiXDAub",
+      "collection": "ventas_hogar",
+      "createdAt": "2026-01-23T14:49:37.543Z",
+      "isRecent": true,
+      "plan": null,
+      "planPrice": 13072,
+      "tipoVenta": "nueva",
+      "renovacion": false,
+      "categories": [],
+      "tipoPedido": null,
+      "imeisCount": 0,
+      "accesoriosCount": 0,
+      "totalPriceStored": 13072,
+      "computedTotal": 13072,
+      "reasons": [
+        "no rules require changes"
+      ]
+    }
+  ]
+}

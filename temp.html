@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Performance ICE - CRM</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#007AFF">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="EP ICE">
+    <meta name="description" content="Sistema de Gestión de Clientes - Ejecutivos RCM ICE">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23007AFF' width='180' height='180' rx='40'/><text x='90' y='120' font-size='90' text-anchor='middle' fill='white'>⬥</text></svg>">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231f2937' width='100' height='100'/><text x='50' y='65' font-size='70' text-anchor='middle' dominant-baseline='middle'>🏢</text></svg>">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/calls-styles.css">
+    <link rel="stylesheet" href="css/sales-styles.css">
+    <link rel="stylesheet" href="css/proyecciones.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        /* Tabs wrapper and "Más" dropdown */
+        .tabs-wrap { display:flex; align-items:center; gap:8px; padding: 6px 8px; }
+        .tabs-container { display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow:visible; }
+        .tab-btn { display: inline-flex; align-items: center; justify-content: center; flex:0 0 auto; white-space:nowrap; padding:8px 12px; border-radius:8px; background:transparent; border: none; cursor:pointer; height:44px; line-height:1; }
+        .tab-btn.active { background: #e9f5ff; border-bottom: 3px solid #0d6efd; }
+        .tabs-more { position: relative; display: inline-flex; align-items: center; height:44px; }
+        .tabs-scroll { background: rgba(255,255,255,0.92); color: #0b1220; border: 1px solid rgba(0,0,0,0.08); padding:8px 14px; border-radius:12px; cursor:pointer; min-width:64px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .12s cubic-bezier(.22,1,.36,1), box-shadow .12s ease, opacity .12s ease; font-weight:600; display:inline-flex; align-items:center; height:44px; }
+        .tabs-scroll:hover{ transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,0,0,0.10); }
+        .tabs-scroll:active{ transform: translateY(0); }
+        .tabs-more-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width:220px; background: #ffffff; color: #111; border-radius:12px; box-shadow: 0 18px 40px rgba(0,0,0,0.12); padding:8px; z-index:40; opacity:0; transform: translateY(-8px) scale(0.98); visibility:hidden; transition: opacity 120ms cubic-bezier(.22,1,.36,1), transform 120ms cubic-bezier(.22,1,.36,1), visibility 120ms; transform-origin: top right; }
+        .tabs-more-menu.open{ opacity:1; transform: translateY(0) scale(1); visibility:visible; }
+
+        /* Apple-like button for header */
+        .apple-btn{ background: rgba(255,255,255,0.92); color:#041016; border:1px solid rgba(0,0,0,0.06); padding:8px 12px; border-radius:12px; font-weight:700; box-shadow:0 10px 24px rgba(0,0,0,0.08); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); transition: transform .12s cubic-bezier(.22,1,.36,1), box-shadow .12s ease; }
+        .apple-btn:hover{ transform: translateY(-2px); box-shadow:0 16px 36px rgba(0,0,0,0.12); }
+        .apple-btn:active{ transform: translateY(0); }
+        .tabs-more-menu button{ display:block; width:100%; text-align:left; padding:8px 10px; background:transparent; border:none; cursor:pointer; border-radius:6px; }
+        .tabs-more-menu button:hover{ background: rgba(0,0,0,0.04); }
+        @media(max-width:900px){ .tabs-wrap{ padding:4px; } .tabs-more-menu{ left:0; right:auto; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h1>⬥ Executive Performance ICE</h1>
+                    <p class="subtitle">Sistema de Gestión de Clientes | Uso Exclusivo Ejecutivos RCM</p>
+                </div>
+                
+                <div style="text-align: center; display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 200px;">
+                    <p style="color: var(--text-primary); margin: 0; font-size: 0.95rem;">
+                        👤 <span id="userName">Cargando...</span>
+                        <span class="notification-bell" id="notificationBell">
+                            🔔
+                            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </span>
+                    </p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                        <button id="btnAdminPanel" class="btn btn-warning apple-btn" style="padding: 8px 14px; font-size: 0.9rem; display: none !important;" onclick="window.location.href='admin.html'">
+                            👨‍💼 Panel Admin
+                        </button>
+                        <button id="btnLogout" class="btn btn-secondary apple-btn" style="padding: 8px 14px; font-size: 0.9rem;" onclick="logoutUser()">
+                            🚪 Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Pestañas de navegación (agrupadas en 'Más' cuando hay overflow) -->
+            <div class="tabs-wrap">
+                <div id="tabsContainer" class="tabs-container" role="tablist" aria-label="Navegación principal">
+                    <button class="tab-btn active" data-tab="clientes" onclick="switchTab('clientes')">👥 Mis Clientes</button>
+                    <button class="tab-btn" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Gráfica de Segmentos</button>
+                    <button class="tab-btn" data-tab="calendario" onclick="switchTab('calendario')">📅 Agenda</button>
+                    <button class="tab-btn" data-tab="listaEspera" onclick="switchTab('listaEspera')">⏳ Lista de Espera</button>
+                    <button class="tab-btn" data-tab="objetivos" onclick="switchTab('objetivos')">🎯 Objetivos</button>
+                    <button class="tab-btn" data-tab="misventas" onclick="switchTab('misventas')">📋 Mis Ventas</button>
+                    <button class="tab-btn" data-tab="todasventas" onclick="switchTab('todasventas')" id="btnTodasVentas" style="display: none !important;">🌐 Todas las Ventas</button>
+                    <button class="tab-btn" data-tab="proyecciones" onclick="switchTab('proyecciones')">📈 Proyecciones</button>
+                    <button class="tab-btn" data-tab="contactacionWhatsapp" onclick="switchTab('contactacionWhatsapp')">💬 Contactación WhatsApp</button>
+                </div>
+                <div class="tabs-more">
+                    <button id="tabsMoreBtn" class="tabs-scroll" aria-haspopup="true" aria-expanded="false">Más ▾</button>
+                    <div id="tabsMoreMenu" class="tabs-more-menu" role="menu" aria-hidden="true"></div>
+                </div>
+            </div>
+
+            <!-- Pestaña: Clientes -->
+            <div id="tab-clientes" class="tab-content active">
+            <!-- Barra de búsqueda -->
+            <section class="search-section">
+                <h2>🔍 Buscar Cliente</h2>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Buscar por nombre, cédula o número de servicio..." class="search-input">
+                    <button id="btnSearch" class="btn btn-primary">Buscar</button>
+                    <button id="btnClearSearch" class="btn btn-secondary">Limpiar</button>
+                </div>
+            </section>
+
+            <!-- Sección de controles -->
+            <section class="controls">
+                <h2>Mis Clientes</h2>
+                <div class="button-group">
+                    <button id="btnAddClient" class="btn btn-success">➕ Agregar Cliente</button>
+                    <button id="btnLoadClients" class="btn btn-primary">🔄 Actualizar Lista</button>
+                    <select id="filterSegment" class="filter-select">
+                        <option value="">Todos los segmentos</option>
+                        <option value="PLATINO">PLATINO</option>
+                        <option value="ORO">ORO</option>
+                        <option value="PLATA">PLATA</option>
+                        <option value="BRONCE">BRONCE</option>
+                        <option value="BLACK">BLACK</option>
+                    </select>
+                </div>
+                <div class="stats-bar">
+                    <span>Total: <strong id="totalClients">0</strong></span>
+                    <span>Platino: <strong id="totalPlatino">0</strong></span>
+                    <span>Oro: <strong id="totalOro">0</strong></span>
+                    <span>Plata: <strong id="totalPlata">0</strong></span>
+                    <span>Bronce: <strong id="totalBronce">0</strong></span>
+                    <span>Black: <strong id="totalBlack">0</strong></span>
+                </div>
+            </section>
+
+            <!-- Formulario para crear/editar cliente -->
+            <section id="formSection" class="form-section hidden">
+                <h2 id="formTitle">Agregar Nuevo Cliente</h2>
+                <form id="clientForm">
+                    <!-- Identificación -->
+                    <h3>📋 Información Personal</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cedula" id="labelCedula">Cédula: *</label>
+                            <input type="text" id="cedula" required placeholder="112380702">
+                        </div>
+                        <div class="form-group">
+                            <label for="nombre">Nombre Completo: *</label>
+                            <input type="text" id="nombre" required placeholder="ESQUIVEL AGUILAR IVANNIA LUCIA">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Correo Electrónico:</label>
+                            <input type="email" id="email" placeholder="cliente@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoCliente">Tipo de Cliente:</label>
+                            <select id="tipoCliente">
+                                <option value="fisico">Físico</option>
+                                <option value="juridico">Jurídico</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" id="fechaGroup">
+                            <label for="fechaNacimiento">Fecha de Nacimiento:</label>
+                            <input type="date" id="fechaNacimiento">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="domicilio">Domicilio:</label>
+                        <input type="text" id="domicilio" placeholder="Dirección completa">
+                    </div>
+                    
+                    <!-- Servicios -->
+                    <h3>📱 Servicios</h3>
+                    <div class="form-group">
+                        <label for="serviciosMoviles">Servicios Móviles Activos:</label>
+                        <input type="text" id="serviciosMoviles" placeholder="83033341, 88396969 (separados por coma)">
+                        <small>Ingrese los números separados por coma</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviciosFijos">Servicios Fijos Activos:</label>
+                        <input type="text" id="serviciosFijos" placeholder="22801234, 22805678 (separados por coma)">
+                        <small>Ingrese los números separados por coma</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipoPlan">Tipo de Plan Suscrito:</label>
+                            <input type="text" id="tipoPlan" placeholder="Ej: Plan Pospago 5GB">
+                        </div>
+                        <div class="form-group">
+                            <label for="estadoPlan">Estado del Plan:</label>
+                            <select id="estadoPlan">
+                                <option value="ACTUALIZADO">Actualizado</option>
+                                <option value="NO ACTUALIZADO">No Actualizado</option>
+                                <option value="PENDIENTE">Pendiente</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Clasificación -->
+                    <h3>⭐ Clasificación</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="segmento">Segmento: *</label>
+                            <select id="segmento" required>
+                                <option value="">Seleccione...</option>
+                                <option value="PLATINO">PLATINO</option>
+                                <option value="ORO">ORO</option>
+                                <option value="PLATA">PLATA</option>
+                                <option value="BRONCE">BRONCE</option>
+                                <option value="BLACK">BLACK</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="puntajeScore">Puntaje Score:</label>
+                            <input type="number" id="puntajeScore" placeholder="492" min="0" max="999">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoriaCrediticia">Categoría Crediticia:</label>
+                            <select id="categoriaCrediticia">
+                                <option value="">Seleccione...</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="notas">Notas Importantes:</label>
+                            <textarea id="notas" rows="2" placeholder="Información adicional relevante"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-success">💾 Guardar Cliente</button>
+                        <button type="button" id="btnCancelForm" class="btn btn-secondary">❌ Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Sección de mensajes -->
+            <div id="messageBox" class="message-box hidden"></div>
+
+            <!-- Sección de clientes -->
+            <section class="data-section">
+                <h2>Clientes Registrados</h2>
+                <button id="btnExportClients" class="btn btn-info" style="margin-bottom: 12px;">📤 Exportar a Excel</button>
+                <div id="clientsContainer" class="clients-grid">
+                    <p class="empty-message">No hay clientes registrados. Haz clic en "Agregar Cliente" para comenzar.</p>
+                </div>
+                
+                <!-- Controles de paginación -->
+                <div id="paginationControls" class="pagination-controls hidden">
+                    <div class="pagination-info">
+                        <span>Mostrando <strong id="showingStart">0</strong> - <strong id="showingEnd">0</strong> de <strong id="totalResults">0</strong> resultados</span>
+                        <select id="itemsPerPage" class="filter-select">
+                            <option value="5" selected>5 por página</option>
+                            <option value="10">10 por página</option>
+                            <option value="20">20 por página</option>
+                            <option value="50">50 por página</option>
+                        </select>
+                    </div>
+                    <div class="pagination-buttons">
+                        <button id="btnPrevPage" class="btn btn-secondary">← Anterior</button>
+                        <div id="pageNumbers" class="page-numbers"></div>
+                        <button id="btnNextPage" class="btn btn-secondary">Siguiente →</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Modal detalle del cliente -->
+            <div id="clientDetailModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="modal-close" id="closeModal">&times;</span>
+                    <h2 id="modalClientName">Cliente</h2>
+                    <div id="clientDetailContent"></div>
+                    
+                    <!-- Sección para agregar interacción -->
+                    <div class="interaction-section">
+                        <h3>📞 Registrar Interacción</h3>
+                        <form id="interactionForm">
+                            <div class="form-group">
+                                <label for="interactionType">Tipo:</label>
+                                <select id="interactionType" required>
+                                    <option value="RENOVACION">Renovación</option>
+                                    <option value="OFERTA">Oferta de Producto</option>
+                                    <option value="CONSULTA">Consulta</option>
+                                    <option value="RECLAMO">Reclamo</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="interactionNotes">Notas:</label>
+                                <textarea id="interactionNotes" required rows="3" placeholder="Detalles de la interacción"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="interactionResult">Resultado:</label>
+                                <select id="interactionResult" required>
+                                    <option value="EXITOSO">Exitoso</option>
+                                    <option value="PENDIENTE">Pendiente</option>
+                                    <option value="RECHAZADO">Rechazado</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success">💾 Guardar Interacción</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="modal-actions">
+                        <button id="btnEditClient" class="btn btn-primary">✏️ Editar Cliente</button>
+                        <button id="btnDeleteClient" class="btn btn-danger">🗑️ Eliminar Cliente</button>
+                    </div>
+                </div>
+            </div>
+
+            </div><!-- Fin tab-clientes -->
+
+            <!-- Pestaña: Objetivos -->
+            <div id="tab-objetivos" class="tab-content">
+                <section class="form-section">
+                    <h2 style="margin-bottom: 8px;">🎯 Sistema de Ventas Telecomunicaciones</h2>
+                    <p style="color: #666; margin-bottom: 24px;">Registra ventas de planes móviles y servicios hogar</p>
+                    
+                    <!-- SECCIÓN 1: MÉTRICAS -->
+                    <div id="objetivosMetricasContainer" style="margin-bottom: 32px;"></div>
+
+                    <!-- SECCIÓN 2: GRÁFICAS -->
+                    <div id="objetivosChartsContainer" style="margin-bottom: 32px;"></div>
+
+                    <!-- SECCIÓN 3: FORMULARIOS DE REGISTRO -->
+                    <div class="card" style="margin-bottom: 24px;">
+                        <h3 style="margin-top: 0; margin-bottom: 16px;">📝 Registrar Nueva Venta</h3>
+                        
+                        <!-- Botones para cambiar tipo de venta -->
+                        <div style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid #ddd; padding-bottom: 16px;">
+                            <button class="tab-btn active" onclick="window.objetivosForm?.switchFormType('mobile')" style="padding: 12px 20px; background: transparent; border: none; border-bottom: 3px solid #667eea; color: #667eea; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">📱 Venta Móvil</button>
+                            <button class="tab-btn" onclick="window.objetivosForm?.switchFormType('home')" style="padding: 12px 20px; background: transparent; border: none; border-bottom: 3px solid transparent; color: #999; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s;">🏠 Venta Hogar</button>
+                        </div>
+
+                        <!-- Contenedor del formulario dinámico -->
+                        <div id="objetivosFormContainer"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Pestaña: Mis Ventas -->
+            <div id="tab-misventas" class="tab-content">
+                <section class="form-section">
+                    <h2 style="margin-bottom: 8px;">📋 Mis Ventas</h2>
+                    <p style="color: #666; margin-bottom: 24px;">Gestiona todas tus ventas registradas - Edita, elimina o visualiza detalles</p>
+                    
+                    <!-- Filtros y búsqueda -->
+                    <div class="card" style="margin-bottom: 24px; padding: 16px;">
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <input type="text" id="buscarNumPedido" placeholder="🔍 Buscar por número de pedido" class="form-input" style="flex: 1; min-width: 200px;">
+                            <input type="text" id="buscarCedula" placeholder="🔍 Buscar por cédula" class="form-input" style="flex: 1; min-width: 200px;">
+                            <select id="filtroTipoVenta" class="form-select" style="flex: 1; min-width: 150px;">
+                                <option value="">Todos los tipos</option>
+                                <option value="mobile">📱 Móvil</option>
+                                <option value="home">🏠 Hogar</option>
+                            </select>
+                            <button onclick="window.misVentas?.cargarVentas()" class="btn btn-primary" style="background-color: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">🔄 Refrescar</button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de ventas -->
+                    <div id="misVentasContainer"></div>
+                </section>
+            </div>
+
+            <!-- Pestaña: Proyecciones -->
+            <div id="tab-proyecciones" class="tab-content">
+                <section class="form-section">
+                    <h2 style="margin-bottom: 8px;">📈 Proyecciones Monetarias</h2>
+                    <p style="color: #666; margin-bottom: 24px;">Visualiza tus proyecciones de ingresos basadas en tus ventas registradas</p>
+                    <!-- Tabs internas para anual/mensual -->
+                    <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                        <button id="btnProyeccionAnual" class="tab-btn active" onclick="switchProyeccionTab('anual')">Anual</button>
+                        <button id="btnProyeccionMensual" class="tab-btn" onclick="switchProyeccionTab('mensual')">Por Mes</button>
+                    </div>
+                    <!-- Contenido anual (por defecto visible) -->
+                    <div id="proyeccionAnualSection">
+                        <div id="proyeccionesMetricasContainer"></div>
+                        <div id="proyeccionesChartsContainer"></div>
+                    </div>
+                    <!-- Contenido mensual (oculto por defecto) -->
+                    <div id="proyeccionMensualSection" style="display:none;">
+                        <div style="margin-bottom: 18px;">
+                            <label for="selectMesProyeccion" style="font-weight:600; margin-right:8px;">Selecciona Mes:</label>
+                            <select id="selectMesProyeccion">
+                                <option value="0">Enero</option>
+                                <option value="1">Febrero</option>
+                                <option value="2">Marzo</option>
+                                <option value="3">Abril</option>
+                                <option value="4">Mayo</option>
+                                <option value="5">Junio</option>
+                                <option value="6">Julio</option>
+                                <option value="7">Agosto</option>
+                                <option value="8">Septiembre</option>
+                                <option value="9">Octubre</option>
+                                <option value="10">Noviembre</option>
+                                <option value="11">Diciembre</option>
+                            </select>
+                        </div>
+                        <div id="proyeccionesMetricasMensualContainer"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Pestaña: Todas las Ventas (Solo Admin) -->
+            <div id="tab-todasventas" class="tab-content">
+                <section class="form-section">
+                    <h2 style="margin-bottom: 8px;">🌐 Todas las Ventas (Vista Administrador)</h2>
+                    <p style="color: #666; margin-bottom: 24px;">Visualiza las ventas de todos los usuarios del sistema</p>
+                    
+                    <!-- Filtros -->
+                    <div style="background: white; padding: 16px; border-radius: 8px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">👤 Filtrar por Usuario:</label>
+                                <select id="filtroUsuarioTodasVentas" class="form-input" onchange="window.todasVentas?.aplicarFiltros()">
+                                    <option value="">Todos los usuarios</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">📦 Tipo de Venta:</label>
+                                <select id="filtroTipoTodasVentas" class="form-input" onchange="window.todasVentas?.aplicarFiltros()">
+                                    <option value="">Todas</option>
+                                    <option value="mobile">📱 Móvil</option>
+                                    <option value="home">🏠 Hogar</option>
+                                </select>
+                            </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">🔍 Buscar (pedido / cédula / cliente):</label>
+                                    <input id="filtroBusquedaVentas" type="text" class="form-input" placeholder="KO-123, 0101, nombre cliente" oninput="window.todasVentas?.aplicarFiltros()" />
+                                </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedor de ventas -->
+                    <div id="todasVentasContainer"></div>
+                </section>
+            </div>
+
+            <!-- Pestaña: Contactación WhatsApp -->
+            <div id="tab-contactacionWhatsapp" class="tab-content">
+                <!-- Contenido cargado por public/js/contactacion-whatsapp.js -->
+                <div id="contactacionWhatsappRoot"></div>
+            </div>
+
+            <!-- Pestaña: Dashboard -->
+            <div id="tab-dashboard" class="tab-content">
+                <section class="data-section">
+                    <h2>📊 Dashboard de Métricas</h2>
+                    
+                    <!-- Indicador de carga -->
+                    <div id="dashboardLoading" style="text-align: center; padding: 40px; display: none;">
+                        <div style="border: 4px solid rgba(102,126,234,0.3); border-radius: 50%; border-top: 4px solid #667eea; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                        <p style="font-size: 1.1em; color: #666;">Cargando gráficos...</p>
+                    </div>
+                    
+                    <!-- Gráficos Simples -->
+                    <div class="charts-container" id="chartsContainer">
+                        <!-- Gráfico 1 -->
+                        <div class="chart-card">
+                            <h3 class="chart-title">📊 Distribución por Segmento</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="segmentChartSimple"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Gráfico 2 -->
+                        <div class="chart-card">
+                            <h3 class="chart-title">📈 Clientes por Segmento</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="scoreChartSimple"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botón de recarga manual -->
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="if(typeof loadSegmentCharts === 'function') loadSegmentCharts();" class="btn btn-primary" style="padding: 10px 20px;">
+                            🔄 Actualizar Gráficos
+                        </button>
+                    </div>
+                </section>
+            </div><!-- Fin tab-dashboard -->
+
+            <!-- Pestaña: Agenda / Calendario -->
+            <div id="tab-calendario" class="tab-content">
+                <section class="agenda-section">
+                    <!-- Header de Agenda -->
+                    <div class="agenda-header">
+                        <h2>📅 Mi Agenda</h2>
+                        <div class="agenda-controls">
+                            <div class="view-switcher">
+                                <button class="view-btn active" data-view="day" onclick="AgendaManager.setView('day')">Día</button>
+                                <button class="view-btn" data-view="week" onclick="AgendaManager.setView('week')">Semana</button>
+                                <button class="view-btn" data-view="month" onclick="AgendaManager.setView('month')">Mes</button>
+                            </div>
+                            <button class="btn btn-primary" onclick="AgendaManager.showNewActivityModal()">
+                                ➕ Nueva Actividad
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Navegación de fecha -->
+                    <div class="agenda-nav">
+                        <button class="nav-btn" onclick="AgendaManager.previousPeriod()">
+                            ← Anterior
+                        </button>
+                        <h3 id="agendaCurrentDate" class="current-date">Diciembre 2025</h3>
+                        <button class="nav-btn" onclick="AgendaManager.nextPeriod()">
+                            Siguiente →
+                        </button>
+                        <button class="nav-btn today-btn" onclick="AgendaManager.goToToday()">
+                            Hoy
+                        </button>
+                    </div>
+
+                    <!-- Contenedor principal de la agenda -->
+                    <div id="agendaContainer" class="agenda-container">
+                        <!-- Vista de Día -->
+                        <div id="dayView" class="agenda-view day-view">
+                            <div class="day-header">
+                                <span id="dayViewDate" class="day-title">Lunes, 9 de Diciembre</span>
+                            </div>
+                            <div id="dayActivities" class="day-activities">
+                                <p class="empty-agenda">No hay actividades para hoy</p>
+                            </div>
+                        </div>
+
+                        <!-- Vista de Semana -->
+                        <div id="weekView" class="agenda-view week-view" style="display: none;">
+                            <div id="weekGrid" class="week-grid">
+                                <!-- Se genera dinámicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Vista de Mes -->
+                        <div id="monthView" class="agenda-view month-view" style="display: none;">
+                            <div class="month-header">
+                                <span>Dom</span>
+                                <span>Lun</span>
+                                <span>Mar</span>
+                                <span>Mié</span>
+                                <span>Jue</span>
+                                <span>Vie</span>
+                                <span>Sáb</span>
+                            </div>
+                            <div id="monthGrid" class="month-grid">
+                                <!-- Se genera dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de actividades del período -->
+                    <div class="agenda-activities-list">
+                        <h3>📋 Actividades Próximas</h3>
+                        <div id="upcomingActivities" class="upcoming-list">
+                            <p class="empty-agenda">No hay actividades próximas</p>
+                        </div>
+                    </div>
+                </section>
+            </div><!-- Fin tab-calendario -->
+
+            <!-- Pestaña: Lista de Espera -->
+            <div id="tab-listaEspera" class="tab-content">
+                <section class="form-section">
+                    <h2>⏳ Lista de Espera - Terminales</h2>
+                    <p style="color: #666; margin-bottom: 20px;">Gestiona clientes que esperan disponibilidad de equipos</p>
+                    
+                    <!-- Formulario para agregar a lista de espera -->
+                    <div class="card" style="margin-bottom: 24px;">
+                        <h3>➕ Agregar Cliente a Lista de Espera</h3>
+                        <form id="waitlistForm">
+                            <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                                <div class="form-group">
+                                    <label for="waitlistClientName">Nombre del Cliente *</label>
+                                    <input type="text" id="waitlistClientName" class="form-input" placeholder="Nombre completo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="waitlistCedula">Cédula *</label>
+                                    <input type="text" id="waitlistCedula" class="form-input" placeholder="Ej: 1-1234-5678" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="waitlistPhone">Teléfono de Contacto *</label>
+                                    <input type="tel" id="waitlistPhone" class="form-input" placeholder="Ej: 8888-8888" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="waitlistEmail">Correo Electrónico</label>
+                                    <input type="email" id="waitlistEmail" class="form-input" placeholder="cliente@email.com">
+                                </div>
+                            </div>
+                            <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 16px;">
+                                <div class="form-group">
+                                    <label for="waitlistBrand">Marca del Teléfono *</label>
+                                    <select id="waitlistBrand" class="form-select" required>
+                                        <option value="">Selecciona marca...</option>
+                                        <option value="Apple">Apple (iPhone)</option>
+                                        <option value="Samsung">Samsung</option>
+                                        <option value="Xiaomi">Xiaomi</option>
+                                        <option value="Huawei">Huawei</option>
+                                        <option value="Motorola">Motorola</option>
+                                        <option value="OPPO">OPPO</option>
+                                        <option value="Realme">Realme</option>
+                                        <option value="Nokia">Nokia</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="waitlistModel">Modelo *</label>
+                                    <input type="text" id="waitlistModel" class="form-input" placeholder="Ej: iPhone 15 Pro Max" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="waitlistStorage">Capacidad de Almacenamiento *</label>
+                                    <select id="waitlistStorage" class="form-select" required>
+                                        <option value="">Selecciona capacidad...</option>
+                                        <option value="64GB">64 GB</option>
+                                        <option value="128GB">128 GB</option>
+                                        <option value="256GB">256 GB</option>
+                                        <option value="512GB">512 GB</option>
+                                        <option value="1TB">1 TB</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="waitlistNotes">Notas adicionales</label>
+                                    <input type="text" id="waitlistNotes" class="form-input" placeholder="Color preferido, urgencia, etc.">
+                                </div>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <button type="submit" class="btn btn-success">💾 Agregar a Lista de Espera</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Estadísticas rápidas -->
+                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold;" id="waitlistTotal">0</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Total en Espera</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold;" id="waitlistUrgent">0</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Urgentes (+5 días)</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold;" id="waitlistToday">0</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Agregados Hoy</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold;" id="waitlistCompleted">0</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Completados</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de clientes en espera -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3>📋 Clientes en Lista de Espera</h3>
+                            <button class="btn btn-primary" onclick="WaitlistManager.loadWaitlist()">🔄 Actualizar</button>
+                        </div>
+                        <div id="waitlistContainer">
+                            <p class="empty-message">Cargando lista de espera...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de pedidos completados -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3>✅ Pedidos Completados</h3>
+                            <button class="btn btn-success" onclick="WaitlistManager.loadCompleted()">🔄 Actualizar</button>
+                        </div>
+                        <div id="completedContainer">
+                            <p class="empty-message">Cargando pedidos completados...</p>
+                        </div>
+                    </div>
+                </section>
+            </div><!-- Fin tab-listaEspera -->
+
+            <!-- Modal para nueva actividad -->
+            <div id="activityModal" class="modal hidden">
+                <div class="modal-content agenda-modal">
+                    <span class="modal-close" onclick="AgendaManager.hideModal()">&times;</span>
+                    <h2 id="activityModalTitle">➕ Nueva Actividad</h2>
+                    
+                    <form id="activityForm" onsubmit="AgendaManager.saveActivity(event)">
+                        <div class="form-group">
+                            <label for="activityType">Tipo:</label>
+                            <select id="activityType" class="form-select" required>
+                                <option value="visita">🚗 Visita</option>
+                                <option value="cita">📅 Cita</option>
+                                <option value="seguimiento">🔄 Seguimiento</option>
+                                <option value="otro">📝 Otro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="activityTitle">Título:</label>
+                            <input type="text" id="activityTitle" class="form-input" placeholder="Ej: Llamar a Juan Pérez" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="activityDate">Fecha:</label>
+                                <input type="date" id="activityDate" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="activityTime">Hora:</label>
+                                <input type="time" id="activityTime" class="form-input" value="09:00">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="activityClient">Cliente (opcional):</label>
+                            <input type="text" id="activityClient" class="form-input" placeholder="Nombre del cliente">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="activityNotes">Notas:</label>
+                            <textarea id="activityNotes" class="form-textarea" rows="3" placeholder="Detalles adicionales..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="activityReminder" checked>
+                                🔔 Recordarme antes
+                            </label>
+                        </div>
+                        
+                        <input type="hidden" id="activityId" value="">
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="AgendaManager.hideModal()">Cancelar</button>
+                            <button type="submit" class="btn btn-success">💾 Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pestaña: Metas -->
+
+    <!-- SheetJS (XLSX) for client-side .xlsx export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script type="module" src="js/contactacion-whatsapp.js"></script>
+    <script>
+        // Manejo de overflow en la barra de pestañas: agrupa en dropdown "Más"
+        document.addEventListener('DOMContentLoaded', function(){
+            const tabsContainer = document.getElementById('tabsContainer');
+            const moreBtn = document.getElementById('tabsMoreBtn');
+            const moreMenu = document.getElementById('tabsMoreMenu');
+            if(!tabsContainer || !moreBtn || !moreMenu) return;
+
+            const originalTabs = Array.from(tabsContainer.querySelectorAll('.tab-btn'));
+
+            function rebuildMoreMenu(){
+                // show all initially
+                originalTabs.forEach(b=> b.style.display = 'inline-flex');
+                moreMenu.innerHTML = '';
+
+                const containerWidth = tabsContainer.clientWidth;
+                const moreBtnWidth = moreBtn.offsetWidth + 16; // reserve
+                let used = 0;
+
+                for(const btn of originalTabs){
+                    const w = btn.offsetWidth;
+                    // ensure at least first tab is visible
+                    if(used + w + moreBtnWidth > containerWidth && btn !== originalTabs[0]){
+                        // hide from main bar and add to menu
+                        btn.style.display = 'none';
+                        const m = document.createElement('button');
+                        m.type = 'button';
+                        m.setAttribute('role','menuitem');
+                        m.textContent = btn.textContent;
+                        m.dataset.tab = btn.dataset.tab || '';
+                        m.onclick = function(){
+                            const t = this.dataset.tab;
+                            if(t) switchTab(t);
+                            hideMoreMenu();
+                        };
+                        moreMenu.appendChild(m);
+                    }else{
+                        used += w;
+                    }
+                }
+
+                if(moreMenu.children.length > 0){
+                    moreBtn.style.display = '';
+                } else {
+                    moreBtn.style.display = 'none';
+                    hideMoreMenu();
+                }
+            }
+
+            function showMoreMenu(){ moreMenu.classList.add('open'); moreBtn.setAttribute('aria-expanded','true'); moreMenu.setAttribute('aria-hidden','false'); }
+            function hideMoreMenu(){ moreMenu.classList.remove('open'); moreBtn.setAttribute('aria-expanded','false'); moreMenu.setAttribute('aria-hidden','true'); }
+
+            moreBtn.addEventListener('click', function(e){
+                const visible = moreMenu.style.display === 'block';
+                if(visible) hideMoreMenu(); else showMoreMenu();
+            });
+
+            // click outside to close
+            document.addEventListener('click', function(e){
+                if(!moreBtn.contains(e.target) && !moreMenu.contains(e.target)) hideMoreMenu();
+            });
+
+            // rebuild on resize (debounced)
+            let t;
+            window.addEventListener('resize', ()=>{ clearTimeout(t); t = setTimeout(rebuildMoreMenu,120); });
+
+            // initial build
+            setTimeout(rebuildMoreMenu, 80);
+        });
+    </script>
+    
+    <!-- Global handlers para eventos onclick -->
+    <script src="js/global-handlers.js"></script>
+
+    <script>
+        // Aplicar automáticamente estilo Apple a botones principales
+        document.addEventListener('DOMContentLoaded', function(){
+            try{
+                const selectors = '.btn-primary, .btn-success, .btn-warning, .btn-info, .btn-secondary';
+                document.querySelectorAll(selectors).forEach(b => b.classList.add('apple-btn'));
+            }catch(e){ console.error('Apple style apply error', e); }
+        });
+    </script>
+    
+    <!-- Funciones de carga de métricas (no-módulo) -->
+    <!-- Inicializador maestro: controla el orden de carga PRIMERO -->
+    <script type="module" src="js/init-master.js"></script>
+    
+    <!-- Script de autenticación -->
+    <script type="module" src="js/auth.js?v=20260107_2"></script>
+    
+    <script src="js/load-metrics.js"></script>
+    
+    <!-- 🔧 SOLUCIÓN TEMPORAL: Métricas directas mientras se arreglan las functions -->
+    <script type="module" src="js/direct-metrics.js?v=20251116003"></script>
+    
+    <script type="module" src="js/clients.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script type="module" src="js/executive-features.js"></script>
+    <script type="module" src="js/advanced-features.js"></script>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // 🔧 FUNCIONES GLOBALES - Deben estar disponibles SIEMPRE
+        // ═══════════════════════════════════════════════════════════
+        
+        // Funciones para manejar campos dinámicos de IMEIs y Accesorios
+        window.addImeiField = function() {
+            const container = document.getElementById('imeiFieldsList');
+            const newField = document.createElement('div');
+            newField.className = 'imei-field-group';
+            newField.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
+            newField.innerHTML = `
+                <input type="text" class="imei-input" placeholder="Ej: 356938035643809" style="flex: 1; padding: 10px; border: 2px solid #FF9800; border-radius: 4px; font-size: 14px;">
+                <button type="button" onclick="removeImeiField(this)" style="padding: 8px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>
+            `;
+            container.appendChild(newField);
+        };
+
+        window.removeImeiField = function(btn) {
+            const container = document.getElementById('imeiFieldsList');
+            if (container.children.length > 1) {
+                btn.parentElement.remove();
+            } else {
+                alert('Debe haber al menos un campo de IMEI');
+            }
+        };
+
+        window.addAccesorioField = function() {
+            const container = document.getElementById('accesorioFieldsList');
+            const newField = document.createElement('div');
+            newField.className = 'accesorio-field-group';
+            newField.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
+            newField.innerHTML = `
+                <input type="text" class="accesorio-input" placeholder="Ej: Funda Samsung Galaxy" style="flex: 1; padding: 10px; border: 2px solid #FF9800; border-radius: 4px; font-size: 14px;">
+                <button type="button" onclick="removeAccesorioField(this)" style="padding: 8px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>
+            `;
+            container.appendChild(newField);
+        };
+
+        window.removeAccesorioField = function(btn) {
+            const container = document.getElementById('accesorioFieldsList');
+            if (container.children.length > 1) {
+                btn.parentElement.remove();
+            } else {
+                alert('Debe haber al menos un campo de accesorio');
+            }
+        };
+
+        // Funciones de créditos
+        function showCredits() {
+            document.getElementById('creditsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCredits() {
+            document.getElementById('creditsModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        const creditsModal = document.getElementById('creditsModal');
+        if (creditsModal) {
+            creditsModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeCredits();
+                }
+            });
+        }
+
+        // Función de logout global
+        async function logoutUser() {
+            console.log('🔴 LOGOUT: logoutUser() llamado');
+            try {
+                console.log('🔴 LOGOUT: Obteniendo auth desde window...');
+                if (!window.auth) {
+                    console.error('❌ window.auth no disponible');
+                    alert('Error: Auth no disponible');
+                    return;
+                }
+
+                console.log('🔴 LOGOUT: Importando signOut...');
+                const { signOut } = await import('./js/firebase-config.js');
+                
+                console.log('🔴 LOGOUT: Limpiando datos de sesión (NO borrando meta)...');
+                // Solo borrar datos de sesión, preservar localStorage con datos importantes
+                sessionStorage.clear();
+                // Borrar solo tokens y fingerprints, NO la meta guardada
+                localStorage.removeItem('deviceFingerprint');
+                localStorage.removeItem('csrfToken');
+                localStorage.removeItem('reminders');
+                
+                console.log('🔴 LOGOUT: Llamando a signOut...');
+                await signOut(window.auth);
+                
+                console.log('🔴 LOGOUT: SignOut exitoso, redirigiendo...');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('❌ Error en logoutUser:', error);
+                alert('Error al cerrar sesión: ' + error.message);
+            }
+        }
+
+        function switchProyeccionTab(tab) {
+            const anual = document.getElementById('proyeccionAnualSection');
+            const mensual = document.getElementById('proyeccionMensualSection');
+            const btnAnual = document.getElementById('btnProyeccionAnual');
+            const btnMensual = document.getElementById('btnProyeccionMensual');
+            if(tab === 'anual') {
+                anual.style.display = '';
+                mensual.style.display = 'none';
+                btnAnual.classList.add('active');
+                btnMensual.classList.remove('active');
+            } else {
+                anual.style.display = 'none';
+                mensual.style.display = '';
+                btnAnual.classList.remove('active');
+                btnMensual.classList.add('active');
+                if(window.app && window.app.proyecciones && typeof window.app.proyecciones.renderMetricasMensual === 'function') {
+                    window.app.proyecciones.renderMetricasMensual();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectMes = document.getElementById('selectMesProyeccion');
+            if(selectMes) {
+                selectMes.addEventListener('change', function() {
+                    if(window.app && window.app.proyecciones && typeof window.app.proyecciones.renderMetricasMensual === 'function') {
+                        window.app.proyecciones.renderMetricasMensual();
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Scripts de Seguridad y Monitoreo -->
+    <script src="js/security.js"></script>
+    <script src="js/error-handler.js"></script>
+    <script src="js/app-controller.js"></script>
+    <script src="js/monitoring.js"></script>
+    <script src="js/retry-handler.js"></script>
+    <script src="js/charts-dashboard.js"></script>
+    <!-- ❌ COMENTADO: Metas Ejecutivo eliminada -->
+    <!-- <script src="js/metas-desglosadas.js"></script>
+    <script src="js/categorical-dashboard.js"></script> -->
+    <script src="js/agenda-manager.js"></script>
+    <script src="js/waitlist-manager.js"></script>
+    
+    <!-- ✅ Cache Manager para optimización de costos -->
+    <script src="js/cache-manager.js"></script>
+    
+    <!-- ✅ NUEVO: Sistema de Ventas en pestaña Objetivos -->
+    <script src="js/ventas-manager.js"></script>
+    <script src="js/objetivos-form.js"></script>
+    <script src="js/objetivos-dashboard.js"></script>
+    <script src="js/objetivos-init.js"></script>
+    <script src="js/mis-ventas.js"></script>
+    <script src="js/proyecciones.js"></script>
+    <script src="js/todas-ventas.js"></script>
+
+    <!-- Scripts de Lista de Espera -->
+    <script src="js/modelos-telefonos.js"></script>
+    <script src="js/autocompletado-modelos.js"></script>
+
+    <!-- ❌ COMENTADO: Metas Ejecutivo eliminada -->
+    <!-- <script src="js/sales-form.js"></script>
+    <script src="js/sales-list.js"></script>
+    <script src="js/ventas-dashboard.js"></script> -->
+    </body>
+    <script type="module">
+    import { auth } from './js/firebase-config.js';
+    window.auth = auth;
+</script>
+</body>
+</html>

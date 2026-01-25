@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-01-23T22:01:57.592Z",
+  "totals": {
+    "ventas": 20,
+    "ventas_hogar": 4
+  },
+  "problems": [
+    {
+      "id": "gZaFKkLOYntFkNPQK1m1",
+      "collection": "ventas",
+      "reasons": [
+        "missing tipoVenta"
+      ]
+    },
+    {
+      "id": "rSlrHuIQcM2RbxmPmPAS",
+      "collection": "ventas",
+      "reasons": [
+        "missing tipoVenta"
+      ]
+    },
+    {
+      "id": "48wD2nCKzKfEhgPsdv1a",
+      "collection": "ventas_hogar",
+      "reasons": [
+        "missing tipoVenta"
+      ]
+    },
+    {
+      "id": "Yj4hjpn9kFdcd85tIcrp",
+      "collection": "ventas_hogar",
+      "reasons": [
+        "missing tipoVenta"
+      ]
+    },
+    {
+      "id": "jsOEbKfCWqOxWeHQEtvp",
+      "collection": "ventas_hogar",
+      "reasons": [
+        "missing tipoVenta"
+      ]
+    },
+    {
+      "id": "pnBmqrszWyLFomiXDAub",
+      "collection": "ventas_hogar",
+      "reasons": [
+        "missing tipoVenta"
+      ]
+    }
+  ]
+}

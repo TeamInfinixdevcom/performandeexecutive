@@ -399,8 +399,11 @@ class ObjetivosDashboard {
   calcularTerminales(ventasMobile) {
     let total = 0;
     ventasMobile.forEach(venta => {
-      if (venta.imeis && Array.isArray(venta.imeis)) {
+      if (venta.imeis && Array.isArray(venta.imeis) && venta.imeis.length > 0) {
         total += venta.imeis.length;
+      } else if (venta.tipoPedido === 'imei_contado') {
+        // Contabilizar 1 terminal si se registró como IMEI contado sin lista
+        total += 1;
       }
     });
     return total;
@@ -412,8 +415,11 @@ class ObjetivosDashboard {
   calcularAccesorios(ventasMobile) {
     let total = 0;
     ventasMobile.forEach(venta => {
-      if (venta.accesorios && Array.isArray(venta.accesorios)) {
+      if (venta.accesorios && Array.isArray(venta.accesorios) && venta.accesorios.length > 0) {
         total += venta.accesorios.length;
+      } else if (venta.tipoPedido === 'accesorio_contado') {
+        // Contabilizar 1 accesorio si se registró como Accesorio contado sin lista
+        total += 1;
       }
     });
     return total;
