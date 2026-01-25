@@ -312,6 +312,7 @@ class MisVentas {
             ${!isEditing ? `
               <button onclick="window.misVentas?.toggleEditar('${ventaId}')" class="btn btn-secondary" style="background-color: #f39c12; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">✏️ Editar</button>
               <button onclick="window.misVentas?.eliminarVenta('${ventaId}', 'mobile')" class="btn btn-danger" style="background-color: #e74c3c; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">🗑️ Eliminar</button>
+              ${venta.estado && (venta.estado === 'pendiente' || venta.estado === 'en_proceso') ? `<button onclick="window.misVentas?.marcarEntregada('${ventaId}','mobile')" class="btn btn-success" style="background-color: #27ae60; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">✅ Marcar como entregada</button>` : ''}
             ` : `
               <button onclick="window.misVentas?.guardarEdicion('${ventaId}', 'mobile')" class="btn btn-success" style="background-color: #27ae60; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">💾 Guardar</button>
               <button onclick="window.misVentas?.cancelarEdicion('${ventaId}')" class="btn btn-secondary" style="background-color: #95a5a6; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">❌ Cancelar</button>
@@ -552,6 +553,22 @@ class MisVentas {
         el.addEventListener('input', () => { this.currentPage = 1; this.renderVentas(); });
       }
     });
+  }
+
+  /**
+   * Marcar una venta como entregada (completada)
+   */
+  async marcarEntregada(ventaId, tipo = 'mobile') {
+    try {
+      if (!confirm('¿Marcar esta venta como entregada/completada?')) return;
+      await window.ventasManager.markVentaEntregada(ventaId, tipo);
+      // Recargar lista
+      await this.cargarVentas(true);
+      alert('✅ Venta marcada como entregada');
+    } catch (error) {
+      console.error('Error marcando venta como entregada:', error);
+      alert('❌ No se pudo marcar como entregada: ' + (error.message || error));
+    }
   }
 
   /**

@@ -258,6 +258,12 @@ class SalesForm {
       }
 
       // Crear venta
+      // Incluir estado si el agente seleccionó uno explícitamente
+      try {
+        const estadoEl = document.getElementById('estadoVentaSelect');
+        if (estadoEl && estadoEl.value) formData.estado = estadoEl.value;
+      } catch (e) { /* ignore */ }
+
       const venta = await this.ventasManager.createVenta(formData);
 
       // Mostrar éxito
