@@ -227,6 +227,34 @@ class ObjetivosForm {
           </div>
 
           <!-- Projections removed per product decision -->
+          <!-- OPCIONES: Entregar inmediatamente, Estado y Método de Envío -->
+          <div style="margin-top:12px; margin-bottom: 8px;">
+            <label style="display:flex;align-items:center;gap:8px; font-weight:bold;">
+              <input id="entregarInmediato" type="checkbox" style="width:18px; height:18px;"> Entregar inmediatamente (si el artículo está disponible)
+            </label>
+          </div>
+
+          <div style="margin-top:8px; margin-bottom: 8px;">
+            <label style="display:block; font-weight:bold; margin-bottom:6px;">Estado de la venta</label>
+            <select id="estadoVentaSelect" style="width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+              <option value="">-- Déjalo por defecto --</option>
+              <option value="entregado">Entregado / Completada</option>
+              <option value="pendiente">Pendiente (por defecto si hay IMEI/accesorio)</option>
+              <option value="en_proceso">En proceso (cliente aún no recibió accesorio/IMEI)</option>
+            </select>
+            <small style="display:block;color:#666;margin-top:6px;">Selecciona "En proceso" si la logística demorará la entrega; luego podrás marcarla como entregada desde la lista de ventas.</small>
+          </div>
+
+          <div style="margin-top:8px; margin-bottom: 8px;">
+            <label style="display:block; font-weight:bold; margin-bottom:6px;">Método de envío</label>
+            <select id="metodoEnvio" style="width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+              <option value="">-- Selecciona si aplica --</option>
+              <option value="mensajero">Mensajería / Envío por mensajero</option>
+              <option value="retiro">Retiro en tienda</option>
+              <option value="postal">Envío postal</option>
+            </select>
+            <small style="display:block;color:#666;margin-top:6px;">Si seleccionas "Mensajería", la venta se marcará como pendiente hasta su entrega (si no se entrega inmediatamente).</small>
+          </div>
 
           <!-- Botones -->
           <div style="display: flex; gap: 12px;">
@@ -475,6 +503,21 @@ class ObjetivosForm {
         tipoVenta = 'nueva';
       }
 
+      // Leer opciones de estado / envío (si el agente las completó)
+      const estadoSeleccionado = document.getElementById('estadoVentaSelect')?.value || '';
+      const metodoEnvio = document.getElementById('metodoEnvio')?.value || '';
+      const entregarInmediato = !!document.getElementById('entregarInmediato')?.checked;
+
+      // Determinar estado por defecto: si el agente seleccionó uno, respetarlo.
+      let estadoFinal = estadoSeleccionado || '';
+      if (!estadoFinal) {
+        // Si se envía por mensajero y no se entrega inmediatamente y hay IMEI/accesorio,
+        // marcar como 'pendiente' por defecto.
+        if (metodoEnvio === 'mensajero' && !entregarInmediato && (imeis.length > 0 || accesorios.length > 0)) {
+          estadoFinal = 'pendiente';
+        }
+      }
+
       const ventaData = {
         agenteId: this.currentUser?.email || 'DESCONOCIDO',
         tipoPedido,
@@ -488,7 +531,9 @@ class ObjetivosForm {
         numeroCliente: numeroCliente || null,
         createdAt: new Date(),
         tipoVenta,
-        categories: esRenovacion ? ['renovacion'] : []
+        categories: esRenovacion ? ['renovacion'] : [],
+        metodoEnvio: metodoEnvio || null,
+        estado: estadoFinal || null
       };
 
       const result = await window.ventasManager.createVenta(ventaData);
