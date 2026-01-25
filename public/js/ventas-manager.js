@@ -425,8 +425,8 @@ class VentasManager {
       const ventasHome = await this.getVentas('home', filtroUID);
       const todasVentas = [...ventasMobile, ...ventasHome];
 
-      // Excluir ventas pendientes o canceladas de métricas (no son ingresos válidos todavía)
-      const ventasValidas = todasVentas.filter(v => v.estado !== 'pendiente' && v.estado !== 'cancelado');
+      // Excluir ventas pendientes, en proceso o canceladas de métricas (no son ingresos válidos todavía)
+      const ventasValidas = todasVentas.filter(v => v.estado !== 'pendiente' && v.estado !== 'en_proceso' && v.estado !== 'cancelado');
 
       // Calcular métricas basadas en `planPrice` (sin proyecciones)
       let totalTerminals = 0;

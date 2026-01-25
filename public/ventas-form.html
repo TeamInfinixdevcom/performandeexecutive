@@ -131,6 +131,18 @@
       </label>
     </div>
 
+    <!-- OPCIÓN: Estado de la venta (permite marcar 'En proceso' cuando el artículo llega después) -->
+    <div style="margin-top:8px; margin-bottom: 8px;">
+      <label style="display:block; font-weight:bold; margin-bottom:6px;">Estado de la venta</label>
+      <select id="estadoVentaSelect" style="width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">-- Déjalo por defecto --</option>
+        <option value="entregado">Entregado / Completada</option>
+        <option value="pendiente">Pendiente (por defecto si hay IMEI/accesorio)</option>
+        <option value="en_proceso">En proceso (cliente aún no recibió accesorio/IMEI)</option>
+      </select>
+      <small style="display:block;color:#666;margin-top:6px;">Selecciona "En proceso" si la logística demorará la entrega; luego podrás marcarla como entregada desde la lista de ventas.</small>
+    </div>
+
     <!-- BOTONES DE ACCIÓN -->
     <div style="display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
       <button id="submitVentaBtn" type="button" style="flex: 1; padding: 14px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; transition: all 0.3s;">✅ Registrar Venta</button>
