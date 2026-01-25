@@ -7,7 +7,8 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFunctions } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
 // Configuración de Firebase (obtenida con: firebase apps:sdkconfig web)
@@ -26,6 +27,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions(app, 'us-central1');
+
+// Conectar a emuladores cuando estemos en localhost
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    try {
+        connectFirestoreEmulator(db, 'localhost', 8080);
+        connectAuthEmulator(auth, 'http://localhost:9099');
+        console.log('Conectado a emuladores: Firestore@8080, Auth@9099');
+    } catch (e) {
+        console.warn('No se pudieron conectar los emuladores:', e);
+    }
+}
 
 // Exportar para usar en otros archivos
 export { app, auth, db, functions, signOut };
