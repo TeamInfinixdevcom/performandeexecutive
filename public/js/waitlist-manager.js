@@ -191,6 +191,58 @@ const WaitlistManager = {
             this.showNotification('❌ Error al actualizar', 'error');
         }
     },
+
+    /**
+     * Marcar un item como perdido con nota explicativa
+     */
+    async markAsLost(id, note) {
+        try {
+            const { doc, updateDoc, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+            await updateDoc(doc(window.db, 'lista_espera', id), {
+                status: 'lost',
+                lostNote: note || null,
+                lostAt: Timestamp.now()
+            });
+
+            this.showNotification('❌ Cliente marcado como perdido', 'info');
+            await this.loadWaitlist();
+            await this.loadCompleted();
+
+        } catch (error) {
+            console.error('Error marcando como perdido:', error);
+            this.showNotification('❌ Error al actualizar', 'error');
+        }
+    },
+
+    /**
+     * Handler para el select de acciones en la lista
+     */
+    async onActionSelectChange(selectEl, id) {
+        const val = selectEl.value;
+        // reset early to avoid duplicate actions on accidental clicks
+        selectEl.value = '';
+
+        if (!val) return;
+
+        if (val === 'completed') {
+            if (!confirm('¿Marcar este cliente como completado?')) return;
+            await this.markAsCompleted(id);
+            return;
+        }
+
+        if (val === 'lost') {
+            const note = prompt('Por favor escribe una nota breve explicando por qué se perdió este cliente (obligatorio):');
+            if (note === null) return; // cancel
+            if (!note.trim()) {
+                this.showNotification('La nota es obligatoria al marcar como perdido', 'warning');
+                return;
+            }
+            if (!confirm('¿Confirmas marcar como PERDIDO y guardar la nota?')) return;
+            await this.markAsLost(id, note.trim());
+            return;
+        }
+    },
     
     async reactivateItem(id) {
         try {
@@ -395,12 +447,11 @@ const WaitlistManager = {
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                            <button onclick="WaitlistManager.markAsCompleted('${item.id}')" 
-                                    class="btn btn-success" 
-                                    style="padding: 6px 12px; font-size: 0.85rem;"
-                                    title="Marcar como completado">
-                                ✅ Completado
-                            </button>
+                            <select onchange="WaitlistManager.onActionSelectChange(this, '${item.id}')" style="padding:6px 10px; font-size:0.85rem; border-radius:6px;">
+                                <option value="">Acciones</option>
+                                <option value="completed">✅ Completado</option>
+                                <option value="lost">❌ Perdido</option>
+                            </select>
                             <button onclick="WaitlistManager.deleteFromWaitlist('${item.id}')" 
                                     class="btn btn-secondary" 
                                     style="padding: 6px 12px; font-size: 0.85rem;"
