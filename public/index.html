@@ -695,9 +695,29 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <h3>📋 Clientes en Lista de Espera</h3>
                             <div style="display:flex; gap:8px; align-items:center;">
-                                <button class="btn btn-primary" onclick="WaitlistManager.loadWaitlist()">🔄 Actualizar</button>
-                                <button class="btn btn-secondary" onclick="WaitlistManager.exportToExcel()">📤 Exportar Excel</button>
+                                <button class="btn btn-primary" onclick="(window.WaitlistManager||{}).loadWaitlist && window.WaitlistManager.loadWaitlist()">🔄 Actualizar</button>
+                                <button class="btn btn-secondary" onclick="safeExportWaitlist()">📤 Exportar Excel</button>
                             </div>
+                            <script>
+                                // Función segura para exportar la lista de espera sin lanzar ReferenceError
+                                function safeExportWaitlist() {
+                                    try {
+                                        if (window.WaitlistManager && typeof window.WaitlistManager.exportToExcel === 'function') {
+                                            window.WaitlistManager.exportToExcel();
+                                        } else {
+                                            // Mensaje amigable si no está lista aún
+                                            if (window.showNotification) {
+                                                window.showNotification('La lista de espera no está lista aún. Intenta actualizar primero.', 'warning');
+                                            } else {
+                                                alert('La lista de espera no está lista aún. Intenta actualizar primero.');
+                                            }
+                                        }
+                                    } catch (err) {
+                                        console.error('safeExportWaitlist error:', err);
+                                        if (window.showNotification) window.showNotification('Error iniciando exportación', 'error');
+                                    }
+                                }
+                            </script>
                         </div>
                         <div id="waitlistContainer">
                             <p class="empty-message">Cargando lista de espera...</p>
