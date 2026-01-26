@@ -251,7 +251,6 @@ class ObjetivosForm {
               <option value="">-- Selecciona si aplica --</option>
               <option value="mensajero">Mensajería / Envío por mensajero</option>
               <option value="retiro">Retiro en tienda</option>
-              <option value="postal">Envío postal</option>
             </select>
             <small style="display:block;color:#666;margin-top:6px;">Si seleccionas "Mensajería", la venta se marcará como pendiente hasta su entrega (si no se entrega inmediatamente).</small>
           </div>
