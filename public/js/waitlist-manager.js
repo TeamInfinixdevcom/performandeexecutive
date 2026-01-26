@@ -418,6 +418,7 @@ const WaitlistManager = {
                     </td>
                     <td style="padding: 12px;">
                         <div style="font-weight: 600; color: #333;">${item.clientName}</div>
+                        ${item.userEmail ? `<div style="font-size: 0.8rem; color: #666; margin-top: 4px;">👤 ${item.userEmail}</div>` : ''}
                         ${item.notes ? `<div style="font-size: 0.8rem; color: #666; margin-top: 4px;">📝 ${item.notes}</div>` : ''}
                     </td>
                     <td style="padding: 12px; color: #555;">${item.cedula}</td>
@@ -537,7 +538,8 @@ const WaitlistManager = {
                 <tr style="border-bottom: 1px solid #eee; background: #f8fff8;">
                     <td style="padding: 12px;">
                         <div style="font-weight: 600; color: #333;">${item.clientName}</div>
-                        <div style="font-size: 0.8rem; color: #666;">📱 ${item.phone}</div>
+                        ${item.userEmail ? `<div style="font-size:0.8rem;color:#666;">👤 ${item.userEmail}</div>` : ''}
+                        <div style="font-size: 0.8rem; color: #666; margin-top:4px;">📱 ${item.phone}</div>
                     </td>
                     <td style="padding: 12px; color: #555;">${item.cedula}</td>
                     <td style="padding: 12px;">
