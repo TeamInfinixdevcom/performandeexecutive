@@ -143,6 +143,17 @@
       <small style="display:block;color:#666;margin-top:6px;">Selecciona "En proceso" si la logística demorará la entrega; luego podrás marcarla como entregada desde la lista de ventas.</small>
     </div>
 
+    <!-- OPCIÓN: Método de Envío -->
+    <div style="margin-top:8px; margin-bottom: 8px;">
+      <label style="display:block; font-weight:bold; margin-bottom:6px;">Método de envío</label>
+      <select id="metodoEnvio" style="width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">-- Selecciona si aplica --</option>
+        <option value="mensajero">Mensajería / Envío por mensajero</option>
+        <option value="retiro">Retiro en tienda</option>
+      </select>
+      <small style="display:block;color:#666;margin-top:6px;">Si seleccionas "Mensajería", la venta se marcará como pendiente hasta su entrega (si no se entrega inmediatamente).</small>
+    </div>
+
     <!-- BOTONES DE ACCIÓN -->
     <div style="display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
       <button id="submitVentaBtn" type="button" style="flex: 1; padding: 14px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; transition: all 0.3s;">✅ Registrar Venta</button>

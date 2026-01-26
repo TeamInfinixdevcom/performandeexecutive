@@ -822,4 +822,96 @@ exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
 });
 
 
+// ============================================
+// Trigger: Procesar ventas cuando pasan a 'entregado'
+// - Crea una entrada idempotente en `sales_metrics` con docId = `venta_{ventaId}`
+// - Marca la venta con `processedAt` para evitar reprocesos
+// - Registra auditoría
+// ============================================
+async function processVentaEntregado(change, context, collectionName) {
+  try {
+    const before = change.before.data();
+    const after = change.after.data();
+    if (!before || !after) return null;
+
+    // Solo procesar la transición hacia 'entregado'
+    if (before.estado === 'entregado' || after.estado !== 'entregado') return null;
+
+    const ventaId = context.params.id;
+    const metricsDocId = `venta_${ventaId}`;
+    const metricsRef = db.collection('sales_metrics').doc(metricsDocId);
+
+    // Evitar duplicados: si ya existe la métrica, marcar como procesada y salir
+    const existing = await metricsRef.get();
+    if (existing.exists) {
+      await change.after.ref.update({ processedAt: admin.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+      return null;
+    }
+
+    // Obtener datos básicos
+    const uid = after.uid || null;
+    let executiveName = uid || null;
+    if (uid) {
+      const userDoc = await db.collection('users').doc(uid).get();
+      if (userDoc.exists) executiveName = userDoc.data().displayName || userDoc.data().email || executiveName;
+    }
+
+    const now = admin.firestore.Timestamp.now();
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    const monthStr = `${year}-${month}`;
+
+    const metric = {
+      ventaId: ventaId,
+      executiveId: uid || null,
+      executiveName: executiveName || null,
+      clientCedula: after.cedulaCliente || after.cedula || null,
+      clientName: after.nombreCliente || after.customerName || null,
+      tipoVenta: after.tipoVenta || null,
+      planId: after.plan || after.planId || null,
+      planPrice: after.planPrice || null,
+      cantidad: 1,
+      fecha: now,
+      dateStr: dateStr,
+      monthStr: monthStr,
+      year: year,
+      timestamp: now,
+      type: (after.tipoVenta === 'renovacion') ? 'renovacion' : 'sale',
+      sourceCollection: collectionName
+    };
+
+    // Crear documento idempotente
+    await metricsRef.set(metric);
+
+    // Marcar la venta como procesada para evitar reprocesos
+    await change.after.ref.update({ processedAt: admin.firestore.FieldValue.serverTimestamp() });
+
+    // Registrar auditoría
+    await db.collection('audit_logs').add({
+      userId: uid || 'system',
+      action: 'SALE_PROCESSED',
+      resource: `${collectionName}/${ventaId}`,
+      details: { ventaId },
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`✅ Procesada venta ${collectionName}/${ventaId} -> sales_metrics/${metricsDocId}`);
+    return null;
+  } catch (error) {
+    console.error('Error procesando venta entregada:', error);
+    return null;
+  }
+}
+
+exports.onVentaUpdated = functions.firestore.document('ventas/{id}').onUpdate(async (change, context) => {
+  return processVentaEntregado(change, context, 'ventas');
+});
+
+exports.onVentaHogarUpdated = functions.firestore.document('ventas_hogar/{id}').onUpdate(async (change, context) => {
+  return processVentaEntregado(change, context, 'ventas_hogar');
+});
+
 console.log('✅ Cloud Functions seguras cargadas correctamente');
