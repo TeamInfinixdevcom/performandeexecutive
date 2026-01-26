@@ -129,10 +129,10 @@ class TodasVentas {
       const ventasHome = await this.cargarVentasPorTipo('ventas_hogar');
       console.log(`✅ ${ventasHome.length} ventas hogar cargadas`);
 
-      // Combinar y ordenar por fecha
+      // Combinar y ordenar por fecha: preferir `createdAt` cuando esté disponible
       this.ventas = [...ventasMobile, ...ventasHome].sort((a, b) => {
-        const fechaA = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha);
-        const fechaB = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha);
+        const fechaA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.fecha?.toDate ? a.fecha.toDate() : new Date(a.createdAt || a.fecha));
+        const fechaB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.fecha?.toDate ? b.fecha.toDate() : new Date(b.createdAt || b.fecha));
         return fechaB - fechaA;
       });
 
@@ -591,10 +591,10 @@ class TodasVentas {
 
       // Combinar y ordenar
       this.ventas = [...ventasMobile, ...ventasHome].sort((a, b) => {
-        const fechaA = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha);
-        const fechaB = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha);
-        return fechaB - fechaA;
-      });
+          const fechaA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.fecha?.toDate ? a.fecha.toDate() : new Date(a.createdAt || a.fecha));
+          const fechaB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.fecha?.toDate ? b.fecha.toDate() : new Date(b.createdAt || b.fecha));
+          return fechaB - fechaA;
+        });
 
       console.log(`✅ TOTAL: ${this.ventas.length} ventas cargadas`);
       
