@@ -641,7 +641,7 @@ const WaitlistManager = {
         } else {
             alert(message);
         }
-    }
+    },
 
     /**
      * Exportar la lista visible (o completa) a Excel incluyendo userEmail y lostNote
