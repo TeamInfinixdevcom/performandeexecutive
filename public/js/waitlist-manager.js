@@ -642,6 +642,47 @@ const WaitlistManager = {
             alert(message);
         }
     }
+
+    /**
+     * Exportar la lista visible (o completa) a Excel incluyendo userEmail y lostNote
+     */
+    exportToExcel() {
+        try {
+            // Preferir exportar toda la lista (no solo la página) para gerencia
+            const items = this.waitlist.map(i => ({
+                Estado: i.status || 'waiting',
+                Cliente: i.clientName || '',
+                Cedula: i.cedula || '',
+                Contacto: i.phone || '',
+                EmailAgente: i.userEmail || '',
+                Equipo: `${i.brand || ''} ${i.model || ''}`.trim(),
+                Storage: i.storage || '',
+                DiasEnEspera: (() => { const created = i.createdAt?.toDate ? i.createdAt.toDate() : new Date(i.createdAt); return Math.floor((Date.now() - created.getTime())/(1000*60*60*24)); })(),
+                Nota: i.notes || '',
+                LostNote: i.lostNote || '',
+                FechaRegistro: i.createdAt ? (i.createdAt.toDate ? i.createdAt.toDate().toLocaleString('es-CR') : new Date(i.createdAt).toLocaleString('es-CR')) : '',
+                FechaCompletado: i.completedAt ? (i.completedAt.toDate ? i.completedAt.toDate().toLocaleString('es-CR') : new Date(i.completedAt).toLocaleString('es-CR')) : ''
+            }));
+
+            if (!window.XLSX) {
+                this.showNotification('La librería XLSX no está disponible en esta página.', 'error');
+                return;
+            }
+
+            const ws = window.XLSX.utils.json_to_sheet(items);
+            const wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, 'Lista de Espera');
+
+            const filename = `waitlist_export_${new Date().toISOString().slice(0,10)}.xlsx`;
+            window.XLSX.writeFile(wb, filename);
+
+            this.showNotification('✅ Exportación iniciada: ' + filename, 'success');
+
+        } catch (error) {
+            console.error('Error exportando a Excel:', error);
+            this.showNotification('❌ Error exportando a Excel', 'error');
+        }
+    }
 };
 
 // Inicializar cuando el DOM esté listo
