@@ -1,0 +1,83 @@
+Reglas de Negocio - Ventas (Executive Performance)
+
+Propósito
+- Documentar de forma clara y entendible las reglas de negocio para el manejo de ventas, estados y los flujos asociados (nueva venta, pendiente, en_proceso, entregada, renovación).
+
+Definiciones básicas
+- Venta: documento en Firestore en la colección `ventas` (móvil) o `ventas_hogar` (hogar).
+- estado: campo que puede ser `pendiente`, `en_proceso`, `entregado` (u otros). Define si la venta está en espera o completada.
+- metodoEnvio: indica cómo se entrega (ej. `mensajero`, `retiro`, `postal`).
+- entregarInmediato: booleano; si es true, la venta puede considerarse entregada de inmediato si aplica.
+- fechaPendiente: timestamp (server) asignado cuando una venta queda como pendiente al crearse.
+- processedAt: timestamp que indica que la venta fue procesada por las rules/server (se usa para evitar reprocesos).
+
+Resumen de reglas principales
+1) Creación de venta
+- Al crear una venta se detecta su tipo (móvil o hogar). Se intenta inferir `tipoVenta` (nueva / prepago / renovacion).
+- Si el agente suministra `estado`, este prevalece y la venta se crea con ese estado.
+- Si hay IMEI o accesorios y `entregarInmediato` es false:
+  - Si `metodoEnvio === 'mensajero'` => estado por defecto = `pendiente` y se graba `fechaPendiente`.
+  - En general, la presencia de IMEI/accesorio sin entrega inmediata marca la venta `pendiente`.
+- Si no aplica lo anterior, la venta se crea con `estado = 'entregado'` por defecto (venta ya completada).
+
+2) Ventas Pendientes y En Proceso
+- Ventas con `estado === 'pendiente'` o `estado === 'en_proceso'` se consideran en espera y no participan automáticamente en métricas de venta completada.
+- La UI de "Ventas Pendientes" solo lista ventas nuevas/próximas: aquellas con `fechaPendiente` o creadas en los últimos 30 días.
+- Estas ventas permanecen detenidas en su flujo hasta que un agente marque la entrega.
+
+3) Marcar como entregada (flujo de reanudación)
+- Cuando un agente marca una venta como entregada se ejecuta:
+  - Actualización del documento: `estado = 'entregado'`, `entregadoAt = timestamp`.
+  - Cloud Function trigger server-side (onUpdate) detecta la transición a `entregado` y procesa la venta:
+    - Crea un documento idempotente en `sales_metrics` con id `venta_{ventaId}` que resume la venta (cantidad, plan, tipoVenta, agente, fecha).
+    - Marca la venta con `processedAt` para evitar reprocesos.
+    - Registra una entrada en `audit_logs`.
+- Efecto: al pasar a `entregado`, la venta "retoma" el flujo de negocio (registro en métricas, conteos, notificaciones si aplica).
+
+4) Renovaciones
+- Si `tipoVenta === 'renovacion'` (o `renovacion === true`), la venta es tratada como renovación:
+  - Cuando se procesa como `entregado`, la métrica creada indicará `type: 'renovacion'` y se contabiliza en los reportes de renovaciones.
+  - La regla de negocio mantiene separadas las métricas de ventas nuevas y renovaciones.
+
+5) Idempotencia y prevención de doble conteo
+- La Cloud Function crea métricas con un id derivado de la venta (`venta_{ventaId}`) para evitar duplicados.
+- Antes de crear métricas el trigger comprueba (por existencia) si ya existe la métrica; si existe, solo marca `processedAt` y sale.
+- Así reducimos lecturas innecesarias y evitamos duplicar ingresos en reportes.
+
+6) Reglas de seguridad y propietario
+- Solo el `uid` del agente (o procesos autorizados) pueden crear/editar sus propias ventas según las reglas de Firestore (ver `firestore.rules`).
+- Las funciones server-side usan el Admin SDK y deben validar permisos/roles si realizan operaciones sensibles.
+
+7) Errores y reintentos
+- Si el procesamiento falla (error en la Function), la venta queda con `estado = 'entregado'` pero sin `processedAt` — la función puede reintentarse (Cloud Functions retries) o se puede reejecutar manualmente mediante un job de reconciliación.
+- Recomendación: revisar `audit_logs` y `sales_metrics` periódicamente y ejecutar reconciliación si detectan ventas `entregado` sin `processedAt`.
+
+8) Comportamiento del cliente (UI)
+- Formularios permiten escoger `estado`, `metodoEnvio` y `entregarInmediato`.
+- Si el agente selecciona `mensajero` y no marcar `entregarInmediato`, el formulario propone por defecto marcar la venta como `pendiente`.
+- Al marcar "Marcar entregada" en la UI:
+  - Se llama a `ventasManager.markVentaEntregada()` que actualiza Firestore.
+  - La UI refresca listas (`Ventas Pendientes`, `Mis Ventas`) y emite eventos para refrescar métricas/panel.
+
+9) Tests y casos a validar (E2E)
+- Caso A: Venta nueva, sin IMEI, `entregarInmediato=true` → debe crearse como `entregado` y generar métricas inmediatamente.
+- Caso B: Venta con IMEI y `metodoEnvio=mensajero`, `entregarInmediato=false` → debe crearse como `pendiente`, aparecer en "Ventas Pendientes" y NO crear métricas hasta que se marque entregada.
+- Caso C: Venta con `renovacion=true` → al entregarla debe crear métrica tipo `renovacion`.
+- Caso D: Venta antigua (más de 30 días) con estado `pendiente` existente antes de este cambio → no aparece en "Ventas Pendientes" (no se modifica automáticamente).
+- Caso E: Marcar entregada dos veces → la función server-side debe mantener idempotencia y no duplicar métricas.
+
+10) Monitoreo y operaciones
+- Revisar `audit_logs` para entradas `SALE_PROCESSED` y errores.
+- Revisar `sales_metrics` para la presencia de `venta_{ventaId}` después de marcar entregada.
+- Reconciliación manual: script para buscar ventas con `estado==='entregado' && !processedAt` y procesarlas.
+
+Contacto y responsabilidades
+- Frontend (agentes): usar el formulario para indicar `metodoEnvio` y `entregarInmediato` correctamente; marcar entregada cuando corresponda.
+- Backend (Sistema): Function trigger procesa y mantiene métricas y auditoría.
+- Operaciones: supervisar logs y reintentos, mantener la versión de `firebase-functions` y dependencias actualizadas.
+
+Notas finales
+- La solución centraliza la lógica crítica (conteo de métricas) en el servidor para mayor fiabilidad y menor dependencia del cliente.
+- Se diseñó con idempotencia para minimizar costos y evitar duplicados.
+
+Archivo generado por el equipo técnico - Si quieres lo exporto a PDF o lo resumo para incluirlo en el README.

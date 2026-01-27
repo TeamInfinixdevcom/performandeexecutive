@@ -69,4 +69,32 @@
 </div>
 
 <!-- SCRIPT: Cargar sales-list -->
+<script type="module" src="js/firebase-config.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script src="js/ventas-manager.js"></script>
 <script src="js/sales-list.js"></script>
+<script>
+  (async function(){
+    try {
+      // Esperar a que ventasManager esté disponible
+      let attempts = 0;
+      while (!window.ventasManager && attempts < 50) { await new Promise(r=>setTimeout(r,100)); attempts++; }
+      if (window.salesList && typeof window.salesList.init === 'function') {
+        await window.salesList.init();
+      }
+
+      // Si la URL contiene hash con id de venta, intentar abrirla automáticamente
+      const id = (location.hash || '').replace('#','').trim();
+      if (id) {
+        // Intentar primero mobile, luego home
+        try { await window.salesList.editVenta(id, 'mobile'); }
+        catch(e1) {
+          try { await window.salesList.editVenta(id, 'home'); }
+          catch(e2) { console.warn('Venta no encontrada con id desde hash:', id); }
+        }
+      }
+    } catch (err) {
+      console.error('Error al inicializar SalesList en pagina standalone:', err);
+    }
+  })();
+</script>

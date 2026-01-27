@@ -191,6 +191,58 @@ const WaitlistManager = {
             this.showNotification('❌ Error al actualizar', 'error');
         }
     },
+
+    /**
+     * Marcar un item como perdido con nota explicativa
+     */
+    async markAsLost(id, note) {
+        try {
+            const { doc, updateDoc, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+            await updateDoc(doc(window.db, 'lista_espera', id), {
+                status: 'lost',
+                lostNote: note || null,
+                lostAt: Timestamp.now()
+            });
+
+            this.showNotification('❌ Cliente marcado como perdido', 'info');
+            await this.loadWaitlist();
+            await this.loadCompleted();
+
+        } catch (error) {
+            console.error('Error marcando como perdido:', error);
+            this.showNotification('❌ Error al actualizar', 'error');
+        }
+    },
+
+    /**
+     * Handler para el select de acciones en la lista
+     */
+    async onActionSelectChange(selectEl, id) {
+        const val = selectEl.value;
+        // reset early to avoid duplicate actions on accidental clicks
+        selectEl.value = '';
+
+        if (!val) return;
+
+        if (val === 'completed') {
+            if (!confirm('¿Marcar este cliente como completado?')) return;
+            await this.markAsCompleted(id);
+            return;
+        }
+
+        if (val === 'lost') {
+            const note = prompt('Por favor escribe una nota breve explicando por qué se perdió este cliente (obligatorio):');
+            if (note === null) return; // cancel
+            if (!note.trim()) {
+                this.showNotification('La nota es obligatoria al marcar como perdido', 'warning');
+                return;
+            }
+            if (!confirm('¿Confirmas marcar como PERDIDO y guardar la nota?')) return;
+            await this.markAsLost(id, note.trim());
+            return;
+        }
+    },
     
     async reactivateItem(id) {
         try {
@@ -366,6 +418,7 @@ const WaitlistManager = {
                     </td>
                     <td style="padding: 12px;">
                         <div style="font-weight: 600; color: #333;">${item.clientName}</div>
+                        ${item.userEmail ? `<div style="font-size: 0.8rem; color: #666; margin-top: 4px;">👤 ${item.userEmail}</div>` : ''}
                         ${item.notes ? `<div style="font-size: 0.8rem; color: #666; margin-top: 4px;">📝 ${item.notes}</div>` : ''}
                     </td>
                     <td style="padding: 12px; color: #555;">${item.cedula}</td>
@@ -395,12 +448,11 @@ const WaitlistManager = {
                     </td>
                     <td style="padding: 12px; text-align: center;">
                         <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                            <button onclick="WaitlistManager.markAsCompleted('${item.id}')" 
-                                    class="btn btn-success" 
-                                    style="padding: 6px 12px; font-size: 0.85rem;"
-                                    title="Marcar como completado">
-                                ✅ Completado
-                            </button>
+                            <select onchange="WaitlistManager.onActionSelectChange(this, '${item.id}')" style="padding:6px 10px; font-size:0.85rem; border-radius:6px;">
+                                <option value="">Acciones</option>
+                                <option value="completed">✅ Completado</option>
+                                <option value="lost">❌ Perdido</option>
+                            </select>
                             <button onclick="WaitlistManager.deleteFromWaitlist('${item.id}')" 
                                     class="btn btn-secondary" 
                                     style="padding: 6px 12px; font-size: 0.85rem;"
@@ -486,7 +538,8 @@ const WaitlistManager = {
                 <tr style="border-bottom: 1px solid #eee; background: #f8fff8;">
                     <td style="padding: 12px;">
                         <div style="font-weight: 600; color: #333;">${item.clientName}</div>
-                        <div style="font-size: 0.8rem; color: #666;">📱 ${item.phone}</div>
+                        ${item.userEmail ? `<div style="font-size:0.8rem;color:#666;">👤 ${item.userEmail}</div>` : ''}
+                        <div style="font-size: 0.8rem; color: #666; margin-top:4px;">📱 ${item.phone}</div>
                     </td>
                     <td style="padding: 12px; color: #555;">${item.cedula}</td>
                     <td style="padding: 12px;">
@@ -587,6 +640,47 @@ const WaitlistManager = {
             window.showNotification(message, type);
         } else {
             alert(message);
+        }
+    },
+
+    /**
+     * Exportar la lista visible (o completa) a Excel incluyendo userEmail y lostNote
+     */
+    exportToExcel() {
+        try {
+            // Preferir exportar toda la lista (no solo la página) para gerencia
+            const items = this.waitlist.map(i => ({
+                Estado: i.status || 'waiting',
+                Cliente: i.clientName || '',
+                Cedula: i.cedula || '',
+                Contacto: i.phone || '',
+                EmailAgente: i.userEmail || '',
+                Equipo: `${i.brand || ''} ${i.model || ''}`.trim(),
+                Storage: i.storage || '',
+                DiasEnEspera: (() => { const created = i.createdAt?.toDate ? i.createdAt.toDate() : new Date(i.createdAt); return Math.floor((Date.now() - created.getTime())/(1000*60*60*24)); })(),
+                Nota: i.notes || '',
+                LostNote: i.lostNote || '',
+                FechaRegistro: i.createdAt ? (i.createdAt.toDate ? i.createdAt.toDate().toLocaleString('es-CR') : new Date(i.createdAt).toLocaleString('es-CR')) : '',
+                FechaCompletado: i.completedAt ? (i.completedAt.toDate ? i.completedAt.toDate().toLocaleString('es-CR') : new Date(i.completedAt).toLocaleString('es-CR')) : ''
+            }));
+
+            if (!window.XLSX) {
+                this.showNotification('La librería XLSX no está disponible en esta página.', 'error');
+                return;
+            }
+
+            const ws = window.XLSX.utils.json_to_sheet(items);
+            const wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, 'Lista de Espera');
+
+            const filename = `waitlist_export_${new Date().toISOString().slice(0,10)}.xlsx`;
+            window.XLSX.writeFile(wb, filename);
+
+            this.showNotification('✅ Exportación iniciada: ' + filename, 'success');
+
+        } catch (error) {
+            console.error('Error exportando a Excel:', error);
+            this.showNotification('❌ Error exportando a Excel', 'error');
         }
     }
 };

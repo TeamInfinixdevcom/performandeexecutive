@@ -308,6 +308,24 @@
     </style>
 </head>
 <body>
+    <script>
+        // Dev convenience: if running on localhost, redirect login page to index.html
+        // so the dev autologin in `auth.js` can run even if other scripts are cached.
+        (function(){
+            try {
+                var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                if (isLocal) {
+                    // Avoid redirect loops if already on index.html
+                    if (!location.pathname.includes('index.html')) {
+                        console.log('⚙️ Dev redirect: localhost detected, navigating to index.html to enable dev autologin');
+                        location.href = 'index.html';
+                    }
+                }
+            } catch (e) {
+                console.error('Dev redirect error', e);
+            }
+        })();
+    </script>
     <div class="auth-container">
         <div class="auth-box">
             <h1>🔐 Iniciar Sesión</h1>

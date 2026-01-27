@@ -229,6 +229,41 @@ if (document.getElementById('loginForm')) {
 if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
+            // Dev shortcut: when running on localhost allow auto-login for UI testing
+            const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            if (isLocal) {
+                console.log('⚙️ Dev mode: no auth found but running on localhost — enabling auto-login for UI testing');
+                // Provide a minimal mock user and userData so UI can render without Firebase auth
+                window.currentUser = { uid: 'dev', email: 'dev@local' };
+                const userData = { name: 'Dev User', role: 'admin', isActive: true };
+
+                // Show user name
+                const userNameElement = document.getElementById('userName');
+                if (userNameElement) userNameElement.textContent = userData.name;
+
+                // Show admin buttons for dev
+                const btnAdminPanel = document.getElementById('btnAdminPanel');
+                if (btnAdminPanel) btnAdminPanel.style.display = 'inline-block';
+                const btnTodasVentas = document.getElementById('btnTodasVentas');
+                if (btnTodasVentas) btnTodasVentas.classList.remove('hidden');
+
+                // Configure logout button to simply clear storage and reload
+                const logoutBtn = document.getElementById('btnLogout');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async () => {
+                        try {
+                            deviceFingerprint.clear();
+                        } catch(e){}
+                        try { csrfTokenManager.clear(); } catch(e){}
+                        sessionStorage.removeItem('csrfToken');
+                        // For dev, just reload to show login again
+                        location.reload();
+                    });
+                }
+
+                // Early return: skip production checks
+                return;
+            }
             // No hay usuario autenticado, redirigir a login
             window.location.href = 'login.html';
         } else {
@@ -278,11 +313,11 @@ if (window.location.pathname.includes('index.html') || window.location.pathname 
                 } else {
                     console.error('❌ Botón btnAdminPanel no encontrado en el DOM');
                 }
-                
-                // Mostrar pestaña de Todas las Ventas
+
+                // Mostrar pestaña de Todas las Ventas (usar clase .hidden)
                 const btnTodasVentas = document.getElementById('btnTodasVentas');
                 if (btnTodasVentas) {
-                    btnTodasVentas.style.display = 'inline-block';
+                    btnTodasVentas.classList.remove('hidden');
                     console.log('🌐 Pestaña Todas las Ventas mostrada para admin');
                 }
             } else {
@@ -293,17 +328,17 @@ if (window.location.pathname.includes('index.html') || window.location.pathname 
                 if (btnAdminPanel) {
                     btnAdminPanel.style.display = 'none';
                 }
-                
+
                 const btnTodasVentas = document.getElementById('btnTodasVentas');
                 if (btnTodasVentas) {
-                    btnTodasVentas.style.display = 'none';
+                    btnTodasVentas.classList.add('hidden');
                     console.log('🔒 Pestaña Todas las Ventas OCULTA para usuario normal');
                 }
-                
+
                 // Ocultar también la pestaña si estaba visible
                 const tabTodasVentas = document.getElementById('tab-todasventas');
                 if (tabTodasVentas) {
-                    tabTodasVentas.style.display = 'none';
+                    tabTodasVentas.classList.add('hidden');
                 }
             }
             
@@ -352,10 +387,19 @@ if (window.location.pathname.includes('index.html') || window.location.pathname 
  * Redirigir a index si ya está autenticado (en páginas de login/registro)
  */
 if (window.location.pathname.includes('login.html') || window.location.pathname.includes('register.html')) {
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // Ya está autenticado, redirigir a la app
-            window.location.href = 'index.html';
-        }
-    });
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+    // En desarrollo: si estamos en localhost y en la pantalla de login, redirigir
+    // a index.html para activar el autologin de desarrollo (shortcut seguro solo para localhost).
+    if (isLocal && window.location.pathname.includes('login.html')) {
+        console.log('⚙️ Dev mode: login page on localhost — redirecting to index.html to enable dev autologin');
+        window.location.href = 'index.html';
+    } else {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Ya está autenticado, redirigir a la app
+                window.location.href = 'index.html';
+            }
+        });
+    }
 }

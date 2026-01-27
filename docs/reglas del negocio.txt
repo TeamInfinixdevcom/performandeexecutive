@@ -1,0 +1,81 @@
+Reglas del negocio - Ventas
+=================================
+
+Propósito:
+- Documentar las reglas y flujos aplicables al ciclo de venta, estados
+  y las acciones automatizadas en el backend.
+
+Resumen de estados:
+- `pendiente`: Venta creada pero requiere entrega posterior (p. ej. mensajero
+  y no entregar inmediatamente). Debe tener `fechaPendiente` (serverTimestamp)
+  cuando se aplique.
+- `en_proceso`: Trabajo manual en curso (opcional según flujo operativo).
+- `entregado`: La venta fue físicamente entregada al cliente. Campo adicional
+  `entregadoAt` con timestamp.
+- `procesado`: Indicador interno (campo `processedAt`) marcado por el servidor
+  cuando se completan las tareas de métricas/auditoría.
+
+Reglas de creación de ventas (cliente/frontend):
+- Los formularios (`ventas-form`, `objetivos-form`) deben enviar siempre:
+  - `metodoEnvio` (por ejemplo `mensajero`, `sucursal`, etc.)
+  - `entregarInmediato` (boolean)
+  - `estado` (opcional: si el frontend lo define, se respeta)
+- Lógica por defecto en `ventasManager.createVenta`:
+  - Si `ventaData.estado` está presente, usarlo.
+  - Si no está presente y `metodoEnvio === 'mensajero'` y `entregarInmediato === false`
+    y la venta incluye IMEI o accesorio, entonces inicializar como `pendiente`
+    y escribir `fechaPendiente = serverTimestamp()`.
+
+Vista "Ventas Pendientes":
+- Mostrar ventas cuyo `estado === 'pendiente'` y que cumplan alguno de:
+  - Tienen `fechaPendiente` definido, o
+  - Fueron creadas en los últimos 30 días (criterio para evitar basura antigua).
+- La UI permite marcar una venta como `entregado` (accion del agente).
+
+Acción: marcar entregada (cliente/frontend):
+- Al marcar `entregado`, el frontend llama a `ventasManager.markVentaEntregada(ventaId, tipo)`
+  que actualiza: `estado = 'entregado'`, `entregadoAt = serverTimestamp()`.
+
+Procesamiento servidor (Cloud Functions):
+- Triggers: `onVentaUpdated` para `ventas/{id}` y `onVentaHogarUpdated` para `ventas_hogar/{id}`.
+- Detectar transición a `entregado` (antes != 'entregado' y ahora === 'entregado').
+- `processVentaEntregado` realiza:
+  1. Crear de forma idempotente un documento en `sales_metrics` con id `venta_{ventaId}`.
+     - Si el documento ya existe, no duplicar métricas.
+  2. Actualizar la venta con `processedAt = serverTimestamp()` para indicar que
+     se completó el procesamiento backend.
+  3. Escribir una entrada en `audit_logs` con evento `SALE_PROCESSED` (datos
+     mínimos: ventaId, uid que hizo el cambio si disponible, timestamps).
+
+Idempotencia y seguridad:
+- El proceso de métricas debe ser idempotente: usar un id determinista (`venta_{id}`)
+  para evitar duplicados si el trigger se ejecuta varias veces.
+- Validar en las reglas de Firestore que sólo roles autorizados (agentes/admin)
+  pueden cambiar `estado` a `entregado` o modificar campos sensibles.
+
+Índices requeridos (Firestore):
+- Composite index para `ventas` y `ventas_hogar`: `uid` ASC, `createdAt` DESC.
+  (Ver `firestore.indexes.json` y la consola si alguna consulta falla.)
+
+Pruebas end-to-end recomendadas:
+1. Crear venta con `metodoEnvio = mensajero` y `entregarInmediato = false`, con IMEI.
+   - Ver que la venta se crea con `estado = 'pendiente'` y que `fechaPendiente` existe.
+2. Abrir "Ventas Pendientes" → verificar que aparece.
+3. Marcar la venta `entregada` desde la UI.
+   - Ver que `ventas/{id}.estado === 'entregado'` y `entregadoAt` está establecido.
+4. Confirmar en Firestore que `sales_metrics/venta_{id}` existe y que `ventas/{id}.processedAt`
+   fue actualizado.
+5. Confirmar que hay una entrada en `audit_logs` con `SALE_PROCESSED`.
+
+Notas de despliegue y operación:
+- Desplegar `firestore.indexes.json` antes de ejecutar consultas que dependan de
+  los índices compuestos; esperar a que los índices estén `READY`.
+- Las Cloud Functions relevantes (onUpdate) deben ejecutarse en entorno con permisos
+  de lectura/escritura a las colecciones `sales_metrics` y `audit_logs`.
+
+Contacto/Responsabilidades:
+- Frontend: enviar `metodoEnvio`, `entregarInmediato` y `estado` cuando aplique.
+- Backend (Cloud Functions): procesar transiciones a `entregado` de forma idempotente
+  y registrar métricas/auditoría.
+
+Fin del documento.

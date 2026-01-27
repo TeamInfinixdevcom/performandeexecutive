@@ -27,15 +27,15 @@ class Proyecciones {
 
       // Filtrar ventas por mes y año
       const ventasMobileMes = this.ventasMobile.filter(v => {
-        // soportar distintos formatos: string ISO, Firestore Timestamp, o usar createdAt como fallback
-        const raw = v.fecha || v.createdAt;
+        // soportar distintos formatos: preferir `createdAt` (más fiable), luego `fecha`
+        const raw = v.createdAt || v.fecha;
         if (!raw) return false;
         const d = raw && raw.toDate ? raw.toDate() : new Date(raw);
         if (!d || isNaN(d.getTime())) return false;
         return d.getMonth() === mes && d.getFullYear() === year;
       });
       const ventasHomeMes = this.ventasHome.filter(v => {
-        const raw = v.fecha || v.createdAt;
+        const raw = v.createdAt || v.fecha;
         if (!raw) return false;
         const d = raw && raw.toDate ? raw.toDate() : new Date(raw);
         if (!d || isNaN(d.getTime())) return false;
