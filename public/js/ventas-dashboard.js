@@ -49,7 +49,7 @@ class VentasDashboard {
    */
   async getUserDoc(uid) {
     try {
-      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js');
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
       const userRef = doc(this.ventasManager.db, 'users', uid);
       const userSnap = await getDoc(userRef);
       return userSnap.exists() ? userSnap.data() : null;
@@ -64,7 +64,7 @@ class VentasDashboard {
    */
   async loadAllUsers() {
     try {
-      const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js');
+      const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
       const usersRef = collection(this.ventasManager.db, 'users');
       const snapshot = await getDocs(usersRef);
       

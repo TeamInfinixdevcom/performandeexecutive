@@ -1,48 +1,32 @@
-// Configuración de Firebase para el cliente (Frontend)
-// IMPORTANTE: Estas credenciales son para el SDK de cliente, SON PÚBLICAS
-// Para obtenerlas:
-// 1. Ve a Firebase Console > Configuración del proyecto
-// 2. En "Tus aplicaciones" > Configuración de SDK
-// 3. Copia las credenciales del firebaseConfig
-
+// Firebase SDKs
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getFunctions } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
-// Configuración de Firebase (obtenida con: firebase apps:sdkconfig web)
+// Configuración Firebase (cliente – pública)
 const firebaseConfig = {
-    apiKey: "AIzaSyB_QB5AOMTRUF1tPF0ypMYwlI2F16Ugy0w",
-    authDomain: "executiveperformancek.firebaseapp.com",
-    projectId: "executiveperformancek",
-    storageBucket: "executiveperformancek.firebasestorage.app",
-    messagingSenderId: "1010572776177",
-    appId: "1:1010572776177:web:26432cf2220bfe11cccf50",
-    measurementId: "G-MG1MKJ73X2"
+  apiKey: "AIzaSyB_QB5AOMTRUF1tPF0ypMYwlI2F16Ugy0w",
+  authDomain: "executiveperformancek.firebaseapp.com",
+  projectId: "executiveperformancek",
+  storageBucket: "executiveperformancek.firebasestorage.app",
+  messagingSenderId: "1010572776177",
+  appId: "1:1010572776177:web:26432cf2220bfe11cccf50",
+  measurementId: "G-MG1MKJ73X2"
 };
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
+
+// Servicios
 const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions(app, 'us-central1');
 
-// Conectar a emuladores cuando estemos en localhost
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    try {
-        connectFirestoreEmulator(db, 'localhost', 8080);
-        connectAuthEmulator(auth, 'http://localhost:9099');
-        console.log('Conectado a emuladores: Firestore@8080, Auth@9099');
-    } catch (e) {
-        console.warn('No se pudieron conectar los emuladores:', e);
-    }
-}
-
-// Exportar para usar en otros archivos
+// Exports
 export { app, auth, db, functions, signOut };
 
-// Exponer globalmente para acceso desde otros scripts
+// Acceso global (opcional, como lo usabas antes)
 window.firebaseApp = app;
 window.firebaseAuth = auth;
 window.firebaseDb = db;

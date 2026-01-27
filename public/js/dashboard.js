@@ -52,6 +52,8 @@ function switchTab(tabName) {
             window.AgendaManager.init();
         }
     }
+    // Guardar última pestaña en localStorage
+    try { localStorage.setItem('lastTab', tabName); } catch(e){/* ignore */}
 }
 
 // Exponer globalmente INMEDIATAMENTE
@@ -69,6 +71,17 @@ tabButtons.forEach(btn => {
             }
         }
     });
+
+// Restaurar última pestaña al cargar
+(function(){
+    try{
+        const last = localStorage.getItem('lastTab');
+        if (last) {
+            // small timeout to allow initial elements to render
+            setTimeout(()=>{ switchTab(last); }, 120);
+        }
+    }catch(e){}
+})();
 });
 
 if (reminderForm) reminderForm.addEventListener('submit', handleReminderSubmit);

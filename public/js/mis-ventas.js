@@ -100,6 +100,7 @@ class MisVentas {
     // Obtener filtros
     const filtroTipo = document.getElementById('filtroTipoVenta')?.value || '';
     const filtroCategoria = document.getElementById('filtroCategoriaVenta')?.value || '';
+    const filtroEstado = document.getElementById('filtroEstadoVenta')?.value || '';
     const buscarPedido = document.getElementById('buscarNumPedido')?.value.toLowerCase() || '';
     const buscarCedula = document.getElementById('buscarCedula')?.value.toLowerCase() || '';
 
@@ -122,6 +123,15 @@ class MisVentas {
       });
     }
 
+    // Filtrar por estado si se seleccionó uno
+    if (filtroEstado) {
+      if (filtroEstado === 'pendientes') {
+        ventasMobileFiltered = ventasMobileFiltered.filter(v => v.estado === 'pendiente' || v.estado === 'en_proceso');
+      } else {
+        ventasMobileFiltered = ventasMobileFiltered.filter(v => v.estado === filtroEstado);
+      }
+    }
+
     // Filtrar ventas hogar
     let ventasHomeFiltered = this.ventasHome;
     if (filtroTipo && filtroTipo !== 'home') ventasHomeFiltered = [];
@@ -135,6 +145,15 @@ class MisVentas {
         if (filtroCategoria === 'prepago') return v.tipoVenta === 'prepago';
         return true;
       });
+    }
+
+    // Filtrar por estado si se seleccionó uno
+    if (filtroEstado) {
+      if (filtroEstado === 'pendientes') {
+        ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === 'pendiente' || v.estado === 'en_proceso');
+      } else {
+        ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === filtroEstado);
+      }
     }
 
     const todasLasVentas = [...ventasMobileFiltered, ...ventasHomeFiltered];

@@ -4,7 +4,7 @@
 
 class SalesList {
   constructor() {
-    this.ventasManager = window.ventasManager;
+    this.ventasManager = null;
     this.ventasMobile = [];
     this.ventasHome = [];
     this.currentFilter = { type: 'all', orderNumber: '', cedula: '', simoNumber: '' };
@@ -17,6 +17,15 @@ class SalesList {
    */
   async init() {
     try {
+      // Esperar a que window.ventasManager esté disponible (si el objeto global se inicializa después)
+      let attempts = 0;
+      while (!window.ventasManager && attempts < 200) { await new Promise(r => setTimeout(r, 100)); attempts++; }
+      if (!window.ventasManager) {
+        console.warn('⚠️ VentasManager no disponible después de espera; la UI cargará en modo degradado');
+        this.ventasManager = null;
+        return; // evitar inicializar más que causaría errores
+      }
+      this.ventasManager = window.ventasManager;
       await this.ventasManager.ensure();
       
       // Detectar si es admin
@@ -39,11 +48,37 @@ class SalesList {
   }
 
   /**
+   * Asegurar que `this.ventasManager` esté disponible y listo
+   */
+  async ensureVentasManagerReady() {
+    if (this.ventasManager && this.ventasManager.db) {
+      return;
+    }
+
+    let attempts = 0;
+    while (!window.ventasManager && attempts < 100) {
+      await new Promise(r => setTimeout(r, 100));
+      attempts++;
+    }
+
+    if (!window.ventasManager) {
+      throw new Error('VentasManager no disponible');
+    }
+
+    this.ventasManager = window.ventasManager;
+    try {
+      await this.ventasManager.ensure();
+    } catch (e) {
+      console.warn('⚠️ ventasManager.ensure() falló:', e);
+    }
+  }
+
+  /**
    * Obtener documento del usuario desde Firestore
    */
   async getUserDoc(uid) {
     try {
-      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js');
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
       const userRef = doc(this.ventasManager.db, 'users', uid);
       const userSnap = await getDoc(userRef);
       return userSnap.exists() ? userSnap.data() : null;
@@ -68,6 +103,11 @@ class SalesList {
     try {
       // Si es admin con filtro, cargar ventas del usuario seleccionado
       const filtroUID = this.selectedUserUID;
+      if (!this.ventasManager) {
+        const container = document.getElementById('ventasListContainer');
+        if (container) container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Servicio de ventas no disponible. Intenta recargar la página.</p>';
+        return;
+      }
       this.ventasMobile = await this.ventasManager.getVentas('mobile', filtroUID);
       this.ventasHome = await this.ventasManager.getVentas('home', filtroUID);
       this.renderVentas();
@@ -207,7 +247,7 @@ class SalesList {
             <div style="margin-right:8px; font-size:13px;">
               ${venta.estado ? (venta.estado === 'pendiente' ? '<span style="background:#FFEB3B;padding:6px 10px;border-radius:12px;color:#333;font-weight:bold;">⏳ PENDIENTE</span>' : venta.estado === 'cancelado' ? '<span style="background:#EF9A9A;padding:6px 10px;border-radius:12px;color:#7f1d1d;font-weight:bold;">❌ CANCELADO</span>' : '<span style="background:#A5D6A7;padding:6px 10px;border-radius:12px;color:#1b5e20;font-weight:bold;">✅ ENTREGADO</span>') : ''}
             </div>
-            <button onclick="salesList.editVenta('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">✏️ Editar</button>
+
             <button onclick="if(confirm('¿Eliminar esta venta?')) salesList.deleteVenta('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
             ${venta.estado === 'pendiente' ? `<button onclick="salesList.startEntregaAnimation('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🏍️ Marcar Entregado</button>` : ''}
             ${venta.estado === 'pendiente' ? `<button onclick="if(confirm('¿Cancelar esta venta pendiente?')) salesList.markAsCancelado('${venta.id}', '${venta.tipo}')" style="padding: 8px 15px; background: #FF7043; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">✖️ Cancelar</button>` : ''}
@@ -263,7 +303,25 @@ class SalesList {
    */
   async editVenta(ventaId, tipo) {
     try {
-      const venta = await this.ventasManager.getVenta(ventaId, tipo);
+      await this.ensureVentasManagerReady();
+      let venta;
+      try {
+        venta = await this.ventasManager.getVenta(ventaId, tipo);
+      } catch (err) {
+        console.error('Error obteniendo venta en editVenta:', err);
+        // Fallback: abrir la página standalone de ventas con hash para intentar cargarla allí
+        try {
+          const fallbackUrl = 'ventas-list.html#' + ventaId;
+          console.warn('Fallback: redirigiendo a', fallbackUrl);
+          window.location.href = fallbackUrl;
+          return;
+        } catch (redirErr) {
+          console.error('Error al redirigir a fallback:', redirErr);
+        }
+
+        alert('No se pudo cargar la venta. Intenta recargar la página.');
+        return;
+      }
       const container = document.getElementById('ventasListContainer');
       if (!container) return;
 

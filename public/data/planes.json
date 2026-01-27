@@ -1,153 +1,158 @@
 {
   "plansMobile": {
-      "kplus": {
-        "grupo": "📱 K Plus",
-        "planes": [
-          { "id": "k1plus", "nombre": "Plan k1 Plus", "precio": 10458 },
-          { "id": "k2plus", "nombre": "Plan k2 Plus", "precio": 14380 },
-          { "id": "k3plus", "nombre": "Plan k3 Plus", "precio": 18738 },
-          { "id": "k4plus", "nombre": "Plan k4 Plus", "precio": 25710 },
-          { "id": "k5plus", "nombre": "Plan k5 Plus", "precio": 30504 },
-          { "id": "k6plus", "nombre": "Plan k6 Plus", "precio": 38347 }
-        ]
-      },
-      "prepago": {
-        "grupo": "💳 Prepago",
-        "planes": [
-          { "id": "kitprepago", "nombre": "KIT PREPAGO", "precio": 885 },
-          { "id": "doprepago6065", "nombre": "Do. Prepago 6.065", "precio": 5372 },
-          { "id": "doprepago12095", "nombre": "Do. Prepago 12.095", "precio": 10709 }
-        ]
-      },
-      "dominok": {
-        "grupo": "👑 Dominio K",
-        "planes": [
-          { "id": "dominok2", "nombre": "Planes Dominio k2 / Nuevo Dominio k2", "precio": 10458 },
-          { "id": "dominok3", "nombre": "Planes Dominio k3 / Nuevo Dominio k3", "precio": 14380 },
-          { "id": "dominok4", "nombre": "Planes Dominio k4 / Nuevo Dominio k4", "precio": 18738 },
-          { "id": "dominok5", "nombre": "Planes Dominio k5 / Nuevo Dominio k5", "precio": 25710 }
-        ]
-      },
-      "postpago": {
-        "grupo": "📶 Postpago",
-        "planes": [
-          { "id": "datos1", "nombre": "Datos 1", "precio": 11416 },
-          { "id": "datos2", "nombre": "Datos 2", "precio": 14071 },
-          { "id": "datos3", "nombre": "Datos 3", "precio": 22035 },
-          { "id": "datos4", "nombre": "Datos 4", "precio": 25575 },
-          { "id": "datos5", "nombre": "Datos 5", "precio": 25575 }
-        ]
-      },
-      "accesorio_contado": {
-        "grupo": "🎁 Accesorios Contado",
-        "planes": [
-          { "id": "accesorio_contado", "nombre": "Accesorio Contado", "precio": 1 }
-        ]
-      },
-      "imei_contado": {
-        "grupo": "🔢 IMEI Contado",
-        "planes": [
-          { "id": "imei_contado", "nombre": "IMEI Contado", "precio": 1 }
-        ]
-      },    
-      "geolocalizacion": {
-        "grupo": "📍 Geolocalización",
-        "planes": [
-          { "id": "datosgeolocalizacion", "nombre": "Datos Geolocalización", "precio": 2212 },
-          { "id": "datosvozgeolocalizacion", "nombre": "Datos y Voz Geolocalización", "precio": 2212 }
-        ]
-      },
-      "otros": {
-        "grupo": "🧳 Otros",
-        "planes": [
-          { "id": "planturista", "nombre": "Plan Turista", "precio": 10539 },
-          { "id": "plankolbi60", "nombre": "Plan kölbi 60", "precio": 2900 }
-        ]
-      }
+    "kplus": {
+      "grupo": "📱 K Plus",
+      "planes": [
+        { "id": "k1plus", "nombre": "Plan k1 Plus", "precio": 10458 },
+        { "id": "k2plus", "nombre": "Plan k2 Plus", "precio": 14380 },
+        { "id": "k3plus", "nombre": "Plan k3 Plus", "precio": 18738 },
+        { "id": "k4plus", "nombre": "Plan k4 Plus", "precio": 25710 },
+        { "id": "k5plus", "nombre": "Plan k5 Plus", "precio": 30504 },
+        { "id": "k6plus", "nombre": "Plan k6 Plus", "precio": 38347 }
+      ]
     },
-    "plansHome": {
-      "internet": {
-        "grupo": "🌐 Internet Individual",
-        "planes": [
-          { "id": "int1mbps", "nombre": "Internet 1 Mbps", "precio": 8761 },
-          { "id": "int2mbps", "nombre": "Internet 2 Mbps", "precio": 11416 },
-          { "id": "int3mbps", "nombre": "Internet 3 Mbps", "precio": 13186 },
-          { "id": "int4mbps", "nombre": "Internet 4 Mbps", "precio": 14071 },
-          { "id": "int6mbps", "nombre": "Internet 6 Mbps", "precio": 15841 },
-          { "id": "int10mbps", "nombre": "Internet 10 Mbps", "precio": 15841 },
-          { "id": "int15mbps", "nombre": "Internet 15 Mbps", "precio": 16726 },
-          { "id": "int20mbps", "nombre": "Internet 20 Mbps", "precio": 17611 },
-          { "id": "int30mbps", "nombre": "Internet 30 Mbps", "precio": 19381 },
-          { "id": "int50mbps", "nombre": "Internet 50 Mbps", "precio": 13072 },
-          { "id": "int100mbps", "nombre": "Internet 100 Mbps", "precio": 13072 },
-          { "id": "int200mbps", "nombre": "Internet 200 Mbps", "precio": 20828 },
-          { "id": "int300mbps", "nombre": "Internet 300 Mbps", "precio": 22571 },
-          { "id": "int500mbps", "nombre": "Internet 500 Mbps", "precio": 24314 },
-          { "id": "int800mbps", "nombre": "Internet 800 Mbps", "precio": 127843 },
-          { "id": "int1gbps", "nombre": "Internet 1 Gbps", "precio": 158431 }
-        ]
-      },
-      "duo": {
-        "grupo": "📺 Dúo (Internet + TV kölbi)",
-        "planes": [
-          { "id": "duo1mbps", "nombre": "Dúo 1 Mbps", "precio": 22920 },
-          { "id": "duo2mbps", "nombre": "Dúo 2 Mbps", "precio": 23805 },
-          { "id": "duo3mbps", "nombre": "Dúo 3 Mbps", "precio": 24690 },
-          { "id": "duo4mbps", "nombre": "Dúo 4 Mbps", "precio": 25575 },
-          { "id": "duo6mbps", "nombre": "Dúo 6 Mbps", "precio": 25575 },
-          { "id": "duo10mbps", "nombre": "Dúo 10 Mbps", "precio": 25575 },
-          { "id": "duo15mbps", "nombre": "Dúo 15 Mbps", "precio": null },
-          { "id": "duo20mbps", "nombre": "Dúo 20 Mbps", "precio": 27345 },
-          { "id": "duo30mbps", "nombre": "Dúo 30 Mbps", "precio": 30885 },
-          { "id": "duo50mbps", "nombre": "Dúo 50 Mbps", "precio": 32655 },
-          { "id": "duo100mbps", "nombre": "Dúo 100 Mbps", "precio": 34143 },
-          { "id": "duo200mbps", "nombre": "Dúo 200 Mbps", "precio": 37280 },
-          { "id": "duo300mbps", "nombre": "Dúo 300 Mbps", "precio": 40853 },
-          { "id": "duo500mbps", "nombre": "Dúo 500 Mbps", "precio": 63685 },
-          { "id": "duo800mbps", "nombre": "Dúo 800 Mbps", "precio": 143772 },
-          { "id": "duo1gbps", "nombre": "Dúo 1 Gbps", "precio": 174361 }
-        ]
-      },
-      "duotel": {
-        "grupo": "📞 Dúo Telefonía + Internet",
-        "planes": [
-          { "id": "duotelint1mbps", "nombre": "Dúo Telefonía + Internet 1 Mbps", "precio": 10531 },
-          { "id": "duotelint2mbps", "nombre": "Dúo Telefonía + Internet 2 Mbps", "precio": 13186 },
-          { "id": "duotelint3mbps", "nombre": "Dúo Telefonía + Internet 3 Mbps", "precio": 14956 },
-          { "id": "duotelint4mbps", "nombre": "Dúo Telefonía + Internet 4 Mbps", "precio": 15841 },
-          { "id": "duotelint6mbps", "nombre": "Dúo Telefonía + Internet 6 Mbps", "precio": 17611 },
-          { "id": "duotelint10mbps", "nombre": "Dúo Telefonía + Internet 10 Mbps", "precio": 17611 },
-          { "id": "duotelint15mbps", "nombre": "Dúo Telefonía + Internet 15 Mbps", "precio": null },
-          { "id": "duotelint20mbps", "nombre": "Dúo Telefonía + Internet 20 Mbps", "precio": 20265 },
-          { "id": "duotelint30mbps", "nombre": "Dúo Telefonía + Internet 30 Mbps", "precio": 22035 },
-          { "id": "duotelint50mbps", "nombre": "Dúo Telefonía + Internet 50 Mbps", "precio": 23805 },
-          { "id": "duotelint100mbps", "nombre": "Dúo Telefonía + Internet 100 Mbps", "precio": 15948 },
-          { "id": "duotelint200mbps", "nombre": "Dúo Telefonía + Internet 200 Mbps", "precio": 26841 },
-          { "id": "duotelint300mbps", "nombre": "Dúo Telefonía + Internet 300 Mbps", "precio": 27538 },
-          { "id": "duotelint500mbps", "nombre": "Dúo Telefonía + Internet 500 Mbps", "precio": 50370 },
-          { "id": "duotelint800mbps", "nombre": "Dúo Telefonía + Internet 800 Mbps", "precio": 130458 },
-          { "id": "duotelint1gbps", "nombre": "Dúo Telefonía + Internet 1 Gbps", "precio": 161046 }
-        ]
-      },
-      "triple": {
-        "grupo": "☎️ Triple (Internet + TV + Telefonía)",
-        "planes": [
-          { "id": "triple1mbps", "nombre": "Triple 1 Mbps", "precio": 25575 },
-          { "id": "triple2mbps", "nombre": "Triple 2 Mbps", "precio": 26460 },
-          { "id": "triple3mbps", "nombre": "Triple 3 Mbps", "precio": 27345 },
-          { "id": "triple4mbps", "nombre": "Triple 4 Mbps", "precio": 28230 },
-          { "id": "triple6mbps", "nombre": "Triple 6 Mbps", "precio": 28230 },
-          { "id": "triple10mbps", "nombre": "Triple 10 Mbps", "precio": 28230 },
-          { "id": "triple15mbps", "nombre": "Triple 15 Mbps", "precio": null },
-          { "id": "triple20mbps", "nombre": "Triple 20 Mbps", "precio": 30000 },
-          { "id": "triple30mbps", "nombre": "Triple 30 Mbps", "precio": 33540 },
-          { "id": "triple50mbps", "nombre": "Triple 50 Mbps", "precio": 35310 },
-          { "id": "triple100mbps", "nombre": "Triple 100 Mbps", "precio": 39894 },
-          { "id": "triple200mbps", "nombre": "Triple 200 Mbps", "precio": 42857 },
-          { "id": "triple500mbps", "nombre": "Triple 500 Mbps", "precio": 67258 },
-          { "id": "triple800mbps", "nombre": "Triple 800 Mbps", "precio": 146125 },
-          { "id": "triple1gbps", "nombre": "Triple 1 Gbps", "precio": 176714 }
-        ]
-      }
+    "postpago": {
+      "grupo": "📶 Postpago",
+      "planes": [
+        { "id": "datos1", "nombre": "Datos 1", "precio": 11416 },
+        { "id": "datos2", "nombre": "Datos 2", "precio": 14071 },
+        { "id": "datos3", "nombre": "Datos 3", "precio": 22035 },
+        { "id": "datos4", "nombre": "Datos 4", "precio": 25575 },
+        { "id": "datos5", "nombre": "Datos 5", "precio": 25575 }
+      ]
+    },
+    "dominok": {
+      "grupo": "👑 Dominio K",
+      "planes": [
+        { "id": "dominok2", "nombre": "Dominio k2", "precio": 10458 },
+        { "id": "dominok3", "nombre": "Dominio k3", "precio": 14380 },
+        { "id": "dominok4", "nombre": "Dominio k4", "precio": 18738 },
+        { "id": "dominok5", "nombre": "Dominio k5", "precio": 25710 }
+      ]
+    },
+    "geolocalizacion": {
+      "grupo": "📍 Geolocalización",
+      "planes": [
+        { "id": "datosgeolocalizacion", "nombre": "Datos Geolocalización", "precio": 2212 },
+        { "id": "datosvozgeolocalizacion", "nombre": "Datos y Voz Geolocalización", "precio": 2212 }
+      ]
+    },
+    "otros": {
+      "grupo": "🧳 Otros",
+      "planes": [
+        { "id": "planturista", "nombre": "Plan Turista", "precio": 10539 },
+        { "id": "chipprepago2024", "nombre": "Chip prepago 2024", "precio": 871 },
+        { "id": "plankolbi60", "nombre": "Plan kölbi 60", "precio": 2900 }
+      ]
+    },
+    "prepago": {
+      "grupo": "💳 Prepago",
+      "planes": [
+        { "id": "kitprepago", "nombre": "KIT PREPAGO", "precio": 885 },
+        { "id": "doprepago6065", "nombre": "Do. Prepago 6.065", "precio": 5372 },
+        { "id": "doprepago12095", "nombre": "Do. Prepago 12.095", "precio": 10709 }
+      ]
+    }
+  },
+  "plansHome": {
+    "internet": {
+      "grupo": "🌐 Internet Individual",
+      "planes": [
+        { "id": "int1mbps", "nombre": "Internet Individual 1 Mbps", "precio": 8761 },
+        { "id": "int2mbps", "nombre": "Internet Individual 2 Mbps", "precio": 11416 },
+        { "id": "int3mbps", "nombre": "Internet Individual 3 Mbps", "precio": 13186 },
+        { "id": "int4mbps", "nombre": "Internet Individual 4 Mbps", "precio": 14071 },
+        { "id": "int6mbps", "nombre": "Internet Individual 6 Mbps", "precio": 15841 },
+        { "id": "int10mbps", "nombre": "Internet Individual 10 Mbps", "precio": 15841 },
+        { "id": "int15mbps", "nombre": "Internet Individual 15 Mbps", "precio": 16726 },
+        { "id": "int20mbps", "nombre": "Internet Individual 20 Mbps", "precio": 17611 },
+        { "id": "int30mbps", "nombre": "Internet Individual 30 Mbps", "precio": 19381 },
+        { "id": "int50mbps", "nombre": "Internet Individual 50 Mbps", "precio": 13072 },
+        { "id": "int100mbps", "nombre": "Internet Individual 100 Mbps", "precio": 13072 },
+        { "id": "int200mbps", "nombre": "Internet Individual 200 Mbps", "precio": 20828 },
+        { "id": "int300mbps", "nombre": "Internet Individual 300 Mbps", "precio": 22571 },
+        { "id": "int500mbps", "nombre": "Internet Individual 500 Mbps", "precio": 24314 },
+        { "id": "int800mbps", "nombre": "Internet Individual 800 Mbps", "precio": 127843 },
+        { "id": "int1gbps", "nombre": "Internet Individual 1 Gbps", "precio": 158431 }
+      ]
+    },
+    "duo_tv_internet": {
+      "grupo": "📺 Dúo TV + Internet",
+      "planes": [
+        { "id": "duotvint1mbps", "nombre": "Dúo TV + Internet 1 Mbps", "precio": 22920 },
+        { "id": "duotvint2mbps", "nombre": "Dúo TV + Internet 2 Mbps", "precio": 23805 },
+        { "id": "duotvint3mbps", "nombre": "Dúo TV + Internet 3 Mbps", "precio": 24690 },
+        { "id": "duotvint4mbps", "nombre": "Dúo TV + Internet 4 Mbps", "precio": 25575 },
+        { "id": "duotvint6mbps", "nombre": "Dúo TV + Internet 6 Mbps", "precio": 25575 },
+        { "id": "duotvint10mbps", "nombre": "Dúo TV + Internet 10 Mbps", "precio": 25575 },
+        { "id": "duotvint20mbps", "nombre": "Dúo TV + Internet 20 Mbps", "precio": 27345 },
+        { "id": "duotvint30mbps", "nombre": "Dúo TV + Internet 30 Mbps", "precio": 30885 },
+        { "id": "duotvint50mbps", "nombre": "Dúo TV + Internet 50 Mbps", "precio": 32655 },
+        { "id": "duotvint100mbps", "nombre": "Dúo TV + Internet 100 Mbps", "precio": 34143 },
+        { "id": "duotvint200mbps", "nombre": "Dúo TV + Internet 200 Mbps", "precio": 37280 },
+        { "id": "duotvint300mbps", "nombre": "Dúo TV + Internet 300 Mbps", "precio": 40853 },
+        { "id": "duotvint500mbps", "nombre": "Dúo TV + Internet 500 Mbps", "precio": 63685 },
+        { "id": "duotvint800mbps", "nombre": "Dúo TV + Internet 800 Mbps", "precio": 143772 },
+        { "id": "duotvint1gbps", "nombre": "Dúo TV + Internet 1 Gbps", "precio": 174361 }
+      ]
+    },
+    "duo_telefonia_internet": {
+      "grupo": "📞 Dúo Telefonía + Internet",
+      "planes": [
+        { "id": "duotelint1mbps", "nombre": "Dúo Telefonía + Internet 1 Mbps", "precio": 10531 },
+        { "id": "duotelint2mbps", "nombre": "Dúo Telefonía + Internet 2 Mbps", "precio": 13186 },
+        { "id": "duotelint3mbps", "nombre": "Dúo Telefonía + Internet 3 Mbps", "precio": 14956 },
+        { "id": "duotelint4mbps", "nombre": "Dúo Telefonía + Internet 4 Mbps", "precio": 15841 },
+        { "id": "duotelint6mbps", "nombre": "Dúo Telefonía + Internet 6 Mbps", "precio": 17611 },
+        { "id": "duotelint10mbps", "nombre": "Dúo Telefonía + Internet 10 Mbps", "precio": 17611 },
+        { "id": "duotelint20mbps", "nombre": "Dúo Telefonía + Internet 20 Mbps", "precio": 20265 },
+        { "id": "duotelint30mbps", "nombre": "Dúo Telefonía + Internet 30 Mbps", "precio": 22035 },
+        { "id": "duotelint50mbps", "nombre": "Dúo Telefonía + Internet 50 Mbps", "precio": 23805 },
+        { "id": "duotelint100mbps", "nombre": "Dúo Telefonía + Internet 100 Mbps", "precio": 15948 },
+        { "id": "duotelint200mbps", "nombre": "Dúo Telefonía + Internet 200 Mbps", "precio": 24828 },
+        { "id": "duotelint300mbps", "nombre": "Dúo Telefonía + Internet 300 Mbps", "precio": 27573 },
+        { "id": "duotelint500mbps", "nombre": "Dúo Telefonía + Internet 500 Mbps", "precio": 30318 },
+        { "id": "duotelint800mbps", "nombre": "Dúo Telefonía + Internet 800 Mbps", "precio": 130458 },
+        { "id": "duotelint1gbps", "nombre": "Dúo Telefonía + Internet 1 Gbps", "precio": 161046 }
+      ]
+    },
+    "triple": {
+      "grupo": "☎️ Triple (Internet + TV + Telefonía)",
+      "planes": [
+        { "id": "triple1mbps", "nombre": "Triple Internet + Telefonía + TV 1 Mbps", "precio": 25575 },
+        { "id": "triple2mbps", "nombre": "Triple Internet + Telefonía + TV 2 Mbps", "precio": 26460 },
+        { "id": "triple3mbps", "nombre": "Triple Internet + Telefonía + TV 3 Mbps", "precio": 27345 },
+        { "id": "triple4mbps", "nombre": "Triple Internet + Telefonía + TV 4 Mbps", "precio": 28230 },
+        { "id": "triple6mbps", "nombre": "Triple Internet + Telefonía + TV 6 Mbps", "precio": 28230 },
+        { "id": "triple10mbps", "nombre": "Triple Internet + Telefonía + TV 10 Mbps", "precio": 28230 },
+        { "id": "triple20mbps", "nombre": "Triple Internet + Telefonía + TV 20 Mbps", "precio": 30000 },
+        { "id": "triple30mbps", "nombre": "Triple Internet + Telefonía + TV 30 Mbps", "precio": 33540 },
+        { "id": "triple50mbps", "nombre": "Triple Internet + Telefonía + TV 50 Mbps", "precio": 35310 },
+        { "id": "triple100mbps", "nombre": "Triple Internet + Telefonía + TV 100 Mbps", "precio": 39894 },
+        { "id": "triple200mbps", "nombre": "Triple Internet + Telefonía + TV 200 Mbps", "precio": 42857 },
+        { "id": "triple300mbps", "nombre": "Triple Internet + Telefonía + TV 300 Mbps", "precio": 43467 },
+        { "id": "triple500mbps", "nombre": "Triple Internet + Telefonía + TV 500 Mbps", "precio": 67258 },
+        { "id": "triple800mbps", "nombre": "Triple Internet + Telefonía + TV 800 Mbps", "precio": 146125 },
+        { "id": "triple1gbps", "nombre": "Triple Internet + Telefonía + TV 1 Gbps", "precio": 176714 }
+      ]
+    },
+    "duo_tv_avanzada_telefonia": {
+      "grupo": "📞 Dúo TV Avanzada + Telefonía",
+      "planes": [
+        { "id": "duotvavanzadatel", "nombre": "Dúo TV Avanzada + Telefonía", "precio": 23230 }
+      ]
+    },
+    "tv_avanzada_individual": {
+      "grupo": "📺 TV Avanzada Individual",
+      "planes": [
+        { "id": "tvavanzadaind", "nombre": "TV Avanzada Individual", "precio": 26327 }
+      ]
+    },
+    "telefonia_individual": {
+      "grupo": "📞 Telefonía Individual",
+      "planes": [
+        { "id": "telefoniaind", "nombre": "Telefonía Individual", "precio": 5660 }
+      ]
     }
   }
+}
