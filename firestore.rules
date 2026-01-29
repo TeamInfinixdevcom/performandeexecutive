@@ -238,15 +238,25 @@ service cloud.firestore {
     match /ventas/{ventaId} {
       // Cualquier usuario autenticado puede crear ventas con su UID
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      // Cada usuario puede leer solo sus propias ventas
-      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+
+      // Lectura: permitir al propietario por `uid`, al agente por `agenteId` (UID o email), o a admins
+      allow read, list: if isSignedIn() && (
+        resource.data.uid == request.auth.uid
+        || resource.data.agenteId == request.auth.uid
+        || request.auth.token.email == resource.data.agenteId
+        || resource.data.executiveId == request.auth.uid
+        || isAdmin()
+      );
+
       // Cada usuario puede actualizar y eliminar solo sus propias ventas
       // Permitir actualizar/eliminar solo si la venta es del usuario (uid establecido)
       allow update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+
       // Fallback limitado: ventas legacy sin uid pero con executiveId del usuario
       allow update, delete: if isSignedIn()
                 && !resource.data.keys().hasAny(['uid'])
                 && resource.data.executiveId == request.auth.uid;
+
       // Los admins pueden leer, crear, actualizar y eliminar todas las ventas
       allow read, write: if isAdmin();
     }
@@ -257,16 +267,26 @@ service cloud.firestore {
     match /ventas_hogar/{ventaId} {
       // Cualquier usuario autenticado puede crear ventas con su UID
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      // Cada usuario puede leer solo sus propias ventas
-      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+
+      // Lectura: permitir al propietario por `uid`, al agente por `agenteId` (UID o email), o a admins
+      allow read, list: if isSignedIn() && (
+        resource.data.uid == request.auth.uid
+        || resource.data.agenteId == request.auth.uid
+        || request.auth.token.email == resource.data.agenteId
+        || resource.data.executiveId == request.auth.uid
+        || isAdmin()
+      );
+
       // Cada usuario puede actualizar y eliminar solo sus propias ventas
       // Permitir actualizar/eliminar cuando el documento ya tiene uid correcto
       allow update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+
       // ⚠️ Fallback para datos antiguos sin campo uid: permitir que el propio usuario lo reclame
       // Usamos resource.data para que también funcione en delete (request.resource es null en deletes)
       allow update, delete: if isSignedIn()
                             && !resource.data.keys().hasAny(['uid'])
                             && resource.data.executiveId == request.auth.uid;
+
       // Los admins pueden leer, crear, actualizar y eliminar todas las ventas
       allow read, write: if isAdmin();
     }

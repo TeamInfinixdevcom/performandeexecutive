@@ -55,47 +55,59 @@ class MisVentas {
   }
 
   /**
-   * Cargar ventas del usuario actual
-   */
-  async cargarVentas(forceRefresh = false) {
-    try {
-      // Evitar cargas simultáneas
-      if (this.cargando) {
-        console.log('⏳ MisVentas: carga en progreso, ignorando solicitud duplicada');
-        return;
-      }
-
-      if (!this.currentUser) return;
-
-      if (!window.ventasManager) {
-        console.warn('⚠️ VentasManager no disponible');
-        return;
-      }
-
-      this.cargando = true;
-
-      await window.ventasManager.ensure();
-
-      // Obtener ventas solo para el usuario actual (no pasar UID, VentasManager lo obtiene de auth)
-      // Forzar refresh si se especificó (útil después de eliminar)
-      this.ventasMobile = await window.ventasManager.getVentas('mobile', null, forceRefresh);
-      this.ventasHome = await window.ventasManager.getVentas('home', null, forceRefresh);
-
-      console.log(`📊 Ventas cargadas - Móvil: ${this.ventasMobile.length}, Hogar: ${this.ventasHome.length}`);
-      this.renderVentas();
-    } catch (error) {
-      console.error('❌ Error cargando ventas:', error);
-    } finally {
-      this.cargando = false;
+ * Cargar ventas del usuario actual
+ */
+async cargarVentas(forceRefresh = false) {
+  try {
+    // Evitar cargas simultáneas
+    if (this.cargando) {
+      console.log('⏳ MisVentas: carga en progreso, ignorando solicitud duplicada');
+      return;
     }
+
+    if (!this.currentUser) return;
+
+    if (!window.ventasManager) {
+      console.warn('⚠️ VentasManager no disponible');
+      return;
+    }
+
+    this.cargando = true;
+
+    await window.ventasManager.ensure();
+
+    // Obtener ventas solo para el usuario actual
+    // (no pasar UID, VentasManager lo obtiene de auth)
+    this.ventasMobile = await window.ventasManager.getVentas('mobile', null, forceRefresh);
+    this.ventasHome   = await window.ventasManager.getVentas('home', null, forceRefresh);
+
+    // 🔒 Blindaje: asegurar arrays
+    this.ventasMobile = Array.isArray(this.ventasMobile) ? this.ventasMobile : [];
+    this.ventasHome   = Array.isArray(this.ventasHome) ? this.ventasHome : [];
+
+    console.log(`📊 Ventas cargadas - Móvil: ${this.ventasMobile.length}, Hogar: ${this.ventasHome.length}`);
+
+    this.renderVentas();
+  } catch (error) {
+    console.error('❌ Error cargando ventas:', error);
+  } finally {
+    this.cargando = false;
   }
+}
 
   /**
    * Renderizar lista de ventas
    */
+ 
+
   renderVentas() {
     const container = document.getElementById('misVentasContainer');
     if (!container) return;
+
+
+// Blindaje de seguridad)
+  this.ventasMobile = Array.isArray(this.ventasMobile) ? this.ventasMobile : [];
+  this.ventasHome   = Array.isArray(this.ventasHome) ? this.ventasHome : [];
 
     // Obtener filtros
     const filtroTipo = document.getElementById('filtroTipoVenta')?.value || '';
@@ -103,6 +115,11 @@ class MisVentas {
     const filtroEstado = document.getElementById('filtroEstadoVenta')?.value || '';
     const buscarPedido = document.getElementById('buscarNumPedido')?.value.toLowerCase() || '';
     const buscarCedula = document.getElementById('buscarCedula')?.value.toLowerCase() || '';
+
+    // Add logs to debug filters
+    console.log('Filters:', { filtroTipo, filtroCategoria, filtroEstado, buscarPedido, buscarCedula });
+    console.log('Ventas Mobile before filtering:', this.ventasMobile);
+    console.log('Ventas Home before filtering:', this.ventasHome);
 
     // Filtrar ventas móviles
     let ventasMobileFiltered = this.ventasMobile;
@@ -123,7 +140,7 @@ class MisVentas {
       });
     }
 
-    // Filtrar por estado si se seleccionó uno
+  // Filtrar por estado si se seleccionó uno
     if (filtroEstado) {
       if (filtroEstado === 'pendientes') {
         ventasMobileFiltered = ventasMobileFiltered.filter(v => v.estado === 'pendiente' || v.estado === 'en_proceso');
@@ -132,32 +149,33 @@ class MisVentas {
       }
     }
 
-    // Filtrar ventas hogar
-    let ventasHomeFiltered = this.ventasHome;
-    if (filtroTipo && filtroTipo !== 'home') ventasHomeFiltered = [];
-    if (buscarCedula) ventasHomeFiltered = ventasHomeFiltered.filter(v => 
-      v.cedulaCliente?.toLowerCase().includes(buscarCedula)
-    );
-    if (filtroCategoria) {
-      ventasHomeFiltered = ventasHomeFiltered.filter(v => {
-        if (filtroCategoria === 'renovacion') return v.tipoVenta === 'renovacion' || v.renovacion === true;
-        if (filtroCategoria === 'nueva') return v.tipoVenta === 'nueva' || (!v.tipoVenta && v.renovacion !== true);
-        if (filtroCategoria === 'prepago') return v.tipoVenta === 'prepago';
-        return true;
-      });
-    }
+  // Asegurar que ambas variables existan
+ventasMobileFiltered = ventasMobileFiltered ?? [];
 
-    // Filtrar por estado si se seleccionó uno
-    if (filtroEstado) {
-      if (filtroEstado === 'pendientes') {
-        ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === 'pendiente' || v.estado === 'en_proceso');
-      } else {
-        ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === filtroEstado);
-      }
-    }
+// Filtrar ventas hogar
+let ventasHomeFiltered = this.ventasHome ?? [];
 
-    const todasLasVentas = [...ventasMobileFiltered, ...ventasHomeFiltered];
-    const totalVentas = todasLasVentas.length;
+if (filtroTipo && filtroTipo !== 'home') ventasHomeFiltered = [];
+if (buscarCedula) ventasHomeFiltered = ventasHomeFiltered.filter(v =>
+  v.cedulaCliente?.toLowerCase().includes(buscarCedula)
+);
+if (filtroEstado) {
+  ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === filtroEstado);
+}
+
+
+// Logs después del filtrado
+console.log('Ventas Mobile after filtering:', ventasMobileFiltered);
+console.log('Ventas Home after filtering:', ventasHomeFiltered);
+
+// Unir todas las ventas
+const todasLasVentas = [
+  ...ventasMobileFiltered,
+  ...ventasHomeFiltered
+];
+
+const totalVentas = todasLasVentas.length;
+
 
     if (totalVentas === 0) {
       container.innerHTML = `
