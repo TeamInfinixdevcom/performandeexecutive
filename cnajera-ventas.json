@@ -1,0 +1,690 @@
+{
+  "generatedAt": "2026-01-28T21:13:56.033Z",
+  "count": 21,
+  "rows": [
+    {
+      "id": "07tLkDEoPnLlzCtQUvcx",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54031851",
+        "plan": "k2plus",
+        "planId": "k2plus",
+        "planPrice": 14380,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "105190133",
+        "numeroCliente": "71466946",
+        "tipoVenta": "nueva",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769553847,
+          "_nanoseconds": 720000000
+        },
+        "fecha": "2026-01-27T22:44:07.720Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "2K8Y4A9QbANRCTgvuTwg",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54035620",
+        "plan": "k1plus",
+        "planId": "k1plus",
+        "planPrice": 10458,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "204690512",
+        "numeroCliente": "89376146",
+        "tipoVenta": "renovacion",
+        "categories": [
+          "renovacion"
+        ],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769553769,
+          "_nanoseconds": 939000000
+        },
+        "fecha": "2026-01-27T22:42:49.939Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "2yIapGOn4NMo4bJDyeE5",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-53999705",
+        "plan": "kitprepago",
+        "planId": "kitprepago",
+        "planPrice": 885,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "3101742002",
+        "numeroCliente": "88301878",
+        "tipoVenta": "prepago",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769455413,
+          "_nanoseconds": 241000000
+        },
+        "fecha": "2026-01-26T19:23:33.241Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "4gfq8BeJK0Nyh9FXVnlg",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-53739954",
+        "planId": "k2plus",
+        "planPrice": 14380,
+        "imeis": [
+          "359226587586833"
+        ],
+        "accesorios": [],
+        "cedulaCliente": "105290693",
+        "numeroCliente": "88211414",
+        "tipoVenta": "renovacion",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "projections": {
+          "months12": 172560,
+          "endOfYear": 172560,
+          "calculatedAt": "2026-01-19T14:07:27.888Z"
+        },
+        "createdAt": {
+          "_seconds": 1768831648,
+          "_nanoseconds": 409000000
+        },
+        "fecha": "2026-01-19T14:07:28.409Z",
+        "totalPrice": 14380,
+        "categories": [
+          "renovacion"
+        ],
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "7EJaRjAwN9apn9VQQ6AO",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "\tKO-53987813",
+        "plan": "k2plus",
+        "planId": "k2plus",
+        "planPrice": 14380,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "105550950",
+        "numeroCliente": "88755363",
+        "tipoVenta": "renovacion",
+        "categories": [
+          "renovacion"
+        ],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769440622,
+          "_nanoseconds": 949000000
+        },
+        "fecha": "2026-01-26T15:17:02.949Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "9F3E9poC8nAlSmKlJshB",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "86262590",
+        "plan": "k1plus",
+        "planId": "k1plus",
+        "planPrice": 10458,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "111890164",
+        "numeroCliente": "86262590",
+        "tipoVenta": "nueva",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769464927,
+          "_nanoseconds": 906000000
+        },
+        "fecha": "2026-01-26T22:02:07.906Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "AOE0e3VJUroXcWPC8lP8",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-53612593",
+        "planId": "k1plus",
+        "planPrice": 10458,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "3101103475",
+        "numeroCliente": "62841967",
+        "tipoVenta": "renovacion",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "projections": {
+          "months12": 125496,
+          "endOfYear": 125496,
+          "calculatedAt": "2026-01-19T14:03:32.432Z"
+        },
+        "createdAt": {
+          "_seconds": 1768831413,
+          "_nanoseconds": 169000000
+        },
+        "fecha": "2026-01-19T14:03:33.169Z",
+        "totalPrice": 10458,
+        "categories": [
+          "renovacion"
+        ],
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "IFw2D7YHcVUErYQpB4ZW",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54018270",
+        "plan": "k3plus",
+        "planId": "k3plus",
+        "planPrice": 18738,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "3102929425",
+        "numeroCliente": "86927676",
+        "tipoVenta": "nueva",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769531240,
+          "_nanoseconds": 939000000
+        },
+        "fecha": "2026-01-27T16:27:20.939Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "MhpR4OJsaKCs7DRyYuxz",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54036498",
+        "plan": "k1plus",
+        "planId": "k1plus",
+        "planPrice": 10458,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "109950714",
+        "numeroCliente": "89096531",
+        "tipoVenta": "nueva",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769553643,
+          "_nanoseconds": 914000000
+        },
+        "fecha": "2026-01-27T22:40:43.914Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "QKmRwECHbsPKjaufJUcM",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-53875389",
+        "planId": "accesorio_contado",
+        "planPrice": 0,
+        "imeis": [],
+        "accesorios": [
+          "R37Y9NRJA11SEB"
+        ],
+        "cedulaCliente": "116990676",
+        "numeroCliente": "60170890",
+        "tipoVenta": "nueva",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "planNombre": "",
+        "projections": {
+          "months12": 0,
+          "endOfYear": 0,
+          "calculatedAt": "2026-01-20T17:33:02.903Z"
+        },
+        "createdAt": {
+          "_seconds": 1768930383,
+          "_nanoseconds": 348000000
+        },
+        "fecha": "2026-01-20T17:33:03.348Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "exyGLy319AeywwHXN7Zj",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-53645279",
+        "planId": "k2plus",
+        "planPrice": 14380,
+        "imeis": [
+          "356223246971400"
+        ],
+        "accesorios": [],
+        "cedulaCliente": "103240880",
+        "numeroCliente": "86989538",
+        "tipoVenta": "renovacion",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "projections": {
+          "months12": 172560,
+          "endOfYear": 172560,
+          "calculatedAt": "2026-01-19T14:05:41.710Z"
+        },
+        "createdAt": {
+          "_seconds": 1768831542,
+          "_nanoseconds": 378000000
+        },
+        "fecha": "2026-01-19T14:05:42.378Z",
+        "totalPrice": 14380,
+        "categories": [
+          "renovacion"
+        ],
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "gi9eu7RsitniUfvdDA2h",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54018026",
+        "plan": "k3plus",
+        "planId": "k3plus",
+        "planPrice": 18738,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "3102929425",
+        "numeroCliente": "83868666",
+        "tipoVenta": "nueva",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769531206,
+          "_nanoseconds": 7000000
+        },
+        "fecha": "2026-01-27T16:26:46.007Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "pZBIGaq4bFEdGz1LBM9t",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54007782",
+        "plan": "k1plus",
+        "planId": "k1plus",
+        "planPrice": 10458,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "111890164",
+        "numeroCliente": "89786199",
+        "tipoVenta": "nueva",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769464898,
+          "_nanoseconds": 475000000
+        },
+        "fecha": "2026-01-26T22:01:38.475Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "pti5Otwxs7HbMUSD9nNt",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54022136",
+        "plan": "k1plus",
+        "planId": "k1plus",
+        "planPrice": 10458,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "202680127",
+        "numeroCliente": "83754242",
+        "tipoVenta": "renovacion",
+        "categories": [
+          "renovacion"
+        ],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769534965,
+          "_nanoseconds": 114000000
+        },
+        "fecha": "2026-01-27T17:29:25.114Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "rSlrHuIQcM2RbxmPmPAS",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-53931679",
+        "planId": "k3plus",
+        "planPrice": 18738,
+        "imeis": [
+          "359226588112209"
+        ],
+        "accesorios": [],
+        "cedulaCliente": "109750091",
+        "numeroCliente": "88459493",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "createdAt": {
+          "_seconds": 1769179538,
+          "_nanoseconds": 881000000
+        },
+        "totalPrice": 18738,
+        "tipoVenta": "nueva",
+        "fecha": "2026-01-23T14:45:38.881Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "sO1t3Jm73deH354TKCJe",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-54023765",
+        "plan": "k1plus",
+        "planId": "k1plus",
+        "planPrice": 10458,
+        "imeis": [],
+        "accesorios": [],
+        "cedulaCliente": "110930249",
+        "numeroCliente": "88948887",
+        "tipoVenta": "nueva",
+        "categories": [],
+        "metodoEnvio": null,
+        "estado": "entregado",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769537126,
+          "_nanoseconds": 904000000
+        },
+        "fecha": "2026-01-27T18:05:26.904Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "x2S32eISiYDsSk2hR7bX",
+      "collection": "ventas",
+      "data": {
+        "tipoPedido": "Komercial",
+        "numeroPedido": "KO-53895791",
+        "planId": "k1plus",
+        "planPrice": 10619,
+        "imeis": [
+          "862996082053238"
+        ],
+        "accesorios": [],
+        "cedulaCliente": "109260310",
+        "numeroCliente": "86774802",
+        "tipoVenta": "nueva",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "mobile",
+        "planNombre": "",
+        "projections": {
+          "months12": 127428,
+          "endOfYear": 127428,
+          "calculatedAt": "2026-01-19T22:45:10.010Z"
+        },
+        "createdAt": {
+          "_seconds": 1768862710,
+          "_nanoseconds": 659000000
+        },
+        "totalPrice": 10619,
+        "fecha": "2026-01-19T22:45:10.659Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "48wD2nCKzKfEhgPsdv1a",
+      "collection": "ventas_hogar",
+      "data": {
+        "homeNumber": "09811942",
+        "customerName": "AGUILAR\tSANCHEZ ARIANNA NICOLE",
+        "cedulaCliente": "119470403",
+        "numeroCliente": "17859013",
+        "planId": "int100mbps",
+        "planPrice": 13072,
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "home",
+        "createdAt": {
+          "_seconds": 1769109343,
+          "_nanoseconds": 439000000
+        },
+        "totalPrice": 13072,
+        "tipoVenta": "nueva",
+        "fecha": "2026-01-22T19:15:43.439Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "8XEpQQlJ960pDQ2EgQVx",
+      "collection": "ventas_hogar",
+      "data": {
+        "homeNumber": "09811979",
+        "customerName": "HERRERA\tCAMBRONERO VICTOR HUGO",
+        "cedulaCliente": "106090395",
+        "numeroCliente": "17854953",
+        "plan": "int100mbps",
+        "planId": "int100mbps",
+        "planPrice": 13072,
+        "tipoVenta": "nueva",
+        "categories": [],
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "home",
+        "estado": "entregado",
+        "fechaPendiente": null,
+        "createdAt": {
+          "_seconds": 1769449019,
+          "_nanoseconds": 915000000
+        },
+        "fecha": "2026-01-26T17:36:59.915Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "jsOEbKfCWqOxWeHQEtvp",
+      "collection": "ventas_hogar",
+      "data": {
+        "homeNumber": "09811707",
+        "customerName": "3-102-952201\tS.R.L.",
+        "cedulaCliente": "3-102-952201",
+        "numeroCliente": "21001785",
+        "planId": "duotelint100mbps",
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "home",
+        "projections": {
+          "months12": 191376,
+          "endOfYear": 191376,
+          "calculatedAt": "2026-01-19T14:27:40.726Z"
+        },
+        "createdAt": {
+          "_seconds": 1768832861,
+          "_nanoseconds": 728000000
+        },
+        "fecha": "2026-01-19T14:27:41.728Z",
+        "id": "jsOEbKfCWqOxWeHQEtvp",
+        "planPrice": 13072,
+        "totalPrice": 13072,
+        "tipoVenta": "nueva",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    },
+    {
+      "id": "pnBmqrszWyLFomiXDAub",
+      "collection": "ventas_hogar",
+      "data": {
+        "homeNumber": "09811944",
+        "customerName": "SOLANO AVILA RICARDO",
+        "cedulaCliente": "303890176",
+        "numeroCliente": "17855875",
+        "planId": "int100mbps",
+        "planPrice": 13072,
+        "uid": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "tipo": "home",
+        "createdAt": {
+          "_seconds": 1769179777,
+          "_nanoseconds": 543000000
+        },
+        "totalPrice": 13072,
+        "tipoVenta": "nueva",
+        "fecha": "2026-01-23T14:49:37.543Z",
+        "agenteId": "T8OdsUAbGNfGT4PouAMb6HGePxH2",
+        "updatedAt": {
+          "_seconds": 1769631595,
+          "_nanoseconds": 611000000
+        }
+      }
+    }
+  ]
+}

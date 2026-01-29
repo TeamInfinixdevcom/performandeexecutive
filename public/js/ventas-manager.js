@@ -245,7 +245,6 @@ class VentasManager {
     try {
       const uid = this.auth.currentUser?.uid;
       if (!uid) throw new Error('Usuario no autenticado');
-
       const uidAUsar = filtroUID || uid;
       const cacheKey = `ventas_${tipo}_${uidAUsar}`;
       const CACHE_TIME = 5 * 60 * 1000; // 5 minutos
@@ -277,20 +276,69 @@ class VentasManager {
       const collectionName = tipo === 'mobile' ? 'ventas' : 'ventas_hogar';
 
       // OPTIMIZACIÓN: Limitar a 200 ventas más recientes y ordenar por createdAt
-      // Esto hace la query determinista y permite paginación si se desea.
-      const q = query(
-        collection(this.db, collectionName),
-        where('uid', '==', uidAUsar),
-        orderBy('createdAt', 'desc'),
-        limit(200)
-      );
+      // Si se pide `filtroUID === 'all'`, omitimos el where('uid', '==', ...) para obtener ventas de todos los usuarios (uso administrador).
+      let ventas = [];
 
-      const snapshot = await getDocs(q);
-      const ventas = [];
+      // Add logs to debug Firestore query
+      console.log('Fetching ventas for:', { tipo, filtroUID, forceRefresh });
+      console.log('Cache key:', cacheKey);
+      console.log('Force refresh:', forceRefresh);
+      console.log('UID to use:', uidAUsar);
 
-      snapshot.forEach(doc => {
-        ventas.push({ id: doc.id, ...doc.data() });
-      });
+      if (uidAUsar === 'all') {
+        const q = query(
+          collection(this.db, collectionName),
+          orderBy('createdAt', 'desc'),
+          limit(200)
+        );
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => ventas.push({ id: doc.id, ...doc.data() }));
+      } else {
+        // Algunos documentos antiguos usan `agenteId` en lugar de `uid`.
+        // Firestore no soporta OR en where(), así que hacemos dos consultas y combinamos.
+        const qUid = query(
+          collection(this.db, collectionName),
+          where('uid', '==', uidAUsar),
+          orderBy('createdAt', 'desc'),
+          limit(200)
+        );
+
+        const qAgente = query(
+          collection(this.db, collectionName),
+          where('agenteId', '==', uidAUsar),
+          orderBy('createdAt', 'desc'),
+          limit(200)
+        );
+
+        const [snapUid, snapAgente] = await Promise.all([getDocs(qUid), getDocs(qAgente)]);
+
+        const seen = new Set();
+
+        snapUid.forEach(doc => {
+          seen.add(doc.id);
+          ventas.push({ id: doc.id, ...doc.data() });
+        });
+
+        snapAgente.forEach(doc => {
+          if (!seen.has(doc.id)) {
+            seen.add(doc.id);
+            ventas.push({ id: doc.id, ...doc.data() });
+          }
+        });
+
+        // Si queremos garantizar el límite total, ordenar y recortar a 200
+        ventas.sort((a, b) => {
+          const fechaA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+          const fechaB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+          return fechaB - fechaA;
+        });
+
+        if (ventas.length > 200) ventas = ventas.slice(0, 200);
+      }
+
+      // Add logs to debug Firestore results
+      console.log('Ventas fetched:', ventas);
+      console.log('Number of ventas:', ventas.length);
 
       // Ordenar por createdAt en memoria como fallback (en caso de formatos mixtos)
       ventas.sort((a, b) => {
@@ -395,7 +443,7 @@ class VentasManager {
   }
 
   /**
-   * ELIMINAR VENTA
+   * ELIMINAR VENTAS
    */
   async deleteVenta(ventaId, tipo = 'mobile') {
     await this.ensure();

@@ -96,6 +96,7 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
             <div id='sentListMini'>
                 <h3>Historial de envíos:</h3>
                 <ul id='numberListMini'></ul>
+                <div id='paginationControls' style='margin:10px 0; display:flex; gap:8px; align-items:center;'></div>
                 <button id='printContactListMini' class="btn-secondary" aria-label="Imprimir lista">🖨️ Imprimir</button>
                 <button id='exportCsvMini' class="btn-secondary" style='margin-left:8px;' aria-label="Exportar CSV">📥 Exportar Excel</button>
                 <button id='clearHistoryMini' class="btn-danger" style='margin-left:10px;' aria-label="Borrar historial">Borrar historial</button>
@@ -114,12 +115,12 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
 
     // Plantillas K+ (con placeholders: {AGENTE}, {EMAIL}, {CLIENTE})
     const planTemplates = {
-        'k1plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k1 plus recibirías hasta 24 GB por mes durante 1 año + apps ilimitadas, por solo ₡12 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k2plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k2 plus recibirías hasta 34 GB por mes durante 1 año + apps ilimitadas, por solo ₡16 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k3plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k3 plus recibirías hasta 48 GB por mes durante 1 año + apps ilimitadas, por solo ₡21 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k4plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k4 plus recibirías hasta 76 GB por mes durante 1 año + apps ilimitadas, por solo ₡29 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k5plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k5 plus recibirías hasta 90 GB por mes durante 1 año + apps ilimitadas, por solo ₡35 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k6plus': `¡Hola! 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k6 plus navegarías de manera ilimitada + apps ilimitadas, por solo ₡44 000.\n¡Más velocidad, más beneficios y cero preocupación por los datos! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`
+        'k1plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k1 plus recibirías hasta 24 GB por mes durante 1 año + apps ilimitadas, por solo ₡12 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k2plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k2 plus recibirías hasta 34 GB por mes durante 1 año + apps ilimitadas, por solo ₡16 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k3plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k3 plus recibirías hasta 48 GB por mes durante 1 año + apps ilimitadas, por solo ₡21 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k4plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k4 plus recibirías hasta 76 GB por mes durante 1 año + apps ilimitadas, por solo ₡29 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k5plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k5 plus recibirías hasta 90 GB por mes durante 1 año + apps ilimitadas, por solo ₡35 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
+        'k6plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k6 plus navegarías de manera ilimitada + apps ilimitadas, por solo ₡44 000.\n¡Más velocidad, más beneficios y cero preocupación por los datos! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`
     };
 
     // Colores por tipo de oferta (puedes ajustar hex)
@@ -184,13 +185,13 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
             }
         }catch(e){ console.warn('No se pudo cargar public/data/users.json', e); }
 
-        // merge fetched + embedded list, prefer fetched
+        // merge embedded agentsList + fetched, prefer embedded (nombre completo)
         const combined = [];
         const seen = new Set();
-        // first push fetched
-        fetched.forEach(a=>{ const key = (a.email||a.name).toLowerCase(); if(!seen.has(key)){ seen.add(key); combined.push(a); } });
-        // then embedded agentsList
+        // primero la lista embebida (nombre correcto)
         agentsList.forEach(a=>{ const key = (a.email||a.name).toLowerCase(); if(!seen.has(key)){ seen.add(key); combined.push(a); } });
+        // luego los de users.json que no estén en la lista embebida
+        fetched.forEach(a=>{ const key = (a.email||a.name).toLowerCase(); if(!seen.has(key)){ seen.add(key); combined.push(a); } });
 
         combined.forEach(a=>{
             const opt = document.createElement('option');
@@ -267,6 +268,64 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
     const nombreClienteInput = document.getElementById('nombreClienteMini');
     const segmentoInput = document.getElementById('segmentoMini');
     const cedulaEjecutivoNuevoInput = document.getElementById('cedulaEjecutivoNuevoMini');
+
+    // Paginación para historial
+    let historyItems = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    function renderHistoryPage() {
+        numberList.innerHTML = '';
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageItems = historyItems.slice(start, end);
+        pageItems.forEach(({docSnap, info}) => {
+            const li = document.createElement('li');
+            li.dataset.info = JSON.stringify(info);
+            li.dataset.docid = docSnap.id;
+            li.textContent = `${info.region||''} | ${info.cedulaCliente||''} | ${info.nombreCliente||''} | ${info.segmento||''} | ${info.cedulaEjecutivoNuevo||''} | ${info.name} | ${info.user} | ${info.email} | ${info.offer} | ${info.fullNumber} | Enviado: ${info.fecha} ${info.hora}`;
+            // Botón borrar individual
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '🗑️';
+            delBtn.className = 'btn btn-danger';
+            delBtn.style.marginLeft = '8px';
+            delBtn.onclick = async () => {
+                if (confirm('¿Borrar este envío?')) {
+                    await deleteDoc(doc(db, 'contactacion_envios', docSnap.id));
+                    li.remove();
+                    await loadHistoryFirestore();
+                    updateFireWidget();
+                }
+            };
+            li.appendChild(delBtn);
+            numberList.appendChild(li);
+        });
+        renderPaginationControls();
+    }
+
+    function renderPaginationControls() {
+        const controls = document.getElementById('paginationControls');
+        if (!controls) return;
+        controls.innerHTML = '';
+        const totalPages = Math.ceil(historyItems.length / itemsPerPage) || 1;
+        // Botón anterior
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = 'Anterior';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => { if(currentPage > 1){ currentPage--; renderHistoryPage(); } };
+        controls.appendChild(prevBtn);
+        // Info de página
+        const pageInfo = document.createElement('span');
+        pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+        pageInfo.style.margin = '0 8px';
+        controls.appendChild(pageInfo);
+        // Botón siguiente
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Siguiente';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => { if(currentPage < totalPages){ currentPage++; renderHistoryPage(); } };
+        controls.appendChild(nextBtn);
+    }
 
     function init() {
         // Restore defaults
@@ -355,27 +414,9 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
             const qs = await getDocs(q);
             // Ordenar en cliente mientras el índice se construye
             const sorted = qs.docs.sort((a, b) => (b.data().timestamp || 0) - (a.data().timestamp || 0));
-            sorted.forEach(docSnap => {
-                const info = docSnap.data();
-                const li = document.createElement('li');
-                li.dataset.info = JSON.stringify(info);
-                li.dataset.docid = docSnap.id;
-                li.textContent = `${info.region||''} | ${info.cedulaCliente||''} | ${info.nombreCliente||''} | ${info.segmento||''} | ${info.cedulaEjecutivoNuevo||''} | ${info.name} | ${info.user} | ${info.email} | ${info.offer} | ${info.fullNumber} | Enviado: ${info.fecha} ${info.hora}`;
-                // Botón borrar individual
-                const delBtn = document.createElement('button');
-                delBtn.textContent = '🗑️';
-                delBtn.className = 'btn btn-danger';
-                delBtn.style.marginLeft = '8px';
-                delBtn.onclick = async () => {
-                    if (confirm('¿Borrar este envío?')) {
-                        await deleteDoc(doc(db, 'contactacion_envios', docSnap.id));
-                        li.remove();
-                        updateFireWidget();
-                    }
-                };
-                li.appendChild(delBtn);
-                numberList.appendChild(li);
-            });
+            historyItems = sorted.map(docSnap => ({ docSnap, info: docSnap.data() }));
+            currentPage = 1;
+            renderHistoryPage();
         } catch (e) {
             showToast('Error cargando historial');
             console.error(e);
@@ -575,6 +616,6 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
     window.saveHistoryFirestore = saveHistoryFirestore;
     window.clearHistoryFirestore = clearHistoryFirestore;
 
-    // ...resto de la función...
+   
     init();
 })();
