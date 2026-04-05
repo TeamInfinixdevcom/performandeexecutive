@@ -26,33 +26,65 @@ renderMetricasMensual() {
   if (!container) return;
 
   const selectMes = document.getElementById('selectMesProyeccion');
-  // Ajuste: -1 porque getMonth() devuelve 0-11
-  const mes = selectMes ? parseInt(selectMes.value) - 1 : (new Date()).getMonth();
+  const mesValorRaw = selectMes ? selectMes.value : null;
+  const mesNum = mesValorRaw !== null && mesValorRaw !== '' ? parseInt(mesValorRaw, 10) : NaN;
+  // Acepta valores 0-11 (ya en formato JS) o 1-12 (formato humano)
+  let mes;
+  if (isNaN(mesNum)) {
+    mes = (new Date()).getMonth();
+  } else if (mesNum >= 0 && mesNum <= 11) {
+    mes = mesNum;
+  } else if (mesNum >= 1 && mesNum <= 12) {
+    mes = mesNum - 1;
+  } else {
+    mes = (new Date()).getMonth();
+  }
   const year = (new Date()).getFullYear();
 
   // Función para normalizar fechas
   function parseFecha(raw) {
     if (!raw) return null;
     if (raw.toDate) return raw.toDate(); // Firestore Timestamp
+    // Firestore Timestamp serializado en localStorage
+    if (typeof raw === 'object' && typeof raw.seconds === 'number') {
+      return new Date(raw.seconds * 1000);
+    }
+    // Si es número (timestamp) o Date parseable
+    if (typeof raw === 'number') {
+      const dNum = new Date(raw);
+      if (!isNaN(dNum.getTime())) return dNum;
+    }
     const d = new Date(raw);
     if (!isNaN(d.getTime())) return d;
-    // Intentar parsear formato dd/mm/yyyy
-    const parts = raw.split('/');
-    if (parts.length === 3) {
-      const [dd, mm, yyyy] = parts.map(Number);
-      return new Date(yyyy, mm - 1, dd);
+    // Intentar parsear formato dd/mm/yyyy solo si es string
+    if (typeof raw === 'string') {
+      const parts = raw.split('/');
+      if (parts.length === 3) {
+        const [dd, mm, yyyy] = parts.map(Number);
+        return new Date(yyyy, mm - 1, dd);
+      }
     }
     return null;
   }
 
+  function getVentaDate(venta) {
+    return parseFecha(
+      venta.createdAt ||
+      venta.fecha ||
+      venta.registeredAt ||
+      venta.completedAt ||
+      venta.updatedAt
+    );
+  }
+
       // Filtrar ventas por mes y año
   const ventasMobileMes = this.ventasMobile.filter(v => {
-    const d = parseFecha(v.createdAt || v.fecha);
+    const d = getVentaDate(v);
     if (!d) return false;
     return d.getMonth() === mes && d.getFullYear() === year;
   });
   const ventasHomeMes = this.ventasHome.filter(v => {
-    const d = parseFecha(v.createdAt || v.fecha);
+    const d = getVentaDate(v);
     if (!d) return false;
     return d.getMonth() === mes && d.getFullYear() === year;
   });
@@ -241,8 +273,9 @@ try {
   console.warn('⚠️ No se pudo determinar rol de usuario, usando solo ventas propias:', roleErr);
 }
 
-this.ventasMobile = await window.ventasManager.getVentas('mobile', filtroUID, false);
-this.ventasHome   = await window.ventasManager.getVentas('home', filtroUID, false);
+// Forzar lectura desde Firestore para proyecciones
+this.ventasMobile = await window.ventasManager.getVentas('mobile', filtroUID, true);
+this.ventasHome   = await window.ventasManager.getVentas('home', filtroUID, true);
 
 // Logs OK
 console.log('Current user ID:', this.currentUser.uid);

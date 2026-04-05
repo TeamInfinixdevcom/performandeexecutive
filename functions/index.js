@@ -16,7 +16,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
-console.log('✅ Cloud Functions seguras cargadas correctamente');
+console.log('✅ Cloud Functions cargadas correctamente');
 
 const db = admin.firestore();
 const auth = admin.auth();
@@ -332,13 +332,15 @@ exports.syncAuthToFirestore = functions.https.onCall(async (data, context) => {
 
 
 // ============================================
-// ✅ NUEVA FUNCIÓN: Auditoría de cambios
+// ✅ FUNCIÓN: Auditoría de cambios (Firestore v1)
 // ============================================
 exports.auditUserChanges = functions.firestore
   .document('users/{userId}')
   .onUpdate(async (change, context) => {
     const before = change.before.data();
     const after = change.after.data();
+
+    if (!before || !after) return null;
 
     // Detectar cambios en campos críticos
     if (before.role !== after.role) {
@@ -359,7 +361,10 @@ exports.auditUserChanges = functions.firestore
         isActive: after.isActive
       });
     }
+
+    return null;
   });
+
 
 // ============================================
 // ✅ NUEVA FUNCIÓN: Sincronizar usuarios faltantes
@@ -809,7 +814,7 @@ exports.createUserDocument = functions.auth.user().onCreate(async (user) => {
   }
 });
 
-// Trigger: Eliminar documento de usuario automáticamente al eliminarse en Auth
+// Trigger: Eliminar documento de usuario automáticamente al eliminarse en Auth (v2)
 exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
   try {
     await db.collection('users').doc(user.uid).delete();
@@ -848,8 +853,8 @@ async function processVentaEntregado(change, context, collectionName) {
       return null;
     }
 
-    // Obtener datos básicos
-    const uid = after.uid || null;
+    // Obtener datos básicos - preferir `executiveId` cuando exista (compatibilidad con documentos nuevos)
+    const uid = after.executiveId || after.uid || null;
     let executiveName = uid || null;
     if (uid) {
       const userDoc = await db.collection('users').doc(uid).get();
@@ -906,12 +911,17 @@ async function processVentaEntregado(change, context, collectionName) {
   }
 }
 
-exports.onVentaUpdated = functions.firestore.document('ventas/{id}').onUpdate(async (change, context) => {
-  return processVentaEntregado(change, context, 'ventas');
-});
+  exports.onVentaUpdated = functions.firestore
+    .document('ventas/{id}')
+    .onUpdate(async (change, context) => {
+      return processVentaEntregado(change, context, 'ventas');
+    });
 
-exports.onVentaHogarUpdated = functions.firestore.document('ventas_hogar/{id}').onUpdate(async (change, context) => {
-  return processVentaEntregado(change, context, 'ventas_hogar');
-});
+  exports.onVentaHogarUpdated = functions.firestore
+    .document('ventas_hogar/{id}')
+    .onUpdate(async (change, context) => {
+      return processVentaEntregado(change, context, 'ventas_hogar');
+    });
+
 
 console.log('✅ Cloud Functions seguras cargadas correctamente');

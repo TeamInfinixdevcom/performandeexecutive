@@ -84,5 +84,18 @@
     "lastLoginDevice": "6185198da5c25a91cda6...",
     "role": "admin",
     "email": "rmadrigalj@ice.go.cr"
+  },
+  {
+    "id": "lMOh5PUYFHSNGKBj6QaGqrFdhjv1",
+    "uid": "lMOh5PUYFHSNGKBj6QaGqrFdhjv1",
+    "name": "Manuel Escalante Leitón",
+    "email": "mescalanteL@ice.go.cr",
+    "cedula": "109790421",
+    "user": "Maesca1",
+    "phone": "87903535",
+    "role": "executive",
+    "isActive": true,
+    "createdAt": "2026-02-04T00:00:00.000Z",
+    "createdBy": "script"
   }
 ]

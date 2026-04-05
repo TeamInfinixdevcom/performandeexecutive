@@ -85,6 +85,14 @@ class ObjetivosForm {
   }
 
   /**
+   * Convierte un precio con IVA a precio sin IVA (13%) para metas de agente.
+   */
+  getPriceWithoutIva(precioConIva) {
+    if (typeof precioConIva !== 'number' || Number.isNaN(precioConIva)) return '';
+    return Math.round(precioConIva / 1.13);
+  }
+
+  /**
    * Obtener nombre del agente
    */
   getAgenteName() {
@@ -128,14 +136,15 @@ class ObjetivosForm {
    */
   getFormMobileHTML() {
     const grupos = this.planesCache?.plansMobile || {};
+    const kplusGroup = grupos.kplus ? { kplus: grupos.kplus } : {};
     let opcionesPlanes = '<option value="">Selecciona un plan...</option>';
 
-    for (const [grupoKey, grupo] of Object.entries(grupos)) {
+    for (const [grupoKey, grupo] of Object.entries(kplusGroup)) {
       opcionesPlanes += `<optgroup label="${grupo.grupo}">`;
       for (const plan of grupo.planes) {
-        const precioVal = (typeof plan.precio === 'number') ? plan.precio : '';
+        const precioVal = this.getPriceWithoutIva(plan.precio);
         const precioDisplay = precioVal !== '' ? `₡${precioVal.toLocaleString()}` : 'N/D';
-        opcionesPlanes += `<option value="${plan.id}" data-precio="${precioVal}">${plan.nombre} - ${precioDisplay}</option>`;
+        opcionesPlanes += `<option value="${plan.id}" data-precio="${precioVal}">${plan.nombre} - ${precioDisplay} (sin IVA)</option>`;
       }
       opcionesPlanes += '</optgroup>';
     }
@@ -180,7 +189,7 @@ class ObjetivosForm {
               </select>
             </div>
             <div class="form-group">
-              <label for="planPrice">Precio ₡</label>
+              <label for="planPrice">Precio ₡ (sin IVA)</label>
               <input type="number" id="planPrice" class="form-input" placeholder="0" readonly style="background-color: #f5f5f5; cursor: not-allowed;">
             </div>
           </div>
@@ -275,9 +284,9 @@ class ObjetivosForm {
     for (const [grupoKey, grupo] of Object.entries(grupos)) {
       opcionesPlanes += `<optgroup label="${grupo.grupo}">`;
       for (const plan of grupo.planes) {
-        const precioVal = (typeof plan.precio === 'number') ? plan.precio : '';
+        const precioVal = this.getPriceWithoutIva(plan.precio);
         const precioDisplay = precioVal !== '' ? `₡${precioVal.toLocaleString()}` : 'N/D';
-        opcionesPlanes += `<option value="${plan.id}" data-precio="${precioVal}">${plan.nombre} - ${precioDisplay}</option>`;
+        opcionesPlanes += `<option value="${plan.id}" data-precio="${precioVal}">${plan.nombre} - ${precioDisplay} (sin IVA)</option>`;
       }
       opcionesPlanes += '</optgroup>';
     }
@@ -326,7 +335,7 @@ class ObjetivosForm {
               </select>
             </div>
             <div class="form-group">
-              <label for="planPriceHome">Precio ₡</label>
+              <label for="planPriceHome">Precio ₡ (sin IVA)</label>
               <input type="number" id="planPriceHome" class="form-input" placeholder="0" readonly style="background-color: #f5f5f5; cursor: not-allowed;">
             </div>
           </div>

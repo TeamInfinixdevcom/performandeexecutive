@@ -55,6 +55,53 @@ class MisVentas {
   }
 
   /**
+   * Convierte múltiples formatos de fecha a Date.
+   */
+  parseVentaDate(venta) {
+    const value = venta?.createdAt || venta?.updatedAt || venta?.timestamp || venta?.fecha;
+    if (!value) return null;
+
+    if (value?.toDate && typeof value.toDate === 'function') {
+      return value.toDate();
+    }
+
+    if (typeof value === 'object' && typeof value.seconds === 'number') {
+      return new Date(value.seconds * 1000);
+    }
+
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  formatVentaDateTime(venta) {
+    const d = this.parseVentaDate(venta);
+    if (!d) return 'No disponible';
+    return d.toLocaleString('es-CR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  isRenovacion(venta) {
+    return venta?.tipoVenta === 'renovacion' || venta?.renovacion === true;
+  }
+
+  getCategoriaVentaLabel(venta) {
+    if (this.isRenovacion(venta)) return '🔄 Renovación';
+    if (venta?.tipoVenta === 'prepago') return '💳 Prepago';
+    return '🟢 Nueva';
+  }
+
+  matchesAny(list, needle) {
+    if (!needle) return true;
+    if (!Array.isArray(list) || list.length === 0) return false;
+    return list.some(item => String(item || '').toLowerCase().includes(needle));
+  }
+
+  /**
  * Cargar ventas del usuario actual
  */
 async cargarVentas(forceRefresh = false) {
@@ -115,9 +162,11 @@ async cargarVentas(forceRefresh = false) {
     const filtroEstado = document.getElementById('filtroEstadoVenta')?.value || '';
     const buscarPedido = document.getElementById('buscarNumPedido')?.value.toLowerCase() || '';
     const buscarCedula = document.getElementById('buscarCedula')?.value.toLowerCase() || '';
+    const buscarImei = document.getElementById('buscarImei')?.value.toLowerCase() || '';
+    const buscarSerie = document.getElementById('buscarSerie')?.value.toLowerCase() || '';
 
     // Add logs to debug filters
-    console.log('Filters:', { filtroTipo, filtroCategoria, filtroEstado, buscarPedido, buscarCedula });
+    console.log('Filters:', { filtroTipo, filtroCategoria, filtroEstado, buscarPedido, buscarCedula, buscarImei, buscarSerie });
     console.log('Ventas Mobile before filtering:', this.ventasMobile);
     console.log('Ventas Home before filtering:', this.ventasHome);
 
@@ -130,6 +179,12 @@ async cargarVentas(forceRefresh = false) {
     if (buscarCedula) ventasMobileFiltered = ventasMobileFiltered.filter(v => 
       v.cedulaCliente?.toLowerCase().includes(buscarCedula)
     );
+    if (buscarImei) {
+      ventasMobileFiltered = ventasMobileFiltered.filter(v => this.matchesAny(v.imeis, buscarImei));
+    }
+    if (buscarSerie) {
+      ventasMobileFiltered = ventasMobileFiltered.filter(v => this.matchesAny(v.accesorios, buscarSerie));
+    }
     // Filtrar por categoría de venta (nueva / renovacion / prepago)
     if (filtroCategoria) {
       ventasMobileFiltered = ventasMobileFiltered.filter(v => {
@@ -159,8 +214,19 @@ if (filtroTipo && filtroTipo !== 'home') ventasHomeFiltered = [];
 if (buscarCedula) ventasHomeFiltered = ventasHomeFiltered.filter(v =>
   v.cedulaCliente?.toLowerCase().includes(buscarCedula)
 );
+if (buscarImei) {
+  ventasHomeFiltered = ventasHomeFiltered.filter(v => this.matchesAny(v.imeis, buscarImei));
+}
+if (buscarSerie) {
+  ventasHomeFiltered = ventasHomeFiltered.filter(v => this.matchesAny(v.accesorios, buscarSerie));
+}
 if (filtroEstado) {
-  ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === filtroEstado);
+  const estadoCanonico = filtroEstado === 'entregada' ? 'entregado' : (filtroEstado === 'cancelada' ? 'cancelado' : filtroEstado);
+  if (estadoCanonico === 'pendientes') {
+    ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === 'pendiente' || v.estado === 'en_proceso');
+  } else {
+    ventasHomeFiltered = ventasHomeFiltered.filter(v => v.estado === estadoCanonico);
+  }
 }
 
 
@@ -265,10 +331,8 @@ const totalVentas = todasLasVentas.length;
   renderVentaMobileCard(venta) {
     const ventaId = venta.id;
     const isEditing = this.ventasEditando[ventaId];
-    const proyeccion12m = (venta.planPrice || 0) * 12;
-    const now = new Date();
-    const monthsRemaining = 12 - now.getMonth();
-    const proyeccionEndYear = (venta.planPrice || 0) * monthsRemaining;
+    const fechaRegistro = this.formatVentaDateTime(venta);
+    const categoriaVenta = this.getCategoriaVentaLabel(venta);
 
     return `
       <div class="card" style="margin-bottom: 16px; border-left: 4px solid #667eea;">
@@ -292,6 +356,14 @@ const totalVentas = todasLasVentas.length;
                 <div>
                   <label style="font-size: 0.85em; color: #999; font-weight: bold;">Precio</label>
                   <p style="margin: 4px 0; color: #667eea; font-weight: bold;">₡${venta.planPrice?.toLocaleString() || 0}</p>
+                </div>
+                <div>
+                  <label style="font-size: 0.85em; color: #999; font-weight: bold;">Tipo de Venta</label>
+                  <p style="margin: 4px 0; color: #333; font-weight: 600;">${categoriaVenta}</p>
+                </div>
+                <div>
+                  <label style="font-size: 0.85em; color: #999; font-weight: bold;">Fecha y Hora</label>
+                  <p style="margin: 4px 0; color: #333;">${fechaRegistro}</p>
                 </div>
               </div>
 
@@ -366,10 +438,8 @@ const totalVentas = todasLasVentas.length;
   renderVentaHomeCard(venta) {
     const ventaId = venta.id;
     const isEditing = this.ventasEditando[ventaId];
-    const proyeccion12m = (venta.planPrice || 0) * 12;
-    const now = new Date();
-    const monthsRemaining = 12 - now.getMonth();
-    const proyeccionEndYear = (venta.planPrice || 0) * monthsRemaining;
+    const fechaRegistro = this.formatVentaDateTime(venta);
+    const categoriaVenta = this.getCategoriaVentaLabel(venta);
 
     return `
       <div class="card" style="margin-bottom: 16px; border-left: 4px solid #f5576c;">
@@ -393,6 +463,14 @@ const totalVentas = todasLasVentas.length;
                 <div>
                   <label style="font-size: 0.85em; color: #999; font-weight: bold;">Precio</label>
                   <p style="margin: 4px 0; color: #f5576c; font-weight: bold;">₡${venta.planPrice?.toLocaleString() || 0}</p>
+                </div>
+                <div>
+                  <label style="font-size: 0.85em; color: #999; font-weight: bold;">Tipo de Venta</label>
+                  <p style="margin: 4px 0; color: #333; font-weight: 600;">${categoriaVenta}</p>
+                </div>
+                <div>
+                  <label style="font-size: 0.85em; color: #999; font-weight: bold;">Fecha y Hora</label>
+                  <p style="margin: 4px 0; color: #333;">${fechaRegistro}</p>
                 </div>
               </div>
 
@@ -580,9 +658,13 @@ const totalVentas = todasLasVentas.length;
   attachEventListeners() {
     const buscarPedido = document.getElementById('buscarNumPedido');
     const buscarCedula = document.getElementById('buscarCedula');
+    const buscarImei = document.getElementById('buscarImei');
+    const buscarSerie = document.getElementById('buscarSerie');
     const filtroTipo = document.getElementById('filtroTipoVenta');
+    const filtroCategoria = document.getElementById('filtroCategoriaVenta');
+    const filtroEstado = document.getElementById('filtroEstadoVenta');
 
-    [buscarPedido, buscarCedula, filtroTipo].forEach(el => {
+    [buscarPedido, buscarCedula, buscarImei, buscarSerie, filtroTipo, filtroCategoria, filtroEstado].forEach(el => {
       if (el) {
         el.removeEventListener('change', () => this.renderVentas());
         el.removeEventListener('input', () => this.renderVentas());

@@ -9,11 +9,13 @@
 const WaitlistManager = {
     waitlist: [],
     completedList: [],
+    lostList: [],
     
     // Paginación
     currentPage: 1,
     itemsPerPage: 10,
     completedCurrentPage: 1,
+    lostCurrentPage: 1,
     
     // ============================================
     // INICIALIZACIÓN
@@ -36,6 +38,7 @@ const WaitlistManager = {
         this.setupEventListeners();
         await this.loadWaitlist();
         await this.loadCompleted();
+        await this.loadLost();
         
         console.log('✅ WaitlistManager v2.0 inicializado');
     },
@@ -172,6 +175,54 @@ const WaitlistManager = {
             this.updateCompletedStats();
         }
     },
+
+    async loadLost() {
+        try {
+            const { collection, query, where, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+            const q = query(
+                collection(window.db, 'lista_espera'),
+                where('userId', '==', window.currentUser.uid),
+                where('status', '==', 'lost'),
+                orderBy('lostAt', 'desc')
+            );
+
+            const snapshot = await getDocs(q);
+
+            this.lostList = [];
+            snapshot.forEach(doc => {
+                this.lostList.push({ id: doc.id, ...doc.data() });
+            });
+
+            this.renderLost();
+            this.updateLostStats();
+
+        } catch (error) {
+            console.error('Error cargando perdidos:', error);
+
+            const container = document.getElementById('lostContainer');
+            if (container) {
+                if (error.code === 'failed-precondition') {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: #856404; background: #fff3cd; border-radius: 8px;">
+                            <div style="font-size: 2rem; margin-bottom: 12px;">⏳</div>
+                            <p>El índice se está construyendo. Intenta de nuevo en unos minutos.</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+                            <p>No hay clientes perdidos aún</p>
+                        </div>
+                    `;
+                }
+            }
+
+            this.lostList = [];
+            this.updateLostStats();
+        }
+    },
     
     async markAsCompleted(id) {
         try {
@@ -185,6 +236,7 @@ const WaitlistManager = {
             this.showNotification('✅ Cliente marcado como completado', 'success');
             await this.loadWaitlist();
             await this.loadCompleted();
+            await this.loadLost();
             
         } catch (error) {
             console.error('Error:', error);
@@ -208,6 +260,7 @@ const WaitlistManager = {
             this.showNotification('❌ Cliente marcado como perdido', 'info');
             await this.loadWaitlist();
             await this.loadCompleted();
+            await this.loadLost();
 
         } catch (error) {
             console.error('Error marcando como perdido:', error);
@@ -250,12 +303,15 @@ const WaitlistManager = {
             
             await updateDoc(doc(window.db, 'lista_espera', id), {
                 status: 'waiting',
-                completedAt: null
+                completedAt: null,
+                lostAt: null,
+                lostNote: null
             });
             
             this.showNotification('🔄 Cliente reactivado en lista de espera', 'success');
             await this.loadWaitlist();
             await this.loadCompleted();
+            await this.loadLost();
             
         } catch (error) {
             console.error('Error:', error);
@@ -274,6 +330,7 @@ const WaitlistManager = {
             this.showNotification('🗑️ Cliente eliminado', 'success');
             await this.loadWaitlist();
             await this.loadCompleted();
+            await this.loadLost();
             
         } catch (error) {
             console.error('Error:', error);
@@ -293,6 +350,11 @@ const WaitlistManager = {
     goToCompletedPage(page) {
         this.completedCurrentPage = page;
         this.renderCompleted();
+    },
+
+    goToLostPage(page) {
+        this.lostCurrentPage = page;
+        this.renderLost();
     },
     
     getPaginatedItems(items, page) {
@@ -594,6 +656,99 @@ const WaitlistManager = {
         
         container.innerHTML = html;
     },
+
+    renderLost() {
+        const container = document.getElementById('lostContainer');
+        if (!container) return;
+
+        if (this.lostList.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">❌</div>
+                    <p>No hay clientes perdidos aún</p>
+                </div>
+            `;
+            return;
+        }
+
+        const totalPages = this.getTotalPages(this.lostList);
+        const paginatedItems = this.getPaginatedItems(this.lostList, this.lostCurrentPage);
+
+        let html = `
+            <div style="margin-bottom: 16px; color: #666;">
+                Mostrando ${paginatedItems.length} de ${this.lostList.length} clientes perdidos
+            </div>
+            <div class="waitlist-table" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background: #fdecea; border-bottom: 2px solid #dc3545;">
+                            <th style="padding: 12px; text-align: left;">Cliente</th>
+                            <th style="padding: 12px; text-align: left;">Cédula</th>
+                            <th style="padding: 12px; text-align: left;">Equipo Solicitado</th>
+                            <th style="padding: 12px; text-align: left;">Motivo</th>
+                            <th style="padding: 12px; text-align: center;">Fecha Registro</th>
+                            <th style="padding: 12px; text-align: center;">Fecha Perdido</th>
+                            <th style="padding: 12px; text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        paginatedItems.forEach(item => {
+            const createdAt = item.createdAt?.toDate ? item.createdAt.toDate() : new Date(item.createdAt);
+            const lostAt = item.lostAt?.toDate ? item.lostAt.toDate() : new Date(item.lostAt);
+
+            html += `
+                <tr style="border-bottom: 1px solid #eee; background: #fff6f6;">
+                    <td style="padding: 12px;">
+                        <div style="font-weight: 600; color: #333;">${item.clientName}</div>
+                        ${item.userEmail ? `<div style="font-size:0.8rem;color:#666;">👤 ${item.userEmail}</div>` : ''}
+                        <div style="font-size: 0.8rem; color: #666; margin-top:4px;">📱 ${item.phone}</div>
+                    </td>
+                    <td style="padding: 12px; color: #555;">${item.cedula}</td>
+                    <td style="padding: 12px;">
+                        <div style="font-weight: 500; color: #333;">${item.brand} ${item.model}</div>
+                        <div style="font-size: 0.85rem; color: #666;">💾 ${item.storage}</div>
+                    </td>
+                    <td style="padding: 12px; color: #8a1c1c;">
+                        ${item.lostNote ? item.lostNote : 'Sin nota'}
+                    </td>
+                    <td style="padding: 12px; text-align: center; color: #666;">
+                        ${createdAt.toLocaleDateString('es-CR')}
+                    </td>
+                    <td style="padding: 12px; text-align: center; color: #dc3545; font-weight: 500;">
+                        ${lostAt.toLocaleDateString('es-CR')}
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                            <button onclick="WaitlistManager.reactivateItem('${item.id}')" 
+                                    class="btn btn-warning" 
+                                    style="padding: 6px 12px; font-size: 0.85rem;"
+                                    title="Reactivar en lista de espera">
+                                🔄 Reactivar
+                            </button>
+                            <button onclick="WaitlistManager.deleteFromWaitlist('${item.id}')" 
+                                    class="btn btn-secondary" 
+                                    style="padding: 6px 12px; font-size: 0.85rem;"
+                                    title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            
+            ${this.renderPagination(totalPages, this.lostCurrentPage, 'WaitlistManager.goToLostPage')}
+        `;
+
+        container.innerHTML = html;
+    },
     
     // ============================================
     // ESTADÍSTICAS
@@ -628,6 +783,13 @@ const WaitlistManager = {
         const completedCountEl = document.getElementById('waitlistCompleted');
         if (completedCountEl) {
             completedCountEl.textContent = this.completedList.length;
+        }
+    },
+
+    updateLostStats() {
+        const lostCountEl = document.getElementById('waitlistLost');
+        if (lostCountEl) {
+            lostCountEl.textContent = this.lostList.length;
         }
     },
     

@@ -25,16 +25,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         /* Tabs wrapper and "Más" dropdown */
-        .tabs-wrap { display:flex; align-items:center; gap:8px; padding: 6px 8px; }
-        .tabs-container { display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow:visible; }
+        .tabs-wrap { display:block; padding: 6px 8px; }
+        .tabs-container { display:flex; gap:6px; align-items:center; justify-content:flex-start; flex-wrap:wrap; overflow:visible; }
         .tab-btn { display: inline-flex; align-items: center; justify-content: center; flex:0 0 auto; white-space:nowrap; padding:8px 12px; border-radius:8px; background:transparent; border: none; cursor:pointer; height:44px; line-height:1; }
+        .tab-btn.hidden { display: none !important; }
         .tab-btn.active { background: #e9f5ff; border-bottom: 3px solid #0d6efd; }
         .tabs-more { position: relative; display: inline-flex; align-items: center; height:44px; }
         .tabs-scroll { background: rgba(255,255,255,0.92); color: #0b1220; border: 1px solid rgba(0,0,0,0.08); padding:8px 14px; border-radius:12px; cursor:pointer; min-width:64px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .12s cubic-bezier(.22,1,.36,1), box-shadow .12s ease, opacity .12s ease; font-weight:600; display:inline-flex; align-items:center; height:44px; }
         .tabs-scroll:hover{ transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,0,0,0.10); }
         .tabs-scroll:active{ transform: translateY(0); }
         /* Quick-win UX styles for tab bar */
-        .tabs-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tabs-container { overflow: visible; -webkit-overflow-scrolling: touch; row-gap: 8px; }
         .tab-btn { padding: 12px 16px; }
         .tab-btn:focus { outline: 3px solid rgba(13,102,253,0.12); outline-offset: 3px; }
         .tab-btn.active { background: linear-gradient(180deg,#eaf5ff,#e9f5ff); border-bottom: 3px solid #0d6efd; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(13,102,253,0.06); }
@@ -97,10 +98,7 @@
                     <button class="tab-btn" data-tab="proyecciones" onclick="switchTab('proyecciones')">📈 Proyecciones</button>
                     <button class="tab-btn" data-tab="contactacionWhatsapp" onclick="switchTab('contactacionWhatsapp')">💬 Contactación WhatsApp</button>
                 </div>
-                <div class="tabs-more">
-                    <button id="tabsMoreBtn" class="tabs-scroll" aria-haspopup="true" aria-expanded="false">Más ▾</button>
-                    <div id="tabsMoreMenu" class="tabs-more-menu" role="menu" aria-hidden="true"></div>
-                </div>
+                
             </div>
 
             <!-- Pestaña: Clientes -->
@@ -367,32 +365,37 @@
                     <p style="color: #666; margin-bottom: 24px;">Gestiona todas tus ventas registradas - Edita, elimina o visualiza detalles</p>
                     
                     <!-- Filtros y búsqueda -->
-                    <div class="card" style="margin-bottom: 24px; padding: 16px;">
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                            <input type="text" id="buscarNumPedido" placeholder="🔍 Buscar por número de pedido" class="form-input" style="flex: 1; min-width: 200px;">
-                            <input type="text" id="buscarCedula" placeholder="🔍 Buscar por cédula" class="form-input" style="flex: 1; min-width: 200px;">
-                            <select id="filtroTipoVenta" class="form-select" style="flex: 1; min-width: 150px;">
+                    <div class="card" style="margin-bottom: 24px; padding: 18px; background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%); border: 1px solid #dbe4ff; border-radius: 14px; box-shadow: 0 6px 18px rgba(89, 115, 201, 0.10);">
+                        <div style="font-weight: 700; color: #4c63d2; margin-bottom: 12px; font-size: 0.95em;">🎯 Filtros rápidos de ventas</div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="buscarNumPedido" placeholder="🔍 Buscar por número de pedido" class="form-input" style="min-width: 200px; border-radius: 10px; border: 1px solid #cfd8ff;">
+                            <input type="text" id="buscarCedula" placeholder="🔍 Buscar por cédula" class="form-input" style="min-width: 200px; border-radius: 10px; border: 1px solid #cfd8ff;">
+                            <input type="text" id="buscarImei" placeholder="🔍 Buscar por IMEI" class="form-input" style="min-width: 200px; border-radius: 10px; border: 1px solid #cfd8ff;">
+                            <input type="text" id="buscarSerie" placeholder="🔍 Buscar por serie accesorio" class="form-input" style="min-width: 220px; border-radius: 10px; border: 1px solid #cfd8ff;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; align-items: center;">
+                            <select id="filtroTipoVenta" class="form-select" style="min-width: 150px; border-radius: 10px; border: 1px solid #cfd8ff;">
                                 <option value="">Todos los tipos</option>
                                 <option value="mobile">📱 Móvil</option>
                                 <option value="home">🏠 Hogar</option>
                             </select>
-                            <select id="filtroCategoriaVenta" class="form-select" style="flex: 1; min-width: 150px; margin-left:8px;" onchange="window.misVentas?.renderVentas()">
+                            <select id="filtroCategoriaVenta" class="form-select" style="min-width: 150px; border-radius: 10px; border: 1px solid #cfd8ff;" onchange="window.misVentas?.renderVentas()">
                                 <option value="">Todas las categorías</option>
                                 <option value="nueva">🟢 Nuevas</option>
                                 <option value="renovacion">🔄 Renovaciones</option>
                                 <option value="prepago">💳 Prepago</option>
                             </select>
-                            <label style="display:inline-flex; align-items:center; gap:8px; margin-left:8px;">
-                                <select id="filtroEstadoVenta" class="form-select" onchange="window.misVentas?.renderVentas()" style="min-width:160px;">
-                                    <option value="">Todos los estados</option>
-                                    <option value="pendientes">Pendientes (pendiente, en_proceso)</option>
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="en_proceso">En proceso</option>
-                                    <option value="entregada">Entregada</option>
-                                    <option value="cancelada">Cancelada</option>
-                                </select>
-                            </label>
-                            <button onclick="window.misVentas?.cargarVentas()" class="btn btn-primary" style="background-color: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-left:8px;">🔄 Refrescar</button>
+                            <select id="filtroEstadoVenta" class="form-select" onchange="window.misVentas?.renderVentas()" style="min-width:160px; border-radius: 10px; border: 1px solid #cfd8ff;">
+                                <option value="">Todos los estados</option>
+                                <option value="pendientes">Pendientes (pendiente, en_proceso)</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="en_proceso">En proceso</option>
+                                <option value="entregada">Entregada</option>
+                                <option value="cancelada">Cancelada</option>
+                            </select>
+                            <button onclick="window.misVentas?.cargarVentas()" class="btn btn-primary" style="background: linear-gradient(135deg, #5a74e8 0%, #6f56d9 100%); color: white; padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700;">🔄 Refrescar</button>
                         </div>
                     </div>
 
@@ -633,20 +636,28 @@
                                     <label for="waitlistBrand">Marca del Teléfono *</label>
                                     <select id="waitlistBrand" class="form-select" required>
                                         <option value="">Selecciona marca...</option>
-                                        <option value="Apple">Apple (iPhone)</option>
-                                        <option value="Samsung">Samsung</option>
-                                        <option value="Xiaomi">Xiaomi</option>
-                                        <option value="Huawei">Huawei</option>
-                                        <option value="Motorola">Motorola</option>
+                                        <option value="APPLE">Apple</option>
+                                        <option value="BEATS">Beats</option>
+                                        <option value="HONOR">Honor</option>
+                                        <option value="HUAWEI">Huawei</option>
+                                        <option value="MOTOROLA">Motorola</option>
                                         <option value="OPPO">OPPO</option>
-                                        <option value="Realme">Realme</option>
-                                        <option value="Nokia">Nokia</option>
-                                        <option value="Otro">Otro</option>
+                                        <option value="SAMSUNG">Samsung</option>
+                                        <option value="XIAOMI">Xiaomi</option>
+                                        <option value="OTRO">Otro</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="waitlistModel">Modelo *</label>
-                                    <input type="text" id="waitlistModel" class="form-input" placeholder="Ej: iPhone 15 Pro Max" required>
+                                    <input type="text" id="waitlistModel" class="form-input" placeholder="Ej: iPhone 15 Pro Max" list="waitlistModelOptions" required>
+                                    <datalist id="waitlistModelOptions"></datalist>
+                                </div>
+                                <div class="form-group" id="waitlistModelAddContainer" style="display: none;">
+                                    <label for="waitlistModelAddInput">Agregar modelo a lista</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="waitlistModelAddInput" class="form-input" placeholder="Escribe el modelo nuevo">
+                                        <button type="button" id="waitlistModelAddButton" class="btn btn-secondary">➕ Agregar</button>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="waitlistStorage">Capacidad de Almacenamiento *</label>
@@ -687,6 +698,10 @@
                         <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                             <div style="font-size: 2rem; font-weight: bold;" id="waitlistCompleted">0</div>
                             <div style="font-size: 0.9rem; opacity: 0.9;">Completados</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #c9184a 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold;" id="waitlistLost">0</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Perdidos</div>
                         </div>
                     </div>
                     
@@ -732,6 +747,17 @@
                         </div>
                         <div id="completedContainer">
                             <p class="empty-message">Cargando pedidos completados...</p>
+                        </div>
+                    </div>
+
+                    <!-- Lista de clientes perdidos -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3>❌ Clientes Perdidos</h3>
+                            <button class="btn btn-danger" onclick="WaitlistManager.loadLost()">🔄 Actualizar</button>
+                        </div>
+                        <div id="lostContainer">
+                            <p class="empty-message">Cargando clientes perdidos...</p>
                         </div>
                     </div>
                 </section>
@@ -801,7 +827,7 @@
 
     <!-- SheetJS (XLSX) for client-side .xlsx export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script type="module" src="js/contactacion-whatsapp.js"></script>
+    <script type="module" src="js/contactacion-whatsapp.js?v=20260325"></script>
     <script>
         // Manejo de overflow en la barra de pestañas: agrupa en dropdown "Más"
         document.addEventListener('DOMContentLoaded', function(){
@@ -860,11 +886,19 @@
                 }
             }
 
+            // Exponer recálculo para cuando cambian permisos/roles después de cargar la página.
+            window.rebuildTabsOverflow = function(){
+                setTimeout(rebuildMoreMenu, 0);
+            };
+
+            // Permitir que otros módulos pidan refresco de tabs.
+            window.addEventListener('tabs:refresh', window.rebuildTabsOverflow);
+
             function showMoreMenu(){ moreMenu.classList.add('open'); moreBtn.setAttribute('aria-expanded','true'); moreMenu.setAttribute('aria-hidden','false'); }
             function hideMoreMenu(){ moreMenu.classList.remove('open'); moreBtn.setAttribute('aria-expanded','false'); moreMenu.setAttribute('aria-hidden','true'); }
 
             moreBtn.addEventListener('click', function(e){
-                const visible = moreMenu.style.display === 'block';
+                const visible = moreMenu.classList.contains('open');
                 if(visible) hideMoreMenu(); else showMoreMenu();
             });
 
@@ -1069,7 +1103,7 @@
     <script src="js/objetivos-dashboard.js"></script>
     <script src="js/objetivos-init.js"></script>
     <script src="js/mis-ventas.js"></script>
-    <script src="js/proyecciones.js"></script>
+    <script src="js/proyecciones.js?v=20260206"></script>
     <script src="js/todas-ventas.js"></script>
 
     <!-- Scripts de Lista de Espera -->

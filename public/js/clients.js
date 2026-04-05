@@ -28,6 +28,7 @@ let allClients = [];
 let filteredClients = [];
 let selectedClientId = null;
 let editingInteractionId = null;
+let isSavingInteraction = false;
 
 // Variables de paginación
 let currentPage = 1;
@@ -392,9 +393,13 @@ function showPage(pageNum) {
  * Actualizar información de paginación
  */
 function updatePaginationInfo(start, end) {
-    document.getElementById('showingStart').textContent = filteredClients.length > 0 ? start + 1 : 0;
-    document.getElementById('showingEnd').textContent = Math.min(end, filteredClients.length);
-    document.getElementById('totalResults').textContent = filteredClients.length;
+    const elStart = document.getElementById('showingStart');
+    const elEnd = document.getElementById('showingEnd');
+    const elTotal = document.getElementById('totalResults');
+
+    if (elStart) elStart.textContent = filteredClients.length > 0 ? start + 1 : 0;
+    if (elEnd) elEnd.textContent = Math.min(end, filteredClients.length);
+    if (elTotal) elTotal.textContent = filteredClients.length;
     
     updatePageButtons();
 }
@@ -640,6 +645,7 @@ async function handleClientSubmit(e) {
  * Ver detalle del cliente
  */
 window.viewClientDetail = async function(clientId) {
+    if (!clientId) return;
     try {
         const docSnap = await getDoc(doc(db, 'clients', clientId));
         
@@ -786,8 +792,13 @@ async function deleteSelectedClient() {
  */
 async function handleInteractionSubmit(e) {
     e.preventDefault();
-    
-    if (!selectedClientId) return;
+
+    if (!selectedClientId || isSavingInteraction) return;
+    const targetClientId = selectedClientId;
+    isSavingInteraction = true;
+
+    const submitBtn = interactionForm.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
     
     const interaction = {
         type: document.getElementById('interactionType').value,
@@ -798,7 +809,7 @@ async function handleInteractionSubmit(e) {
     };
     
     try {
-        const clientRef = doc(db, 'clients', selectedClientId);
+        const clientRef = doc(db, 'clients', targetClientId);
         const docSnap = await getDoc(clientRef);
 
         if (docSnap.exists()) {
@@ -830,7 +841,7 @@ async function handleInteractionSubmit(e) {
                 try {
                     const recordSuccessfulSale = httpsCallable(functions, 'recordSuccessfulSale');
                     await recordSuccessfulSale({
-                        clientId: selectedClientId,
+                        clientId: targetClientId,
                         segmento: client.segmento
                     });
                     console.log('✅ Venta registrada en métricas');
@@ -843,15 +854,17 @@ async function handleInteractionSubmit(e) {
             showMessage('✅ Interacción registrada exitosamente', 'success');
             interactionForm.reset();
             // Restore submit button text
-            const submitBtn = interactionForm.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.textContent = 'Registrar Interacción';
             // Invalidate clients cache so list shows updated timestamps
             try { if (currentUser) localStorage.removeItem(`clients_${currentUser.uid}`); } catch(e){}
-            viewClientDetail(selectedClientId); // Recargar detalle
+            viewClientDetail(targetClientId); // Recargar detalle
         }
     } catch (error) {
         console.error('Error:', error);
         showMessage(`❌ Error: ${error.message}`, 'error');
+    } finally {
+        isSavingInteraction = false;
+        if (submitBtn) submitBtn.disabled = false;
     }
 }
 

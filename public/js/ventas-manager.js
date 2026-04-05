@@ -219,6 +219,9 @@ class VentasManager {
         updatedAt: serverTimestamp()
       };
 
+      // Asegurar campo canónico `executiveId` para compatibilidad con reglas
+      docData.executiveId = uid;
+
       // Crear en colección correspondiente
       const collectionName = tipo === 'mobile' ? 'ventas' : 'ventas_hogar';
       const collRef = collection(this.db, collectionName);
@@ -310,7 +313,18 @@ class VentasManager {
           limit(200)
         );
 
-        const [snapUid, snapAgente] = await Promise.all([getDocs(qUid), getDocs(qAgente)]);
+        const qExecutive = query(
+          collection(this.db, collectionName),
+          where('executiveId', '==', uidAUsar),
+          orderBy('createdAt', 'desc'),
+          limit(200)
+        );
+
+        const [snapUid, snapAgente, snapExecutive] = await Promise.all([
+          getDocs(qUid),
+          getDocs(qAgente),
+          getDocs(qExecutive)
+        ]);
 
         const seen = new Set();
 
@@ -320,6 +334,13 @@ class VentasManager {
         });
 
         snapAgente.forEach(doc => {
+          if (!seen.has(doc.id)) {
+            seen.add(doc.id);
+            ventas.push({ id: doc.id, ...doc.data() });
+          }
+        });
+
+        snapExecutive.forEach(doc => {
           if (!seen.has(doc.id)) {
             seen.add(doc.id);
             ventas.push({ id: doc.id, ...doc.data() });

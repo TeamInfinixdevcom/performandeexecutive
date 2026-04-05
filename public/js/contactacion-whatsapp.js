@@ -1,4 +1,4 @@
-// Contactación WhatsApp - integrado como pestaña
+// Contactación WhatsApp - integrado como pestaña v2.1
 // Este script renderiza el formulario de contactación y proporciona la función de abrir WhatsApp Web/WA mobile
 import { auth, db } from './firebase-config.js';
 import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -43,16 +43,27 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
             </div>
 
             <div class="form-row" style="flex-direction:column;align-items:flex-start;">
-                <label for="planMini" class="small-muted">Oferta K+</label>
+                <label for="planMini" class="small-muted">Oferta K+ (Móvil)</label>
                 <select id='planMini' aria-label="Oferta K">
                     <option value=''>Seleccioná una oferta K</option>
                     <option value='k1plus'>k1 plus</option>
                     <option value='k2plus'>k2 plus</option>
                     <option value='k3plus'>k3 plus</option>
-                    <option value='k4plus'>k4 plus</option>
-                    <option value='k5plus'>k5 plus</option>
-                    <option value='k6plus'>k6 plus</option>
+                    <option value='ilimitado'>ilimitado</option>
                 </select>
+            </div>
+
+            <div class="form-row" id="planHogarRow" style="flex-direction:column;align-items:flex-start;">
+                <label for="planHogarMini" class="small-muted">🏠 Plan Hogar</label>
+                <select id='planHogarGrupoMini' aria-label="Grupo de Plan Hogar" style='margin-bottom:6px;'>
+                    <option value=''>Seleccioná un tipo de plan</option>
+                </select>
+                <select id='planHogarMini' aria-label="Plan Hogar">
+                    <option value=''>Primero seleccioná el tipo</option>
+                </select>
+                <div id="planHogarPrecioInfo" style="margin-top:8px; padding:8px 12px; background:#0ea5e9; color:#fff; border-radius:6px; display:none; font-weight:600;">
+                    💰 Precio: ₡0
+                </div>
             </div>
 
             <div class="form-row" style="flex-direction:column;align-items:flex-start;">
@@ -95,8 +106,21 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
 
             <div id='sentListMini'>
                 <h3>Historial de envíos:</h3>
+                <div id='paginationTop' style='margin:10px 0; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;'>
+                    <div style='display:flex; gap:8px; align-items:center;'>
+                        <label for='itemsPerPageSelect' style='font-size:0.9em;'>Mostrar:</label>
+                        <select id='itemsPerPageSelect' style='padding:4px 8px; border-radius:4px; background:#1a2a3a; color:var(--main-color); border:1px solid var(--main-color);'>
+                            <option value='10'>10</option>
+                            <option value='25'>25</option>
+                            <option value='50'>50</option>
+                            <option value='100'>100</option>
+                        </select>
+                        <span id='totalRecordsInfo' style='font-size:0.85em; color:#8899aa;'>0 registros</span>
+                    </div>
+                    <div id='paginationControls' style='display:flex; gap:6px; align-items:center;'></div>
+                </div>
                 <ul id='numberListMini'></ul>
-                <div id='paginationControls' style='margin:10px 0; display:flex; gap:8px; align-items:center;'></div>
+                <div id='paginationBottom' style='margin:10px 0; display:flex; gap:8px; align-items:center; justify-content:center;'></div>
                 <button id='printContactListMini' class="btn-secondary" aria-label="Imprimir lista">🖨️ Imprimir</button>
                 <button id='exportCsvMini' class="btn-secondary" style='margin-left:8px;' aria-label="Exportar CSV">📥 Exportar Excel</button>
                 <button id='clearHistoryMini' class="btn-danger" style='margin-left:10px;' aria-label="Borrar historial">Borrar historial</button>
@@ -109,19 +133,217 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
         'Plan móvil': `📱✨ Renová tu plan y estrená celular con kölbi\nComo tu ejecutivo personal, me encargo de ofrecerte las mejores opciones en planes y equipos, de forma rápida y sencilla.\n¿Lo vemos juntos?`,
         'Internet hogar': `🌐🚀 ¡Internet Hogar kölbi al mejor precio!\n✔️ Internet estable y confiable\n👉 Consultá hoy mismo`,
         'Oferta Racsa 5G': `📡✨ ¡Conectate con la nueva era del Internet con RACSA 5G!\n💬 Respondé este mensaje y conocé las opciones disponibles`,
-        'VIP ORO': `Usted es muy importante para nosotros y me encantaría ser su agente personal de Kolbi.`,
+        'VIP ORO': `🥇✨ ¡Hola {CLIENTE}!\n\nSoy {AGENTE}, tu agente personal de kölbi.\n\nEs un gusto saludarte. Sos parte de nuestros clientes más importantes y estoy aquí para brindarte una atención exclusiva y personalizada.\n\n¿En qué puedo ayudarte hoy?\n\n• 📱 Planes móviles y equipos\n• 🌐 Internet hogar\n• 📺 Televisión\n• ☎️ Telefonía fija\n• 💡 Cualquier consulta o trámite\n\nEstoy a tu disposición para lo que necesités.\n📧 {EMAIL}\n📞 {TELEFONO}\n\n¡Será un placer atenderte! 🙌`,
         'Mensaje Personalizado': ''
     };
 
-    // Plantillas K+ (con placeholders: {AGENTE}, {EMAIL}, {CLIENTE})
+    // Plantillas K+ (con placeholders: {AGENTE}, {EMAIL}, {TELEFONO}, {CLIENTE})
     const planTemplates = {
-        'k1plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k1 plus recibirías hasta 24 GB por mes durante 1 año + apps ilimitadas, por solo ₡12 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k2plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k2 plus recibirías hasta 34 GB por mes durante 1 año + apps ilimitadas, por solo ₡16 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k3plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k3 plus recibirías hasta 48 GB por mes durante 1 año + apps ilimitadas, por solo ₡21 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k4plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k4 plus recibirías hasta 76 GB por mes durante 1 año + apps ilimitadas, por solo ₡29 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k5plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k5 plus recibirías hasta 90 GB por mes durante 1 año + apps ilimitadas, por solo ₡35 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`,
-        'k6plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kólbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k6 plus navegarías de manera ilimitada + apps ilimitadas, por solo ₡44 000.\n¡Más velocidad, más beneficios y cero preocupación por los datos! 🙌\n¿Te gustaría renovarlo virtualmente o escribirme a mi correo {EMAIL}?`
+        'k1plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kölbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k1 plus recibirías hasta 30 GB por mes + apps ilimitadas, por solo ₡12 000.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente?\n📧 {EMAIL}\n📞 {TELEFONO}`,
+        'k2plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kölbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k2 plus recibirías hasta 45 GB por mes + apps ilimitadas, por solo ₡16 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente?\n📧 {EMAIL}\n📞 {TELEFONO}`,
+        'k3plus': ` 👋📱 Soy {AGENTE}, tu agente personal de kölbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el k3 plus recibirías hasta 60 GB por mes + apps ilimitadas, por solo ₡21 500.\n¡Más gigas y más beneficios! 🙌\n¿Te gustaría renovarlo virtualmente?\n📧 {EMAIL}\n📞 {TELEFONO}`,
+        'ilimitado': ` 👋📱 Soy {AGENTE}, tu agente personal de kölbi.\nTe comento que tu plan actual no incluye algunos de los nuevos beneficios y podemos mejorarlo.\nCon el plan Ilimitado navegarías de manera ilimitada + apps ilimitadas, por solo ₡44 000.\n¡Más velocidad, más beneficios y cero preocupación por los datos! 🙌\n¿Te gustaría renovarlo virtualmente?\n📧 {EMAIL}\n📞 {TELEFONO}`
     };
+
+    // Datos de planes hogar (se cargan dinámicamente)
+    let planesHogarData = null;
+
+    // Función para cargar planes desde JSON
+    async function loadPlanesHogar() {
+        try {
+            const res = await fetch('/data/planes.json', { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                planesHogarData = data.plansHome;
+                populatePlanesHogarGrupos();
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar planes.json', e);
+        }
+    }
+
+    // Poblar selector de grupos de planes hogar
+    function populatePlanesHogarGrupos() {
+        const grupoSelect = document.getElementById('planHogarGrupoMini');
+        if (!grupoSelect || !planesHogarData) return;
+        
+        grupoSelect.innerHTML = '<option value="">Seleccioná un tipo de plan</option>';
+        
+        Object.keys(planesHogarData).forEach(key => {
+            const grupo = planesHogarData[key];
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = grupo.grupo;
+            grupoSelect.appendChild(opt);
+        });
+        
+        grupoSelect.onchange = () => {
+            const selectedGrupo = grupoSelect.value;
+            populatePlanesHogarPlanes(selectedGrupo);
+        };
+    }
+
+    function getPlanSpeedMbps(planNombre) {
+        const gbpsMatch = /\b(\d+)\s*Gbps\b/i.exec(planNombre);
+        if (gbpsMatch) return parseInt(gbpsMatch[1], 10) * 1000;
+        const mbpsMatch = /\b(\d+)\s*Mbps\b/i.exec(planNombre);
+        if (mbpsMatch) return parseInt(mbpsMatch[1], 10);
+        return null;
+    }
+
+    // Poblar selector de planes según grupo seleccionado
+    function populatePlanesHogarPlanes(grupoKey) {
+        const planSelect = document.getElementById('planHogarMini');
+        const precioInfo = document.getElementById('planHogarPrecioInfo');
+        if (!planSelect) return;
+        
+        planSelect.innerHTML = '<option value="">Seleccioná un plan</option>';
+        if (precioInfo) precioInfo.style.display = 'none';
+        
+        if (!grupoKey || !planesHogarData || !planesHogarData[grupoKey]) {
+            // Si no hay grupo seleccionado, habilitar planes móvil
+            togglePlanSelectors('none');
+            return;
+        }
+        
+        // Deshabilitar selector de planes móvil cuando se selecciona hogar
+        togglePlanSelectors('hogar');
+        
+        const minSpeedMbps = 30;
+        const planes = planesHogarData[grupoKey].planes.filter(plan => {
+            const speed = getPlanSpeedMbps(plan.nombre || '');
+            return speed === null || speed >= minSpeedMbps;
+        });
+        const modemRental = 1130; // Alquiler mensual del módem (se suma aparte)
+        planes.forEach(plan => {
+            const opt = document.createElement('option');
+            opt.value = plan.id;
+            // Agregar impuestos: IVA 13% + 911 0.75% + Cruz Roja 1% = 14.75%
+            const precioFinal = plan.precioFinal ? Math.round(plan.precio) : Math.round(plan.precio * 1.1475);
+            opt.textContent = `${plan.nombre} - ₡${precioFinal.toLocaleString('es-CR')} (+₡${modemRental.toLocaleString('es-CR')} módem)`;
+            opt.dataset.nombre = plan.nombre;
+            opt.dataset.precio = precioFinal;
+            planSelect.appendChild(opt);
+        });
+        
+        planSelect.onchange = () => {
+            const selectedOpt = planSelect.options[planSelect.selectedIndex];
+            if (selectedOpt && selectedOpt.value) {
+                const precio = selectedOpt.dataset.precio; // Ya incluye IVA
+                const nombre = selectedOpt.dataset.nombre;
+                if (precioInfo) {
+                    precioInfo.textContent = `💰 Precio promocional: ₡${parseInt(precio).toLocaleString('es-CR')} (+₡${modemRental.toLocaleString('es-CR')} módem)`;
+                    precioInfo.style.display = 'block';
+                }
+                // Generar mensaje con precio (ya con IVA)
+                generateHogarMessage(nombre, precio);
+            } else {
+                if (precioInfo) precioInfo.style.display = 'none';
+            }
+        };
+    }
+
+    // Función para deshabilitar/habilitar selectores mutuamente
+    // modo: 'hogar' = deshabilita móvil, 'movil' = deshabilita hogar, 'none' = habilita ambos
+    function togglePlanSelectors(modo) {
+        const planMobilSelect = document.getElementById('planMini');
+        const planHogarGrupoSelect = document.getElementById('planHogarGrupoMini');
+        const planHogarSelect = document.getElementById('planHogarMini');
+        const precioInfo = document.getElementById('planHogarPrecioInfo');
+        
+        if (modo === 'hogar') {
+            // Deshabilitar móvil, habilitar hogar
+            if (planMobilSelect) {
+                planMobilSelect.disabled = true;
+                planMobilSelect.value = '';
+                planMobilSelect.style.opacity = '0.5';
+                planMobilSelect.style.cursor = 'not-allowed';
+            }
+            if (planHogarGrupoSelect) {
+                planHogarGrupoSelect.disabled = false;
+                planHogarGrupoSelect.style.opacity = '1';
+                planHogarGrupoSelect.style.cursor = 'pointer';
+            }
+            if (planHogarSelect) {
+                planHogarSelect.disabled = false;
+                planHogarSelect.style.opacity = '1';
+                planHogarSelect.style.cursor = 'pointer';
+            }
+        } else if (modo === 'movil') {
+            // Deshabilitar hogar, habilitar móvil
+            if (planMobilSelect) {
+                planMobilSelect.disabled = false;
+                planMobilSelect.style.opacity = '1';
+                planMobilSelect.style.cursor = 'pointer';
+            }
+            if (planHogarGrupoSelect) {
+                planHogarGrupoSelect.disabled = true;
+                planHogarGrupoSelect.value = '';
+                planHogarGrupoSelect.style.opacity = '0.5';
+                planHogarGrupoSelect.style.cursor = 'not-allowed';
+            }
+            if (planHogarSelect) {
+                planHogarSelect.disabled = true;
+                planHogarSelect.value = '';
+                planHogarSelect.innerHTML = '<option value="">Primero seleccioná el tipo</option>';
+                planHogarSelect.style.opacity = '0.5';
+                planHogarSelect.style.cursor = 'not-allowed';
+            }
+            if (precioInfo) precioInfo.style.display = 'none';
+        } else {
+            // Habilitar ambos
+            if (planMobilSelect) {
+                planMobilSelect.disabled = false;
+                planMobilSelect.style.opacity = '1';
+                planMobilSelect.style.cursor = 'pointer';
+            }
+            if (planHogarGrupoSelect) {
+                planHogarGrupoSelect.disabled = false;
+                planHogarGrupoSelect.style.opacity = '1';
+                planHogarGrupoSelect.style.cursor = 'pointer';
+            }
+            if (planHogarSelect) {
+                planHogarSelect.disabled = false;
+                planHogarSelect.style.opacity = '1';
+                planHogarSelect.style.cursor = 'pointer';
+            }
+        }
+    }
+
+    // Generar mensaje para plan hogar con precio (ya incluye IVA)
+    function generateHogarMessage(nombrePlan, precio) {
+        const agente = (agentSelect && agentSelect.value) || 'tu agente';
+        const email = (agentSelect && agentSelect.options[agentSelect.selectedIndex] && agentSelect.options[agentSelect.selectedIndex].getAttribute('data-email')) || '';
+        const telefono = (agentSelect && agentSelect.options[agentSelect.selectedIndex] && agentSelect.options[agentSelect.selectedIndex].getAttribute('data-phone')) || '';
+        const precioFormateado = parseInt(precio).toLocaleString('es-CR');
+        
+        const mensaje = `🏠✨ ¡Hola! Soy ${agente}, tu agente personal de kölbi.
+
+Te cuento que tenemos una excelente promoción para vos:
+
+📺 *${nombrePlan}*
+💰 *Precio promocional: ₡${precioFormateado} mensuales* (impuestos incluidos)
+⚠️ Cnvm use 20.20.0
+where node
+node -v
+firebase --versiononsultá disponibilidad de la promoción con tu agente
+🧾 *Alquiler de módem: ₡1,130 mensuales (se suma al precio)*
+
+✅ 60 minutos incluidos a números fijos y celulares kölbi
+
+✅ Internet estable y de alta velocidad
+✅ Instalación incluida
+✅ Soporte técnico 24/7
+
+¿Te gustaría que te ayude con la contratación?
+📧 ${email}
+📞 ${telefono}
+
+¡Estoy para ayudarte! 🙌`;
+        
+        customMessage.value = mensaje;
+        currentTemplate = ''; // Reset template móvil
+    }
 
     // Colores por tipo de oferta (puedes ajustar hex)
     const offerColors = {
@@ -160,7 +382,7 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
         { name: 'Galo Guillermo Fabara Acuña', cedula: '112480845', user: 'Gafaba', email: 'gfabara@ice.go.cr', phone: '20010536' },
         { name: 'David Ruben Orozco Serrano', cedula: '801310118', user: 'ruoroz', email: 'rorozcos@ice.go.cr', phone: '86903535' },
         { name: 'Juan Carlos Duarte Montiel', cedula: '206660149', user: 'Juduar', email: 'JDuarte@ice.go.cr', phone: '86260404' },
-        { name: 'Manuel Antonio Escalante Leitón', cedula: '109790421', user: 'Maesca', email: 'MEscalanteL@ice.go.cr', phone: '87903535' },
+        { name: 'Manuel Escalante Leitón', cedula: '109790421', user: 'Maesca1', email: 'mescalanteL@ice.go.cr', phone: '87903535' },
         { name: 'Marco Vinicio Miranda Álvarez', cedula: '107980920', user: 'Mamira1', email: 'MMirandaA@ice.go.cr', phone: '87703535' },
         { name: 'Melanie Rodriguez Salas', cedula: '116800549', user: 'merodr2', email: 'MRodriguezSalas@ice.go.cr', phone: '86253636' },
         { name: 'Adriana Rivera Vega', cedula: '110840927', user: 'Adrive', email: 'ARiveraV@ice.go.cr', phone: '87058704' },
@@ -200,6 +422,7 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
             opt.setAttribute('data-user', a.user||'');
             opt.setAttribute('data-email', a.email||'');
             opt.setAttribute('data-cedula', a.cedula||'');
+            opt.setAttribute('data-phone', a.phone||'');
             agentSelect.appendChild(opt);
         });
     }
@@ -272,18 +495,27 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
     // Paginación para historial
     let historyItems = [];
     let currentPage = 1;
-    const itemsPerPage = 10;
+    let itemsPerPage = 10;
 
     function renderHistoryPage() {
         numberList.innerHTML = '';
         const start = (currentPage - 1) * itemsPerPage;
         const end = start + itemsPerPage;
         const pageItems = historyItems.slice(start, end);
-        pageItems.forEach(({docSnap, info}) => {
+        
+        if (pageItems.length === 0 && historyItems.length > 0) {
+            // Si la página actual está vacía pero hay registros, volver a la primera página
+            currentPage = 1;
+            renderHistoryPage();
+            return;
+        }
+        
+        pageItems.forEach(({docSnap, info}, idx) => {
             const li = document.createElement('li');
             li.dataset.info = JSON.stringify(info);
             li.dataset.docid = docSnap.id;
-            li.textContent = `${info.region||''} | ${info.cedulaCliente||''} | ${info.nombreCliente||''} | ${info.segmento||''} | ${info.cedulaEjecutivoNuevo||''} | ${info.name} | ${info.user} | ${info.email} | ${info.offer} | ${info.fullNumber} | Enviado: ${info.fecha} ${info.hora}`;
+            const rowNum = start + idx + 1;
+            li.innerHTML = `<span style="color:#6cf;font-weight:bold;">#${rowNum}</span> ${info.region||''} | ${info.cedulaCliente||''} | ${info.nombreCliente||''} | ${info.segmento||''} | ${info.cedulaEjecutivoNuevo||''} | ${info.name} | ${info.user} | ${info.email} | ${info.offer} | ${info.fullNumber} | Enviado: ${info.fecha} ${info.hora}`;
             // Botón borrar individual
             const delBtn = document.createElement('button');
             delBtn.textContent = '🗑️';
@@ -301,30 +533,106 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
             numberList.appendChild(li);
         });
         renderPaginationControls();
+        updateTotalRecordsInfo();
+    }
+
+    function updateTotalRecordsInfo() {
+        const el = document.getElementById('totalRecordsInfo');
+        if (el) {
+            el.textContent = `${historyItems.length} registro${historyItems.length !== 1 ? 's' : ''}`;
+        }
     }
 
     function renderPaginationControls() {
-        const controls = document.getElementById('paginationControls');
+        const controls = root.querySelector('#paginationControls');
+        const bottomControls = root.querySelector('#paginationBottom');
         if (!controls) return;
-        controls.innerHTML = '';
+        
         const totalPages = Math.ceil(historyItems.length / itemsPerPage) || 1;
-        // Botón anterior
-        const prevBtn = document.createElement('button');
-        prevBtn.textContent = 'Anterior';
-        prevBtn.disabled = currentPage === 1;
-        prevBtn.onclick = () => { if(currentPage > 1){ currentPage--; renderHistoryPage(); } };
-        controls.appendChild(prevBtn);
-        // Info de página
-        const pageInfo = document.createElement('span');
-        pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-        pageInfo.style.margin = '0 8px';
-        controls.appendChild(pageInfo);
-        // Botón siguiente
-        const nextBtn = document.createElement('button');
-        nextBtn.textContent = 'Siguiente';
-        nextBtn.disabled = currentPage === totalPages;
-        nextBtn.onclick = () => { if(currentPage < totalPages){ currentPage++; renderHistoryPage(); } };
-        controls.appendChild(nextBtn);
+        
+        // Estilos para botones de paginación - más claros y visibles
+        const btnStyle = 'padding:6px 12px; border-radius:6px; background:#ffffff; color:#1a1a2e; border:2px solid #22c55e; cursor:pointer; font-weight:600; transition:all 0.2s;';
+        const btnDisabledStyle = 'padding:6px 12px; border-radius:6px; background:#e5e7eb; color:#9ca3af; border:2px solid #d1d5db; cursor:not-allowed; font-weight:600;';
+        const selectStyle = 'padding:6px 10px; border-radius:6px; background:#22c55e; color:#ffffff; border:2px solid #16a34a; font-weight:600; cursor:pointer;';
+        
+        // Función para crear los controles de paginación
+        function createPaginationHTML(container) {
+            container.innerHTML = '';
+            
+            // Botón Primera página
+            const firstBtn = document.createElement('button');
+            firstBtn.textContent = '⏮️';
+            firstBtn.title = 'Primera página';
+            firstBtn.disabled = currentPage === 1;
+            firstBtn.style.cssText = firstBtn.disabled ? btnDisabledStyle : btnStyle;
+            firstBtn.onclick = () => { if(currentPage > 1){ currentPage = 1; renderHistoryPage(); } };
+            container.appendChild(firstBtn);
+            
+            // Botón anterior
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '◀️ Anterior';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.style.cssText = prevBtn.disabled ? btnDisabledStyle : btnStyle;
+            prevBtn.onclick = () => { if(currentPage > 1){ currentPage--; renderHistoryPage(); } };
+            container.appendChild(prevBtn);
+            
+            // Selector de página directa (para muchas páginas)
+            if (totalPages > 1) {
+                const pageSelect = document.createElement('select');
+                pageSelect.style.cssText = selectStyle;
+                for (let i = 1; i <= totalPages; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `Pág ${i}`;
+                    if (i === currentPage) opt.selected = true;
+                    pageSelect.appendChild(opt);
+                }
+                pageSelect.onchange = (e) => { currentPage = parseInt(e.target.value); renderHistoryPage(); };
+                container.appendChild(pageSelect);
+            }
+            
+            // Info de página
+            const pageInfo = document.createElement('span');
+            pageInfo.style.cssText = 'margin:0 10px; font-size:1em; color:#374151; font-weight:600; background:#f3f4f6; padding:6px 12px; border-radius:6px;';
+            pageInfo.textContent = `${currentPage} de ${totalPages}`;
+            container.appendChild(pageInfo);
+            
+            // Botón siguiente
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Siguiente ▶️';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.style.cssText = nextBtn.disabled ? btnDisabledStyle : btnStyle;
+            nextBtn.onclick = () => { if(currentPage < totalPages){ currentPage++; renderHistoryPage(); } };
+            container.appendChild(nextBtn);
+            
+            // Botón Última página
+            const lastBtn = document.createElement('button');
+            lastBtn.textContent = '⏭️';
+            lastBtn.title = 'Última página';
+            lastBtn.disabled = currentPage === totalPages;
+            lastBtn.style.cssText = lastBtn.disabled ? btnDisabledStyle : btnStyle;
+            lastBtn.onclick = () => { if(currentPage < totalPages){ currentPage = totalPages; renderHistoryPage(); } };
+            container.appendChild(lastBtn);
+        }
+        
+        createPaginationHTML(controls);
+        if (bottomControls && historyItems.length > itemsPerPage) {
+            createPaginationHTML(bottomControls);
+        } else if (bottomControls) {
+            bottomControls.innerHTML = '';
+        }
+    }
+
+    function initPaginationSettings() {
+        const itemsPerPageSelect = root.querySelector('#itemsPerPageSelect');
+        if (itemsPerPageSelect) {
+            itemsPerPageSelect.value = itemsPerPage;
+            itemsPerPageSelect.onchange = (e) => {
+                itemsPerPage = parseInt(e.target.value) || 10;
+                currentPage = 1; // Volver a la primera página al cambiar cantidad
+                renderHistoryPage();
+            };
+        }
     }
 
     function init() {
@@ -336,17 +644,59 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
         customMessage.value = initial;
         // poblar select de ejecutivos
         populateAgents();
+        // cargar planes de hogar desde JSON
+        loadPlanesHogar();
+        // inicializar configuración de paginación
+        initPaginationSettings();
         // aplicar color inicial
         applyOfferColor(offerSelect.value);
-        offerSelect.addEventListener('change', () => { customMessage.value = messages[offerSelect.value] || ''; updateFireWidget(); applyOfferColor(offerSelect.value); });
+        offerSelect.addEventListener('change', () => { 
+            const selectedOffer = offerSelect.value;
+            // Para VIP ORO usar fillTemplate para reemplazar placeholders
+            if (selectedOffer === 'VIP ORO') {
+                currentTemplate = messages[selectedOffer];
+                customMessage.value = fillTemplate(currentTemplate);
+            } else {
+                customMessage.value = messages[selectedOffer] || '';
+            }
+            updateFireWidget(); 
+            applyOfferColor(selectedOffer);
+            // Deshabilitar planes K+ si se selecciona Internet hogar
+            if(selectedOffer === 'Internet hogar') {
+                togglePlanSelectors('hogar');
+            } else {
+                togglePlanSelectors('movil');
+            }
+        });
         if(planSelect){
-            planSelect.addEventListener('change', () => { currentTemplate = planTemplates[planSelect.value] || ''; customMessage.value = fillTemplate(currentTemplate || messages[offerSelect.value] || ''); updateFireWidget(); applyOfferColor(offerSelect.value); });
+            planSelect.addEventListener('change', () => { 
+                currentTemplate = planTemplates[planSelect.value] || ''; 
+                customMessage.value = fillTemplate(currentTemplate || messages[offerSelect.value] || ''); 
+                updateFireWidget(); 
+                applyOfferColor(offerSelect.value);
+                // Deshabilitar hogar si se selecciona plan móvil K+
+                if(planSelect.value) {
+                    togglePlanSelectors('movil');
+                }
+            });
         }
         agentSelect.addEventListener('change', showAgentInfo);
         agentSelect.addEventListener('change', () => { if(currentTemplate) customMessage.value = fillTemplate(currentTemplate); });
         nombreClienteInput.addEventListener('input', () => { if(currentTemplate) customMessage.value = fillTemplate(currentTemplate); });
         document.getElementById('openWhatsAppBtn').addEventListener('click', sendMessage);
-        document.getElementById('restoreTemplateBtnMini').addEventListener('click', () => { customMessage.value = messages[offerSelect.value] || ''; showToast('Plantilla restaurada'); });
+        document.getElementById('restoreTemplateBtnMini').addEventListener('click', () => { 
+            customMessage.value = messages[offerSelect.value] || ''; 
+            showToast('Plantilla restaurada');
+            // Resetear ambos selectores de planes
+            if(planSelect) planSelect.value = '';
+            const planHogarGrupo = document.getElementById('planHogarGrupoMini');
+            const planHogar = document.getElementById('planHogarMini');
+            const precioInfo = document.getElementById('planHogarPrecioInfo');
+            if(planHogarGrupo) planHogarGrupo.value = '';
+            if(planHogar) { planHogar.value = ''; planHogar.innerHTML = '<option value="">Primero seleccioná el tipo</option>'; }
+            if(precioInfo) precioInfo.style.display = 'none';
+            togglePlanSelectors('none');
+        });
         document.getElementById('clearHistoryMini').addEventListener('click', ()=>{ if(confirm('¿Seguro que querés borrar el historial de envíos?')) clearHistoryFirestore(); });
         document.getElementById('printContactListMini').addEventListener('click', printContactList);
         document.getElementById('exportCsvMini').addEventListener('click', exportXlsx);
@@ -365,8 +715,9 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
         if(!tpl) return '';
         const agente = (agentSelect && agentSelect.value) || '';
         const email = (agentSelect && agentSelect.options[agentSelect.selectedIndex] && agentSelect.options[agentSelect.selectedIndex].getAttribute('data-email')) || '';
+        const telefono = (agentSelect && agentSelect.options[agentSelect.selectedIndex] && agentSelect.options[agentSelect.selectedIndex].getAttribute('data-phone')) || '';
         const cliente = (nombreClienteInput && nombreClienteInput.value) || '';
-        return tpl.replace(/\{AGENTE\}/g, agente).replace(/\{EMAIL\}/g, email).replace(/\{CLIENTE\}/g, cliente);
+        return tpl.replace(/\{AGENTE\}/g, agente).replace(/\{EMAIL\}/g, email).replace(/\{TELEFONO\}/g, telefono).replace(/\{CLIENTE\}/g, cliente);
     }
 
     function showAgentInfo(){
@@ -529,21 +880,75 @@ import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy } fr
     }
 
     function updateFireWidget(){
-        const items = Array.from(numberList.children).map(li=>{ try{return JSON.parse(li.dataset.info)}catch(e){return null}}).filter(Boolean);
-        const total = items.length; totalSendsEl.textContent = total;
+        // Usar el total real de historyItems, no solo los visibles en la página actual
+        const total = historyItems.length;
+        totalSendsEl.textContent = total;
         const widget = document.getElementById('fireWidgetMini');
-        if(total===0){ fireStatusEl.textContent='Calm'; widget.className='fire-widget level-safe'; }
-        else if(total<10){ fireStatusEl.textContent='Caliente'; widget.className='fire-widget level-warm'; }
-        else if(total<20){ fireStatusEl.textContent='🔥 Activo'; widget.className='fire-widget level-fire'; }
-        else if(total<30){ fireStatusEl.textContent='🔥🔥 Inferno'; widget.className='fire-widget level-inferno'; }
-        else { fireStatusEl.textContent='🐐 GOAT'; widget.className='fire-widget level-goat'; }
+        
+        // Niveles extendidos para carteras grandes
+        if(total === 0){ 
+            fireStatusEl.textContent = '😴 Calm'; 
+            widget.className = 'fire-widget level-safe'; 
+        }
+        else if(total < 10){ 
+            fireStatusEl.textContent = '🌡️ Calentando'; 
+            widget.className = 'fire-widget level-warm'; 
+        }
+        else if(total < 20){ 
+            fireStatusEl.textContent = '🔥 Activo'; 
+            widget.className = 'fire-widget level-fire'; 
+        }
+        else if(total < 35){ 
+            fireStatusEl.textContent = '🔥🔥 En llamas'; 
+            widget.className = 'fire-widget level-inferno'; 
+        }
+        else if(total < 50){ 
+            fireStatusEl.textContent = '💥 Imparable'; 
+            widget.className = 'fire-widget level-goat'; 
+        }
+        else if(total < 75){ 
+            fireStatusEl.textContent = '⚡ Supersónico'; 
+            widget.className = 'fire-widget level-supersonic'; 
+        }
+        else if(total < 100){ 
+            fireStatusEl.textContent = '🚀 Cohete'; 
+            widget.className = 'fire-widget level-rocket'; 
+        }
+        else if(total < 150){ 
+            fireStatusEl.textContent = '🌟 Estrella'; 
+            widget.className = 'fire-widget level-star'; 
+        }
+        else if(total < 200){ 
+            fireStatusEl.textContent = '👑 Leyenda'; 
+            widget.className = 'fire-widget level-legend'; 
+        }
+        else if(total < 300){ 
+            fireStatusEl.textContent = '🏆 Campeón'; 
+            widget.className = 'fire-widget level-champion'; 
+        }
+        else if(total < 500){ 
+            fireStatusEl.textContent = '💎 Diamante'; 
+            widget.className = 'fire-widget level-diamond'; 
+        }
+        else if(total < 750){ 
+            fireStatusEl.textContent = '🦄 Unicornio'; 
+            widget.className = 'fire-widget level-unicorn'; 
+        }
+        else if(total < 1000){ 
+            fireStatusEl.textContent = '🐐 GOAT'; 
+            widget.className = 'fire-widget level-goat'; 
+        }
+        else { 
+            fireStatusEl.textContent = '👽 Alienígena ' + total; 
+            widget.className = 'fire-widget level-alien'; 
+        }
     }
 
     // Seasonal emoji
     function updateSeasonalEmojiMini(){
         const el = document.getElementById('seasonalEmoji'); if(!el) return;
         const m = new Date().getMonth();
-        const map = ['❄️','💘','🌱','🌸','🌼','☀️','🌞','🏖️','🍁','🎃','🦃','🎄'];
+        const map = ['❄️','🌷','🌱','🌸','🌼','☀️','🌞','🏖️','🍁','🎃','🦃','🎄'];
         if(m===11){ el.innerHTML = "<span class='emoji'>🎅</span> <span class='emoji'>🛷</span> <span class='emoji'>🦌</span> <span class='emoji'>🏡</span> <span class='emoji'>🎄</span>"; el.classList.add('december'); }
         else { el.textContent = map[m]||'🎉'; el.classList.remove('december'); }
     }

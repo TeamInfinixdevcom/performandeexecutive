@@ -3,12 +3,10 @@
     "kplus": {
       "grupo": "📱 K Plus",
       "planes": [
-        { "id": "k1plus", "nombre": "Plan k1 Plus", "precio": 10458 },
-        { "id": "k2plus", "nombre": "Plan k2 Plus", "precio": 14380 },
-        { "id": "k3plus", "nombre": "Plan k3 Plus", "precio": 18738 },
-        { "id": "k4plus", "nombre": "Plan k4 Plus", "precio": 25710 },
-        { "id": "k5plus", "nombre": "Plan k5 Plus", "precio": 30504 },
-        { "id": "k6plus", "nombre": "Plan k6 Plus", "precio": 38347 }
+        { "id": "k1plus", "nombre": "Plan k1 Plus", "precio": 12000 },
+        { "id": "k2plus", "nombre": "Plan k2 Plus", "precio": 16500 },
+        { "id": "k3plus", "nombre": "Plan k3 Plus", "precio": 21500 },
+        { "id": "ilimitado", "nombre": "Plan Ilimitado", "precio": 44000 }
       ]
     },
     "postpago": {
@@ -108,12 +106,12 @@
         { "id": "duotelint20mbps", "nombre": "Dúo Telefonía + Internet 20 Mbps", "precio": 20265 },
         { "id": "duotelint30mbps", "nombre": "Dúo Telefonía + Internet 30 Mbps", "precio": 22035 },
         { "id": "duotelint50mbps", "nombre": "Dúo Telefonía + Internet 50 Mbps", "precio": 23805 },
-        { "id": "duotelint100mbps", "nombre": "Dúo Telefonía + Internet 100 Mbps", "precio": 15948 },
-        { "id": "duotelint200mbps", "nombre": "Dúo Telefonía + Internet 200 Mbps", "precio": 24828 },
-        { "id": "duotelint300mbps", "nombre": "Dúo Telefonía + Internet 300 Mbps", "precio": 27573 },
-        { "id": "duotelint500mbps", "nombre": "Dúo Telefonía + Internet 500 Mbps", "precio": 30318 },
-        { "id": "duotelint800mbps", "nombre": "Dúo Telefonía + Internet 800 Mbps", "precio": 130458 },
-        { "id": "duotelint1gbps", "nombre": "Dúo Telefonía + Internet 1 Gbps", "precio": 161046 }
+        { "id": "duotelint100mbps", "nombre": "Dúo Telefonía + Internet 100| Mbps", "precio": 15948 },
+        { "id": "duotelint200mbps", "nombre": "Dúo Telefonía + Internet 200 Mbps", "precio": 30800, "precioFinal": true },
+        { "id": "duotelint300mbps", "nombre": "Dúo Telefonía + Internet 300 Mbps", "precio": 31600, "precioFinal": true },
+        { "id": "duotelint500mbps", "nombre": "Dúo Telefonía + Internet 500 Mbps", "precio": 57800, "precioFinal": true },
+        { "id": "duotelint800mbps", "nombre": "Dúo Telefonía + Internet 800 Mbps", "precio": 149700, "precioFinal": true },
+        { "id": "duotelint1gbps", "nombre": "Dúo Telefonía + Internet 1 Gbps", "precio": 184800, "precioFinal": true }
       ]
     },
     "triple": {
@@ -128,12 +126,12 @@
         { "id": "triple20mbps", "nombre": "Triple Internet + Telefonía + TV 20 Mbps", "precio": 30000 },
         { "id": "triple30mbps", "nombre": "Triple Internet + Telefonía + TV 30 Mbps", "precio": 33540 },
         { "id": "triple50mbps", "nombre": "Triple Internet + Telefonía + TV 50 Mbps", "precio": 35310 },
-        { "id": "triple100mbps", "nombre": "Triple Internet + Telefonía + TV 100 Mbps", "precio": 39894 },
-        { "id": "triple200mbps", "nombre": "Triple Internet + Telefonía + TV 200 Mbps", "precio": 42857 },
-        { "id": "triple300mbps", "nombre": "Triple Internet + Telefonía + TV 300 Mbps", "precio": 43467 },
-        { "id": "triple500mbps", "nombre": "Triple Internet + Telefonía + TV 500 Mbps", "precio": 67258 },
-        { "id": "triple800mbps", "nombre": "Triple Internet + Telefonía + TV 800 Mbps", "precio": 146125 },
-        { "id": "triple1gbps", "nombre": "Triple Internet + Telefonía + TV 1 Gbps", "precio": 176714 }
+        { "id": "triple100mbps", "nombre": "Triple Internet + Telefonía + TV 100 Mbps", "precio": 39651 },
+        { "id": "triple200mbps", "nombre": "Triple Internet + Telefonía + TV 200 Mbps", "precio": 42614 },
+        { "id": "triple300mbps", "nombre": "Triple Internet + Telefonía + TV 300 Mbps", "precio": 43224 },
+        { "id": "triple500mbps", "nombre": "Triple Internet + Telefonía + TV 500 Mbps", "precio": 67015 },
+        { "id": "triple800mbps", "nombre": "Triple Internet + Telefonía + TV 800 Mbps", "precio": 145882 },
+        { "id": "triple1gbps", "nombre": "Triple Internet + Telefonía + TV 1 Gbps", "precio": 176471 }
       ]
     },
     "duo_tv_avanzada_telefonia": {

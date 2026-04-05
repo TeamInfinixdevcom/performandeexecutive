@@ -164,18 +164,28 @@ if (document.getElementById('loginForm')) {
             // 🔒 PASO 3: Después verificar en Firestore si está autorizado
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             
+            let userData;
             if (!userDoc.exists()) {
-                showMessage('❌ Acceso denegado. Usuario no encontrado en el sistema.', 'error');
-                await signOut(auth);
-                return;
-            }
-            
-            const userData = userDoc.data();
-            
-            if (userData.isActive === false) {
-                showMessage('❌ Acceso denegado. Tu cuenta está inactiva.', 'error');
-                await signOut(auth);
-                return;
+                // Si el documento no existe, crearlo con datos básicos
+                console.log('📝 Documento de usuario no existe, creando...');
+                userData = {
+                    email: user.email,
+                    name: user.displayName || 'Usuario',
+                    isActive: true,
+                    role: 'user',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                await setDoc(doc(db, 'users', user.uid), userData);
+                console.log('✅ Documento de usuario creado exitosamente');
+            } else {
+                userData = userDoc.data();
+                
+                if (userData.isActive === false) {
+                    showMessage('❌ Acceso denegado. Tu cuenta está inactiva.', 'error');
+                    await signOut(auth);
+                    return;
+                }
             }
             
             // 🔒 PASO 4: Guardar device fingerprint en localStorage (para futuras validaciones)
@@ -246,6 +256,9 @@ if (window.location.pathname.includes('index.html') || window.location.pathname 
                 if (btnAdminPanel) btnAdminPanel.style.display = 'inline-block';
                 const btnTodasVentas = document.getElementById('btnTodasVentas');
                 if (btnTodasVentas) btnTodasVentas.classList.remove('hidden');
+                const tabTodasVentasDev = document.getElementById('tab-todasventas');
+                if (tabTodasVentasDev) tabTodasVentasDev.classList.remove('hidden');
+                window.dispatchEvent(new Event('tabs:refresh'));
 
                 // Configure logout button to simply clear storage and reload
                 const logoutBtn = document.getElementById('btnLogout');
@@ -320,6 +333,11 @@ if (window.location.pathname.includes('index.html') || window.location.pathname 
                     btnTodasVentas.classList.remove('hidden');
                     console.log('🌐 Pestaña Todas las Ventas mostrada para admin');
                 }
+                const tabTodasVentas = document.getElementById('tab-todasventas');
+                if (tabTodasVentas) {
+                    tabTodasVentas.classList.remove('hidden');
+                }
+                window.dispatchEvent(new Event('tabs:refresh'));
             } else {
                 console.log('ℹ️ Usuario no es admin, ocultando botones admin');
                 
@@ -340,6 +358,7 @@ if (window.location.pathname.includes('index.html') || window.location.pathname 
                 if (tabTodasVentas) {
                     tabTodasVentas.classList.add('hidden');
                 }
+                window.dispatchEvent(new Event('tabs:refresh'));
             }
             
             // Configurar botón de logout

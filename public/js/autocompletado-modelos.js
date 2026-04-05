@@ -7,6 +7,10 @@ class AutocompletadoModelos {
     this.inputModelo = null;
     this.selectBrand = null;
     this.suggestionsContainer = null;
+    this.datalist = null;
+    this.addContainer = null;
+    this.addInput = null;
+    this.addButton = null;
     this.init();
   }
 
@@ -14,6 +18,10 @@ class AutocompletadoModelos {
     // Obtener elementos del DOM
     this.inputModelo = document.getElementById('waitlistModel');
     this.selectBrand = document.getElementById('waitlistBrand');
+    this.datalist = document.getElementById('waitlistModelOptions');
+    this.addContainer = document.getElementById('waitlistModelAddContainer');
+    this.addInput = document.getElementById('waitlistModelAddInput');
+    this.addButton = document.getElementById('waitlistModelAddButton');
 
     if (!this.inputModelo || !this.selectBrand) {
       console.warn('⚠️ Elementos de modelo o marca no encontrados');
@@ -31,10 +39,23 @@ class AutocompletadoModelos {
       setTimeout(() => this.ocultarSugerencias(), 200);
     });
 
+    if (this.addButton) {
+      this.addButton.addEventListener('click', () => {
+        const texto = (this.addInput?.value || '').trim();
+        if (!texto) return;
+        this.agregarModeloNuevo(texto);
+      });
+    }
+
     this.selectBrand.addEventListener('change', () => {
       this.inputModelo.value = ''; // Limpiar campo cuando cambia marca
       this.ocultarSugerencias();
+      this.actualizarDatalist();
+      this.actualizarCampoAgregar('');
     });
+
+    this.actualizarDatalist();
+    this.actualizarCampoAgregar('');
 
     console.log('✅ Autocompletado de modelos inicializado');
   }
@@ -84,7 +105,7 @@ class AutocompletadoModelos {
   }
 
   mostrarSugerencias() {
-    const marca = this.selectBrand.value;
+    const marca = (this.selectBrand.value || '').trim().toUpperCase();
     const texto = this.inputModelo.value;
 
     if (!marca) {
@@ -95,6 +116,8 @@ class AutocompletadoModelos {
     const modelos = typeof filtrarModelos === 'function' 
       ? filtrarModelos(texto, marca) 
       : [];
+
+    this.actualizarCampoAgregar(texto, modelos, marca);
 
     // Construir HTML de sugerencias
     let html = '';
@@ -152,6 +175,54 @@ class AutocompletadoModelos {
     }
   }
 
+  actualizarDatalist() {
+    if (!this.datalist) return;
+
+    const marca = (this.selectBrand.value || '').trim().toUpperCase();
+
+    if (!marca || typeof obtenerModelosPorMarca !== 'function') {
+      this.datalist.innerHTML = '';
+      return;
+    }
+
+    const modelos = obtenerModelosPorMarca(marca);
+    const fragment = document.createDocumentFragment();
+
+    modelos.forEach(modelo => {
+      const option = document.createElement('option');
+      option.value = modelo;
+      fragment.appendChild(option);
+    });
+
+    this.datalist.innerHTML = '';
+    this.datalist.appendChild(fragment);
+  }
+
+  actualizarCampoAgregar(texto = '', modelos = null, marca = '') {
+    if (!this.addContainer || !this.addInput) return;
+
+    const brand = marca || (this.selectBrand?.value || '').trim().toUpperCase();
+    const valor = (texto || '').trim();
+
+    if (!brand || !valor) {
+      this.addContainer.style.display = 'none';
+      this.addInput.value = '';
+      return;
+    }
+
+    const lista = modelos || (typeof obtenerModelosPorMarca === 'function' ? obtenerModelosPorMarca(brand) : []);
+    const existe = lista.some(item => item.toLowerCase() === valor.toLowerCase());
+
+    if (existe) {
+      this.addContainer.style.display = 'none';
+      this.addInput.value = '';
+      return;
+    }
+
+    this.addContainer.style.display = 'block';
+    this.addInput.value = valor;
+  }
+
   resaltarCoincidencias(texto, filtro) {
     if (!filtro) return texto;
 
@@ -169,7 +240,7 @@ class AutocompletadoModelos {
    * Agregar un modelo personalizado nuevo
    */
   agregarModeloNuevo(modelo) {
-    const marca = this.selectBrand.value;
+    const marca = (this.selectBrand.value || '').trim().toUpperCase();
     
     if (!marca) {
       alert('⚠️ Por favor selecciona una marca primero');
@@ -188,6 +259,8 @@ class AutocompletadoModelos {
         // Rellenar el campo con el modelo nuevo
         this.inputModelo.value = modelo.trim().toUpperCase();
         this.ocultarSugerencias();
+        this.actualizarDatalist();
+        this.actualizarCampoAgregar('');
         
         console.log(`✅ Modelo "${modelo}" agregado a la lista de ${marca}`);
       } else {
