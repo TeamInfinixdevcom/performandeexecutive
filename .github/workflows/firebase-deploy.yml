@@ -14,11 +14,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install dependencies (if package.json present)
         run: |
-          if [ -f package.json ]; then npm ci; fi
+          if [ -f package.json ]; then
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+          fi
+
+          if [ -f functions/package.json ]; then
+            if [ -f functions/package-lock.json ]; then
+              npm ci --prefix functions
+            else
+              npm install --prefix functions
+            fi
+          fi
 
       - name: Install Firebase Tools
         run: npm install -g firebase-tools
